@@ -14,11 +14,18 @@ AEchoActor::AEchoActor()
 	EchoRoot = CreateDefaultSubobject<USceneComponent>(TEXT("EchoRoot"));
 	SetRootComponent(EchoRoot);
 
+
 	EchoVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("OrbVisual"));
 	EchoVisual->SetupAttachment(EchoRoot);
-
 	EchoVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	EchoVisual->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+	EchoSkeletalVisual = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CreatureSkeletalVisual"));
+	EchoSkeletalVisual->SetupAttachment(EchoRoot);
+	EchoSkeletalVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EchoSkeletalVisual->SetCollisionResponseToAllChannels(ECR_Ignore);
+	EchoSkeletalVisual->SetVisibility(false);
+
 
 	EchoCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("EchoCamera"));
 	EchoCamera->SetupAttachment(EchoRoot);
@@ -39,6 +46,11 @@ void AEchoActor::BeginPlay()
 		PreviewMID = UMaterialInstanceDynamic::Create(PreviewMaterial, this);
 	}
 
+	if (PlacedMesh && EchoSkeletalVisual)
+	{
+		EchoSkeletalVisual->SetSkeletalMesh(PlacedMesh);
+	}
+
 	SetVisualState(EEchoVisualState::Preview);
 	
 }
@@ -50,16 +62,48 @@ void AEchoActor::SetVisualState(EEchoVisualState NewState)
 	switch (VisualState)
 	{
 	case EEchoVisualState::Preview:
+		EchoVisual->SetVisibility(true);
 		EchoVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		EchoCamera->SetActive(false);
-
+		if (PreviewMesh)
+		{
+			EchoVisual->SetStaticMesh(PreviewMesh);
+		}
 		EchoVisual->SetMaterial(0, PreviewMID ? PreviewMID : PreviewMaterial);
+
+
+		EchoSkeletalVisual->SetVisibility(false);
+		EchoSkeletalVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		EchoCamera->SetActive(false);
 		break;
 
 	case EEchoVisualState::Placed:
-		EchoVisual->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		EchoVisual->SetVisibility(false);
+		EchoVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+
+		EchoSkeletalVisual->SetVisibility(true);
+		EchoSkeletalVisual->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		if (PlacedMaterial)
+		{
+
+			EchoSkeletalVisual->SetOverlayMaterial(nullptr);
+			const int NumMaterials = EchoSkeletalVisual->GetNumMaterials();
+
+			for (int i = 0; i < NumMaterials; ++i)
+			{
+				EchoSkeletalVisual->SetMaterial(i, PlacedMaterial);
+			}
+		}
+		else
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("WARNING: PlacedMaterial is not assigned in the Blueprint defaults!"));
+			}
+		}
+
 		EchoCamera->SetActive(true);
-		EchoVisual->SetMaterial(0, PlacedMaterial);
 		break;
 	}
 }

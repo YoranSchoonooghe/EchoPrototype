@@ -7,11 +7,18 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Character.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values for this component's properties
 UEchoComponent::UEchoComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+
+	if (APawn* OwnerPawn = GetOwnerPawn())
+	{
+		Camera = OwnerPawn->FindComponentByClass<UCameraComponent>();
+	}
 }
 
 
@@ -30,6 +37,11 @@ void UEchoComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	if (EchoState == EEchoState::Aiming)
 	{
 		UpdateAimPreview(DeltaTime);
+	}
+
+	if (FovEffect == EEchoFOVEffect::ZoomingIn)
+	{
+		UpdateTeleportFovEffect(DeltaTime);
 	}
 }
 
@@ -79,13 +91,21 @@ void UEchoComponent::LookThroughEcho()
 		return;
 	}
 
+	if (bIsViewingThroughEcho)
+	{
+		ReturnViewToSelf(); 
+		return;
+	}
+
 	if (APawn* OwnerPawn = GetOwnerPawn())
 	{
 		if (APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController()))
 		{
 			PC->SetViewTargetWithBlend(ActiveEcho, ViewBlendTime);
+			bIsViewingThroughEcho = true;
 		}
 	}
+	
 }
 
 void UEchoComponent::ReturnViewToSelf()
@@ -97,7 +117,18 @@ void UEchoComponent::ReturnViewToSelf()
 			PC->SetViewTargetWithBlend(OwnerPawn, ViewBlendTime);
 		}
 	}
+	bIsViewingThroughEcho = false;
 }
+
+void UEchoComponent::AddEchoLookInput(float YawDelta, float PitchDelta)
+{
+
+	if (ActiveEcho && bIsViewingThroughEcho)
+	{
+		//ActiveEcho->AddCameraLookInput(YawDelta, PitchDelta);
+	}
+}
+
 
 void UEchoComponent::TeleportToEcho()
 {
@@ -115,8 +146,17 @@ void UEchoComponent::TeleportToEcho()
 	const FVector TargetLocation = ActiveEcho->GetActorLocation();
 	const FRotator TargetRotation = ActiveEcho->GetActorRotation();
 
+	StartTeleportFovEffect();
+
+
 	if (!OwnerCharacter->TeleportTo(TargetLocation, TargetRotation, false, false))
 	{
+		if (Camera)
+		{
+			Camera->SetFieldOfView(FovEffectBaseFOV);
+		}
+		FovEffect = EEchoFOVEffect::None;
+
 		return;
 	}
 
@@ -125,6 +165,45 @@ void UEchoComponent::TeleportToEcho()
 }
 
 #pragma endregion input
+
+
+void UEchoComponent::StartTeleportFovEffect()
+{
+	if (!Camera) return;
+
+
+	FovEffectBaseFOV = Camera->FieldOfView;
+
+	FovEffectStartFOV = TeleportFOV;
+
+	Camera->SetFieldOfView(TeleportFOV);
+	FovEffectElapsed = 0.0f;
+
+	FovEffect = EEchoFOVEffect::ZoomingIn;
+}
+
+void UEchoComponent::UpdateTeleportFovEffect(float DeltaTime)
+{
+	if (!Camera)
+	{
+		FovEffect = EEchoFOVEffect::None;
+		return;
+	}
+
+	FovEffectElapsed += DeltaTime;
+
+	const float Alpha = FMath::Clamp(FovEffectElapsed / TeleportZoomDuration, 0.0f, 1.0f);
+
+	const float Eased = 1.0f - FMath::Pow(1.0f - Alpha, 3.0f);
+	Camera->SetFieldOfView(FMath::Lerp(FovEffectStartFOV, FovEffectBaseFOV, Eased));
+
+	if (Alpha >= 1.0f)
+	{
+		Camera->SetFieldOfView(FovEffectBaseFOV);
+		FovEffect = EEchoFOVEffect::None;
+	}
+}
+
 
 void UEchoComponent::BeginAiming()
 {
@@ -189,6 +268,7 @@ void UEchoComponent::DestroyActiveEcho()
 		ActiveEcho = nullptr;
 	}
 	EchoState = EEchoState::Idle;
+	bIsViewingThroughEcho = false;
 }
 
 
@@ -229,7 +309,8 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 		QueryParams
 	);
 
-	OutRotation = CamRot;
+	OutRotation = FRotator(0.0f, CamRot.Yaw, 0.0f);
+
 	if (bHit)
 	{
 		OutLocation = Hit.ImpactPoint + (Hit.ImpactNormal * EchoTraceRadius);

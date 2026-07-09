@@ -7,6 +7,9 @@
 #include "EchoComponent.generated.h"
 
 class AEchoActor;
+class UCameraComponent;
+
+
 enum class EEchoVisualState : uint8;
 
 UENUM(BlueprintType)
@@ -15,6 +18,13 @@ enum class EEchoState : uint8
 	Idle,
 	Aiming,
 	Placed
+};
+
+UENUM(BlueprintType)
+enum class EEchoFOVEffect : uint8
+{
+	None,
+	ZoomingIn
 };
 
 
@@ -46,8 +56,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void ReturnViewToSelf();
 
+
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void AddEchoLookInput(float yawDelta, float PitchDelta);
+
+
 	UFUNCTION(BlueprintPure, Category = "Echo")
 	FORCEINLINE EEchoState GetEchoState() const { return EchoState; }
+
+	UFUNCTION(BlueprintPure, Category = "Echo")
+	FORCEINLINE bool IsViewingThroughEcho() const { return bIsViewingThroughEcho; }
 
 protected:
 	// Called when the game starts
@@ -71,17 +89,34 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Echo")
 	float ViewBlendTime = 0.5f;
 
+	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
+	float TeleportFOV = 130.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
+	float TeleportZoomDuration = 0.3f;
+
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<AEchoActor> ActiveEcho;
 
 	EEchoState EchoState = EEchoState::Idle;
 	double PressStartTime = 0.0;
+	bool bIsViewingThroughEcho = false;
+
+
+	EEchoFOVEffect FovEffect = EEchoFOVEffect::None;
+	float FovEffectElapsed = 0.0f;
+	float FovEffectStartFOV = 90.0f;
+	float FovEffectBaseFOV = 90.0f;
+	UCameraComponent* Camera;
 
 	void BeginAiming();
 	void UpdateAimPreview(float DeltaSeconds);
 	void PlaceEcho();
 	void DestroyActiveEcho();
+
+	void StartTeleportFovEffect();
+	void UpdateTeleportFovEffect(float DeltaTime);
 
 	bool TraceForEchoLocation(FVector& OutLocation, FRotator& OutRotation, bool& bOutValid) const;
 

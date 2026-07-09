@@ -6,8 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "EchoActor.generated.h"
 
-class UStaticMeshComponent;
 class UCameraComponent;
+
+class UStaticMeshComponent;
+class USkeletalMeshComponent;
+class USkeletalMesh;
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
 
@@ -53,16 +56,23 @@ protected:
 	TObjectPtr<UStaticMeshComponent> EchoVisual;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> EchoSkeletalVisual;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> EchoCamera;
 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
-	TObjectPtr<UMaterialInterface> PreviewMaterial;
+	TObjectPtr<UStaticMesh> PreviewMesh;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<USkeletalMesh> PlacedMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<UMaterialInterface> PreviewMaterial;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
 	TObjectPtr<UMaterialInterface> PlacedMaterial;
-
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> PreviewMID;
