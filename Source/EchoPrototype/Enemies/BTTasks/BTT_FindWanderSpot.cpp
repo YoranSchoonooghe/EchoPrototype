@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "BTT_FindWanderSpot.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
@@ -10,7 +7,6 @@
 EBTNodeResult::Type UBTT_FindWanderSpot::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
     auto* pBlackboardComponent = OwnerComp.GetBlackboardComponent();
-
     if (!pBlackboardComponent)
         return EBTNodeResult::Failed;
 

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "PatrolPoint.h"
 #include "EnemyCharacter.generated.h"
 
 UCLASS()
@@ -20,4 +21,8 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
+	TArray<APatrolPoint*> PatrolPoints;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
+	bool IsStationary{ false };
 };
