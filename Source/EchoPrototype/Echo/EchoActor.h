@@ -1,0 +1,78 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "EchoActor.generated.h"
+
+class UStaticMeshComponent;
+class UCameraComponent;
+class UMaterialInstanceDynamic;
+class UMaterialInterface;
+
+UENUM(BlueprintType)
+enum class EEchoVisualState : uint8
+{
+	Preview,	//Following player's aim
+	Placed
+};
+
+UCLASS()
+class ECHOPROTOTYPE_API AEchoActor : public AActor
+{
+	GENERATED_BODY()
+	
+public:	
+	// Sets default values for this actor's properties
+	AEchoActor();
+
+	UFUNCTION(BlueprintPure, Category = "Echo")
+	FORCEINLINE UCameraComponent* GetEchoCamera() const { return EchoCamera; }
+
+	UFUNCTION(BlueprintPure, Category = "Echo")
+	FORCEINLINE EEchoVisualState GetVisualState() const { return VisualState; }
+
+
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void SetVisualState(EEchoVisualState NewState);
+
+
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void SetPreviewValidity(bool bIsValid);
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USceneComponent> EchoRoot;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> EchoVisual;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> EchoCamera;
+
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<UMaterialInterface> PreviewMaterial;
+
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<UMaterialInterface> PlacedMaterial;
+
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> PreviewMID;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	FLinearColor ValidPlacementColor = FLinearColor(0.2f, 0.6f, 1.0f, 0.5f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	FLinearColor InvalidPlacementColor = FLinearColor(1.0f, 0.2f, 0.2f, 0.5f);
+
+private:
+	EEchoVisualState VisualState = EEchoVisualState::Preview;
+};

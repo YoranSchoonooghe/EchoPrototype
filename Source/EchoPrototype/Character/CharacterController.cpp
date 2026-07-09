@@ -32,14 +32,29 @@ void ACharacterController::SetupInputComponent()
 
 		if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
 		{
+
+			//Movement
 			if (MoveAction)
 				EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACharacterController::Move);
 
+			if (JumpAction)
+				EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacterController::Jump);
+			
+
+			//Camera
 			if (CameraMoveAction)
 				EIC->BindAction(CameraMoveAction, ETriggerEvent::Triggered, this, &ACharacterController::CameraMove);
 
-			if (JumpAction)
-				EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacterController::Jump);
+
+			//Echo
+			if (EchoAction)
+			{
+ 				EIC->BindAction(EchoAction, ETriggerEvent::Started, this, &ACharacterController::EchoPressed);
+ 				EIC->BindAction(EchoAction, ETriggerEvent::Completed, this, &ACharacterController::EchoReleased);
+			}
+
+			if (LookThroughEchoAction)
+ 				EIC->BindAction(LookThroughEchoAction, ETriggerEvent::Started, this, &ACharacterController::LookThroughEcho);
 		}
 	
 }
@@ -71,5 +86,29 @@ void ACharacterController::Jump()
 	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
 	{
 		PlayerChar->Jump();
+	}
+}
+
+void ACharacterController::EchoPressed()
+{
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
+	{
+		PlayerChar->EchoPressed();
+	}
+}
+
+void ACharacterController::EchoReleased()
+{
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
+	{
+		PlayerChar->EchoReleased();
+	}
+}
+
+void ACharacterController::LookThroughEcho()
+{
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
+	{
+		PlayerChar->LookThroughEcho();
 	}
 }

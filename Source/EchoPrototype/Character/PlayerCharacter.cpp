@@ -1,6 +1,7 @@
 #include "PlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "EchoComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -22,6 +23,8 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); 
 	FollowCamera->bUsePawnControlRotation = false; 
+
+	Echo = CreateDefaultSubobject<UEchoComponent>(TEXT("EchoComponent"));
 }
 
 void APlayerCharacter::Move(const FVector2D& Value)
@@ -66,3 +69,27 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 }
 
+void APlayerCharacter::EchoPressed()
+{
+	if (Echo)
+		Echo->OnEchoPressed();
+	
+}
+
+void APlayerCharacter::EchoReleased()
+{
+	if (Echo)
+		Echo->OnEchoReleased();
+}
+
+void APlayerCharacter::LookThroughEcho()
+{
+	if (Echo)
+		Echo->LookThroughEcho();
+}
+
+void APlayerCharacter::TeleportToEcho()
+{
+	if (Echo)
+		Echo->TeleportToEcho();
+}
