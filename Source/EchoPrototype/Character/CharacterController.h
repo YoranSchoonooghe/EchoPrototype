@@ -15,6 +15,9 @@ UCLASS()
 class ECHOPROTOTYPE_API ACharacterController : public APlayerController
 {
 	GENERATED_BODY()
+
+public:
+	ACharacterController();
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;

@@ -1,8 +1,14 @@
 #include "CharacterController.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "PlayerCharacterCameraManager.h"
 #include "PlayerCharacter.h"
 
+
+ACharacterController::ACharacterController()
+{
+	PlayerCameraManagerClass = APlayerCharacterCameraManager::StaticClass();
+}
 
 void ACharacterController::BeginPlay()
 {

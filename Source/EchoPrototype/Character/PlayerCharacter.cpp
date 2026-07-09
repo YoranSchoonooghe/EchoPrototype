@@ -1,18 +1,38 @@
-
 #include "PlayerCharacter.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = true; 
+	bUseControllerRotationRoll = false;
+
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->TargetArmLength = 250.0f; 
+	CameraBoom->bUsePawnControlRotation = true; 
+
+	// over the shoulder
+	CameraBoom->SocketOffset = FVector(0.0f, 60.0f, 50.0f);
+
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); 
+	FollowCamera->bUsePawnControlRotation = false; 
 }
 
 void APlayerCharacter::Move(const FVector2D& Value)
 {
 	if (Controller != nullptr)
 	{
-		const FVector ForwardDirection = FVector(1.0f, 0.0f, 0.0f);
-		const FVector RightDirection = FVector(0.0f, 1.0f, 0.0f);
+		const FRotator Rotation = Controller->GetControlRotation();
+
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 		AddMovementInput(ForwardDirection, Value.Y);
 		AddMovementInput(RightDirection, Value.X);
@@ -21,7 +41,11 @@ void APlayerCharacter::Move(const FVector2D& Value)
 
 void APlayerCharacter::CameraMove(const FVector2D& Value)
 {
-	// TODO
+	if (Controller != nullptr)
+	{
+		AddControllerYawInput(Value.X);
+		AddControllerPitchInput(-Value.Y);
+	}
 }
 
 void APlayerCharacter::BeginPlay()
