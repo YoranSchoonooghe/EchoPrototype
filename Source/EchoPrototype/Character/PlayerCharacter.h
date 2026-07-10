@@ -8,6 +8,15 @@ class USpringArmComponent;
 class UCameraComponent;
 class UEchoComponent;
 
+//Camere perspective states
+UENUM(BlueprintType)
+enum class ECameraPerspective : uint8
+{
+	ThirdPerson,
+	TopDown,
+	FirstPerson
+};
+
 UCLASS()
 class ECHOPROTOTYPE_API APlayerCharacter : public ACharacter
 {
@@ -21,6 +30,7 @@ public:
 	
 	//Camera
 	void CameraMove(const FVector2D& Value);
+	void CycleCameraPerspective();
 
 	//Echo
 	void EchoPressed();
@@ -40,7 +50,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Echo, meta = (AllowPrivateAccess = "true"))
 	UEchoComponent* Echo;
 
-public:	
+	UPROPERTY(BlueprintReadOnly, Category = "Camera")
+	ECameraPerspective CurrentPerspective;
+public:
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

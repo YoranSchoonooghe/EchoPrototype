@@ -18,6 +18,7 @@ APlayerCharacter::APlayerCharacter()
 	CameraBoom->bUsePawnControlRotation = true; 
 
 	// over the shoulder
+	CurrentPerspective = ECameraPerspective::ThirdPerson;
 	CameraBoom->SocketOffset = FVector(0.0f, 60.0f, 50.0f);
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -92,4 +93,43 @@ void APlayerCharacter::TeleportToEcho()
 {
 	if (Echo)
 		Echo->TeleportToEcho();
+}
+
+void APlayerCharacter::CycleCameraPerspective()
+{
+	switch (CurrentPerspective)
+	{
+	case ECameraPerspective::ThirdPerson:
+		// SWITCHING TO TOP-DOWN
+		CameraBoom->TargetArmLength = 800.0f; 
+		CameraBoom->SocketOffset = FVector::ZeroVector; 
+		CameraBoom->bUsePawnControlRotation = false;
+		CameraBoom->SetRelativeRotation(FRotator(-50.0f, 0.0f, 0.0f));
+
+		CurrentPerspective = ECameraPerspective::TopDown;
+		break;
+
+	case ECameraPerspective::TopDown:
+		// SWITCHING TO FIRST-PERSON
+		CameraBoom->TargetArmLength = -10.0f;
+		CameraBoom->SocketOffset = FVector(0.0f, 0.0f, BaseEyeHeight);
+		CameraBoom->bUsePawnControlRotation = true;
+		CameraBoom->SetRelativeRotation(FRotator::ZeroRotator);
+
+		GetMesh()->SetOwnerNoSee(true);
+
+		CurrentPerspective = ECameraPerspective::FirstPerson;
+		break;
+
+	case ECameraPerspective::FirstPerson:
+		// SWITCHING BACK TO THIRD-PERSON
+		CameraBoom->TargetArmLength = 250.0f; 
+		CameraBoom->SocketOffset = FVector(0.0f, 60.0f, 50.0f);
+		CameraBoom->bUsePawnControlRotation = true;
+
+		GetMesh()->SetOwnerNoSee(false);
+
+		CurrentPerspective = ECameraPerspective::ThirdPerson;
+		break;
+	}
 }

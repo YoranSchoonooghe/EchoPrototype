@@ -35,6 +35,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
 	UInputAction* CameraMoveAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	class UInputAction* ToggleCameraAction;
 
 	//Echo
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -55,6 +57,7 @@ private:
 
 	//Camera
 	void CameraMove(const FInputActionValue& Value);
+	void CameraCycle();
 
 	//Echo
 	void EchoPressed();

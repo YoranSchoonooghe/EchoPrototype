@@ -45,6 +45,8 @@ void ACharacterController::SetupInputComponent()
 			if (CameraMoveAction)
 				EIC->BindAction(CameraMoveAction, ETriggerEvent::Triggered, this, &ACharacterController::CameraMove);
 
+			if (ToggleCameraAction)
+				EIC->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &ACharacterController::CameraCycle);
 
 			//Echo
 			if (EchoAction)
@@ -78,6 +80,14 @@ void ACharacterController::CameraMove(const FInputActionValue & Value)
 		if (CameraMovementVector.Length() < 0.1f) return;
 
 		PlayerChar->CameraMove(CameraMovementVector);
+	}
+}
+
+void ACharacterController::CameraCycle()
+{
+	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
+	{
+		PlayerChar->CycleCameraPerspective();
 	}
 }
 
