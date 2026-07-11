@@ -7,6 +7,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UEchoComponent;
+class UPlayerStateBase;
 
 //Camere perspective states
 UENUM(BlueprintType)
@@ -44,6 +45,9 @@ public:
 	void LookThroughEcho();
 	void TeleportToEcho();
 
+	//States
+	void ChangeState(class UPlayerStateBase* NewState);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -58,10 +62,12 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	ECameraPerspective CurrentPerspective;
+
+	UPROPERTY(BlueprintReadOnly, Category = "State Machine")
+	TObjectPtr<UPlayerStateBase> CurrentState;
 public:
 
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
 };

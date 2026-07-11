@@ -3,6 +3,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EchoComponent.h"
+#include "States/PlayerStateBase.h"
+#include "States/PlayerStates.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -53,25 +55,22 @@ void APlayerCharacter::Move(const FVector2D& Value)
 
 void APlayerCharacter::StartSprinting()
 {
-	if (!bIsCrouched)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = 800.0f;
-	}
+	if (CurrentState) ChangeState(CurrentState->OnSprintPressed(this));
 }
 
 void APlayerCharacter::StopSprinting()
 {
-	GetCharacterMovement()->MaxWalkSpeed = 500.0f; 
+	if (CurrentState) ChangeState(CurrentState->OnSprintReleased(this));
 }
 
 void APlayerCharacter::StartSneaking()
 {
-	Crouch();
+	if (CurrentState) ChangeState(CurrentState->OnSneakPressed(this));
 }
 
 void APlayerCharacter::StopSneaking()
 {
-	UnCrouch();
+	if (CurrentState) ChangeState(CurrentState->OnSneakReleased(this));
 }
 
 void APlayerCharacter::CameraMove(const FVector2D& Value)
@@ -87,6 +86,7 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	ChangeState(NewObject<UPlayerState_IdleWalk>(this));
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -99,6 +99,23 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void APlayerCharacter::ChangeState(UPlayerStateBase* NewState)
+{
+	if (NewState == nullptr || NewState == CurrentState) return;
+
+	if (CurrentState)
+	{
+		CurrentState->ExitState(this);
+	}
+
+	CurrentState = NewState;
+
+	if (CurrentState)
+	{
+		CurrentState->EnterState(this);
+	}
 }
 
 void APlayerCharacter::EchoPressed()
