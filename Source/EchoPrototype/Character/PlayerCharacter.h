@@ -7,6 +7,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class UEchoComponent;
+class UCombatComponent;
 class UPlayerStateBase;
 
 //Camere perspective states
@@ -45,6 +46,14 @@ public:
 	void LookThroughEcho();
 	void TeleportToEcho();
 
+	//Combat
+	void AttackPressed();
+
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
+
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	bool IsAttacking() const;
+
 	//States
 	void ChangeState(class UPlayerStateBase* NewState);
 
@@ -59,6 +68,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Echo, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UEchoComponent> Echo;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCombatComponent> Combat;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	ECameraPerspective CurrentPerspective;

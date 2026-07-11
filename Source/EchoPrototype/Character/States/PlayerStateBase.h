@@ -21,4 +21,8 @@ public:
 	virtual UPlayerStateBase* OnSprintReleased(APlayerCharacter* Character) { return nullptr; }
 	virtual UPlayerStateBase* OnSneakPressed(APlayerCharacter* Character) { return nullptr; }
 	virtual UPlayerStateBase* OnSneakReleased(APlayerCharacter* Character) { return nullptr; }
+
+	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) { return nullptr; }
+
+	virtual bool CanMove() const { return true; }
 };

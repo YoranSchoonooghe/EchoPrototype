@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EchoComponent.h"
+#include "../Combat/CombatComponent.h"
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
 
@@ -29,6 +30,7 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera->bUsePawnControlRotation = false; 
 
 	Echo = CreateDefaultSubobject<UEchoComponent>(TEXT("EchoComponent"));
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 
 	// crouching
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -40,6 +42,8 @@ APlayerCharacter::APlayerCharacter()
 
 void APlayerCharacter::Move(const FVector2D& Value)
 {
+	if (CurrentState && !CurrentState->CanMove()) return;
+
 	if (Controller != nullptr)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -93,6 +97,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (CurrentState)
+	{
+		ChangeState(CurrentState->UpdateState(this, DeltaTime));
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -141,6 +149,16 @@ void APlayerCharacter::TeleportToEcho()
 {
 	if (Echo)
 		Echo->TeleportToEcho();
+}
+
+void APlayerCharacter::AttackPressed()
+{
+	if (CurrentState) ChangeState(CurrentState->OnAttackPressed(this));
+}
+
+bool APlayerCharacter::IsAttacking() const
+{
+	return Combat && Combat->IsAttacking();
 }
 
 void APlayerCharacter::CycleCameraPerspective()

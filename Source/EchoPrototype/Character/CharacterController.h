@@ -52,6 +52,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<UInputAction> LookThroughEchoAction;
 
+	//Combat
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> AttackAction;
+
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -79,6 +83,9 @@ private:
 	void EchoPressed();
 	void EchoReleased();
 	void LookThroughEcho();
+
+	//Combat
+	void Attack();
 
 	UPROPERTY()
 	TObjectPtr<APlayerCharacter> CachedPlayerCharacter;

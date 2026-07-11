@@ -1,5 +1,6 @@
 #include "PlayerStates.h"
 #include "../PlayerCharacter.h"
+#include "../../Combat/CombatComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // IDLE / WALK STATE
@@ -18,6 +19,11 @@ UPlayerStateBase* UPlayerState_IdleWalk::OnSneakPressed(APlayerCharacter* Charac
 	return NewObject<UPlayerState_Sneak>(Character);
 }
 
+UPlayerStateBase* UPlayerState_IdleWalk::OnAttackPressed(APlayerCharacter* Character)
+{
+	return NewObject<UPlayerState_Attacking>(Character);
+}
+
 // SPRINT STATE
 void UPlayerState_Sprint::EnterState(APlayerCharacter* Character)
 {
@@ -32,6 +38,11 @@ UPlayerStateBase* UPlayerState_Sprint::OnSprintReleased(APlayerCharacter* Charac
 UPlayerStateBase* UPlayerState_Sprint::OnSneakPressed(APlayerCharacter* Character)
 {
 	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Sprint::OnAttackPressed(APlayerCharacter* Character)
+{
+	return NewObject<UPlayerState_Attacking>(Character);
 }
 
 // SNEAK STATE
@@ -49,4 +60,34 @@ void UPlayerState_Sneak::ExitState(APlayerCharacter* Character)
 UPlayerStateBase* UPlayerState_Sneak::OnSneakReleased(APlayerCharacter* Character)
 {
 	return NewObject<UPlayerState_IdleWalk>(Character);
+}
+
+// ATTACKING STATE
+void UPlayerState_Attacking::EnterState(APlayerCharacter* Character)
+{
+	if (UCombatComponent* Combat = Character->GetCombatComponent())
+	{
+		Combat->TryAttack();
+	}
+}
+
+UPlayerStateBase* UPlayerState_Attacking::UpdateState(APlayerCharacter* Character, float DeltaTime)
+{
+	UCombatComponent* Combat = Character->GetCombatComponent();
+	if (!Combat || !Combat->IsAttacking())
+	{
+		return NewObject<UPlayerState_IdleWalk>(Character);
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Attacking::OnAttackPressed(APlayerCharacter* Character)
+{
+	if (UCombatComponent* Combat = Character->GetCombatComponent())
+	{
+		Combat->TryAttack();
+	}
+
+	return nullptr;
 }

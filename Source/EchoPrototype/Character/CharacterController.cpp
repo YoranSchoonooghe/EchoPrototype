@@ -67,6 +67,10 @@ void ACharacterController::SetupInputComponent()
 
 			if (LookThroughEchoAction)
  				EIC->BindAction(LookThroughEchoAction, ETriggerEvent::Started, this, &ACharacterController::LookThroughEcho);
+
+			//Combat
+			if (AttackAction)
+				EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &ACharacterController::Attack);
 		}
 	
 }
@@ -168,4 +172,11 @@ void ACharacterController::LookThroughEcho()
 	if (!CachedPlayerCharacter) return;
 
 	CachedPlayerCharacter->LookThroughEcho();
+}
+
+void ACharacterController::Attack()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->AttackPressed();
 }
