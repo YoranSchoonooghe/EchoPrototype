@@ -1,6 +1,7 @@
 #include "PlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "EchoComponent.h"
 
 APlayerCharacter::APlayerCharacter()
@@ -26,6 +27,13 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera->bUsePawnControlRotation = false; 
 
 	Echo = CreateDefaultSubobject<UEchoComponent>(TEXT("EchoComponent"));
+
+	// crouching
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+
+	// default speed
+	GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = 250.0f;
 }
 
 void APlayerCharacter::Move(const FVector2D& Value)
@@ -41,6 +49,29 @@ void APlayerCharacter::Move(const FVector2D& Value)
 		AddMovementInput(ForwardDirection, Value.Y);
 		AddMovementInput(RightDirection, Value.X);
 	}
+}
+
+void APlayerCharacter::StartSprinting()
+{
+	if (!bIsCrouched)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = 800.0f;
+	}
+}
+
+void APlayerCharacter::StopSprinting()
+{
+	GetCharacterMovement()->MaxWalkSpeed = 500.0f; 
+}
+
+void APlayerCharacter::StartSneaking()
+{
+	Crouch();
+}
+
+void APlayerCharacter::StopSneaking()
+{
+	UnCrouch();
 }
 
 void APlayerCharacter::CameraMove(const FVector2D& Value)

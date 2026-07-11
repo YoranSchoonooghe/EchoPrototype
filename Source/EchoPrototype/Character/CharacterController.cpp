@@ -40,6 +40,16 @@ void ACharacterController::SetupInputComponent()
 			if (JumpAction)
 				EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacterController::Jump);
 			
+			if (SneakAction)
+			{
+				EIC->BindAction(SneakAction, ETriggerEvent::Started, this, &ACharacterController::StartSneaking);
+				EIC->BindAction(SneakAction, ETriggerEvent::Completed, this, &ACharacterController::StopSneaking);
+			}
+			if (SprintAction)
+			{
+				EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &ACharacterController::StartSprinting);
+				EIC->BindAction(SprintAction, ETriggerEvent::Completed, this, &ACharacterController::StopSprinting);
+			}
 
 			//Camera
 			if (CameraMoveAction)
@@ -61,64 +71,101 @@ void ACharacterController::SetupInputComponent()
 	
 }
 
+void ACharacterController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	CachedPlayerCharacter = Cast<APlayerCharacter>(InPawn);
+}
+
+void ACharacterController::OnUnPossess()
+{
+	Super::OnUnPossess();
+
+	CachedPlayerCharacter = nullptr;
+}
+
 void ACharacterController::Move(const FInputActionValue& Value)
 {
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
-	{
-		FVector2D MovementVector = Value.Get<FVector2D>();
-		if (MovementVector.Length() < 0.1f) return;
+	if (!CachedPlayerCharacter) return;
+	
+	FVector2D MovementVector = Value.Get<FVector2D>();
+	if (MovementVector.Length() < 0.1f) return;
 
-		PlayerChar->Move(MovementVector);
-	}
+	CachedPlayerCharacter->Move(MovementVector);
 }
 
 void ACharacterController::CameraMove(const FInputActionValue & Value)
 {
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
-	{
-		FVector2D CameraMovementVector = Value.Get<FVector2D>();
-		if (CameraMovementVector.Length() < 0.1f) return;
+	if (!CachedPlayerCharacter) return;
 
-		PlayerChar->CameraMove(CameraMovementVector);
-	}
+	FVector2D CameraMovementVector = Value.Get<FVector2D>();
+	if (CameraMovementVector.Length() < 0.1f) return;
+
+	CachedPlayerCharacter->CameraMove(CameraMovementVector);
+	
 }
 
 void ACharacterController::CameraCycle()
 {
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
-	{
-		PlayerChar->CycleCameraPerspective();
-	}
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->CycleCameraPerspective();
 }
 
 void ACharacterController::Jump()
 {
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
-	{
-		PlayerChar->Jump();
-	}
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->Jump();
+}
+
+void ACharacterController::StartSprinting()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->StartSprinting();
+}
+
+void ACharacterController::StopSprinting()
+{
+	if (!CachedPlayerCharacter) return;
+	
+	CachedPlayerCharacter->StopSprinting();
+	
+}
+
+void ACharacterController::StartSneaking()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->StartSneaking();
+}
+
+void ACharacterController::StopSneaking()
+{
+	if (!CachedPlayerCharacter) return;
+	
+	CachedPlayerCharacter->StopSneaking();
 }
 
 void ACharacterController::EchoPressed()
 {
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
-	{
-		PlayerChar->EchoPressed();
-	}
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->EchoPressed();
 }
 
 void ACharacterController::EchoReleased()
 {
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
-	{
-		PlayerChar->EchoReleased();
-	}
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->EchoReleased();
 }
 
 void ACharacterController::LookThroughEcho()
 {
-	if (APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetPawn()))
-	{
-		PlayerChar->LookThroughEcho();
-	}
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->LookThroughEcho();
 }

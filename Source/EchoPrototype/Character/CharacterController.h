@@ -10,6 +10,7 @@
 
 class UInputMappingContext;
 class UInputAction;
+class APlayerCharacter;
 
 UCLASS()
 class ECHOPROTOTYPE_API ACharacterController : public APlayerController
@@ -25,10 +26,16 @@ protected:
 
 	//Movement
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
-	UInputAction* MoveAction;
+	TObjectPtr<UInputAction> MoveAction;
 
 	UPROPERTY(EditAnywhere, Category = "Input|Actions")
-	UInputAction* JumpAction;
+	TObjectPtr<UInputAction> JumpAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> SprintAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> SneakAction;
 
 
 	//Camera
@@ -36,7 +43,7 @@ protected:
 	UInputAction* CameraMoveAction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
-	class UInputAction* ToggleCameraAction;
+	TObjectPtr<UInputAction> ToggleCameraAction;
 
 	//Echo
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -49,11 +56,20 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
+
 private:
 
 	//Movement
 	void Move(const FInputActionValue& Value);
 	void Jump();
+
+	void StartSprinting();
+	void StopSprinting();
+
+	void StartSneaking();
+	void StopSneaking();
 
 	//Camera
 	void CameraMove(const FInputActionValue& Value);
@@ -63,4 +79,7 @@ private:
 	void EchoPressed();
 	void EchoReleased();
 	void LookThroughEcho();
+
+	UPROPERTY()
+	TObjectPtr<APlayerCharacter> CachedPlayerCharacter;
 };
