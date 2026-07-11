@@ -74,6 +74,8 @@ void AEchoActor::SetVisualState(EEchoVisualState NewState)
 		EchoSkeletalVisual->SetVisibility(false);
 		EchoSkeletalVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+		CameraLookRotation = FRotator::ZeroRotator;
+		EchoCamera->SetWorldRotation(CameraLookRotation);
 		EchoCamera->SetActive(false);
 		break;
 
@@ -104,8 +106,18 @@ void AEchoActor::SetVisualState(EEchoVisualState NewState)
 		}
 
 		EchoCamera->SetActive(true);
+
+		PlacedOriginLocation = GetActorLocation();
 		break;
 	}
+}
+
+void AEchoActor::InitializeCameraFacing(const FRotator& WorldRotation)
+{
+	CameraLookRotation = WorldRotation;
+	CameraLookRotation.Pitch = FMath::Clamp(CameraLookRotation.Pitch, MinLookPitch, MaxLookPitch);
+	CameraLookRotation.Roll = 0.0f;
+	EchoCamera->SetWorldRotation(CameraLookRotation);
 }
 
 void AEchoActor::SetPreviewValidity(bool bIsValid)
@@ -114,4 +126,31 @@ void AEchoActor::SetPreviewValidity(bool bIsValid)
 	{
 		PreviewMID->SetVectorParameterValue(TEXT("TintColor"), bIsValid ? ValidPlacementColor : InvalidPlacementColor);
 	}
+}
+
+void AEchoActor::AddCameraLookInput(float YawDelta, float PitchDelta)
+{
+	CameraLookRotation.Yaw += YawDelta;
+	CameraLookRotation.Pitch = FMath::Clamp(CameraLookRotation.Pitch + -PitchDelta, MinLookPitch, MaxLookPitch);
+
+	EchoCamera->SetWorldRotation(CameraLookRotation);
+}
+
+void AEchoActor::AddMoveInput(const FVector& WorldSpaceDelta)
+{
+	if (WorldSpaceDelta.IsNearlyZero())
+	{
+		return;
+	}
+
+	FVector DesiredLocation = GetActorLocation() + WorldSpaceDelta;
+
+	const FVector OffsetFromOrigin = DesiredLocation - PlacedOriginLocation;
+	if (OffsetFromOrigin.SizeSquared() > FMath::Square(MaxDriftDistance))
+	{
+		DesiredLocation = PlacedOriginLocation + OffsetFromOrigin.GetClampedToMaxSize(MaxDriftDistance);
+	}
+
+	FHitResult Hit;
+	SetActorLocation(DesiredLocation, true, &Hit);
 }

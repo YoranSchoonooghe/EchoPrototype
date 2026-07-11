@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Character.h"
+#include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 
 // Sets default values for this component's properties
@@ -61,9 +62,14 @@ void UEchoComponent::OnEchoPressed()
 	case EEchoState::Idle:
 		BeginAiming();
 		break;
+	
 	case EEchoState::Aiming:
-		PlaceEcho();
+
+		if (bCurrentAimIsValid)
+			PlaceEcho();
+		
 		break;
+
 	case EEchoState::Placed:
 		TeleportToEcho();
 		break;
@@ -78,7 +84,7 @@ void UEchoComponent::OnEchoReleased()
 	}
 
 	const double HeldDuration = GetWorld()->GetTimeSeconds() - PressStartTime;
-	if (HeldDuration > TapThreshold)
+	if (HeldDuration > TapThreshold && bCurrentAimIsValid)
 	{
 		PlaceEcho();
 	}
@@ -122,11 +128,33 @@ void UEchoComponent::ReturnViewToSelf()
 
 void UEchoComponent::AddEchoLookInput(float YawDelta, float PitchDelta)
 {
-
 	if (ActiveEcho && bIsViewingThroughEcho)
 	{
-		//ActiveEcho->AddCameraLookInput(YawDelta, PitchDelta);
+		ActiveEcho->AddCameraLookInput(YawDelta, PitchDelta);
 	}
+}
+
+void UEchoComponent::AddEchoMoveInput(const FVector2D& MoveInput)
+{
+	if (!ActiveEcho || !bIsViewingThroughEcho || MoveInput.IsNearlyZero())
+	{
+		return;
+	}
+
+	UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera();
+	if (!EchoCam)
+	{
+		return;
+	}
+
+	const FRotator YawOnly(0.0f, EchoCam->GetComponentRotation().Yaw, 0.0f);
+	const FVector Forward = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::X);
+	const FVector Right = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::Y);
+
+	const float DeltaSeconds = GetWorld()->GetDeltaSeconds();
+	const FVector WorldDelta = (Forward * MoveInput.Y + Right * MoveInput.X) * EchoMoveSpeed * DeltaSeconds;
+
+	ActiveEcho->AddMoveInput(WorldDelta);
 }
 
 
@@ -143,13 +171,18 @@ void UEchoComponent::TeleportToEcho()
 		return;
 	}
 
-	const FVector TargetLocation = ActiveEcho->GetActorLocation();
+	FVector TargetLocation = ActiveEcho->GetActorLocation();
 	const FRotator TargetRotation = ActiveEcho->GetActorRotation();
+
+	if (UCapsuleComponent* CharacterCapsule = OwnerCharacter->GetCapsuleComponent())
+	{
+		TargetLocation.Z += CharacterCapsule->GetScaledCapsuleHalfHeight();
+	}
 
 	StartTeleportFovEffect();
 
 
-	if (!OwnerCharacter->TeleportTo(TargetLocation, TargetRotation, false, false))
+	if (!OwnerCharacter->TeleportTo(TargetLocation, TargetRotation, true, false))
 	{
 		if (Camera)
 		{
@@ -216,6 +249,7 @@ void UEchoComponent::BeginAiming()
 	FRotator SpawnRotation;
 	bool bValid = false;
 	TraceForEchoLocation(SpawnLocation, SpawnRotation, bValid);
+	bCurrentAimIsValid = bValid;
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
@@ -242,6 +276,9 @@ void UEchoComponent::UpdateAimPreview(float DeltaSeconds)
 	FRotator TargetRotation;
 	bool bValid = false;
 	TraceForEchoLocation(TargetLocation, TargetRotation, bValid);
+	bCurrentAimIsValid = bValid;
+
+	TargetRotation.Pitch = 0.0f;
 
 	const FVector NewLocation = FMath::VInterpTo(ActiveEcho->GetActorLocation(), TargetLocation, DeltaSeconds, PreviewInterpSpeed);
 	ActiveEcho->SetActorLocation(NewLocation);
@@ -256,8 +293,25 @@ void UEchoComponent::PlaceEcho()
 		return;
 	}
 
-	ActiveEcho->SetVisualState(EEchoVisualState::Placed);
-	EchoState = EEchoState::Placed;
+	FVector FinalLocation;
+	FRotator FinalRotation;
+	bool bValid = false;
+	TraceForEchoLocation(FinalLocation, FinalRotation, bValid);
+
+	if (bValid)
+	{
+		FinalRotation.Pitch = 0.0f;
+		FinalRotation.Roll = 0.0f;
+
+		const float VerticalSpawnBuffer = 10.0f;
+		FinalLocation.Z += VerticalSpawnBuffer;
+
+		ActiveEcho->SetActorLocationAndRotation(FinalLocation, FinalRotation);
+
+
+		ActiveEcho->SetVisualState(EEchoVisualState::Placed);
+		EchoState = EEchoState::Placed;
+	}
 }
 
 void UEchoComponent::DestroyActiveEcho()
@@ -269,6 +323,7 @@ void UEchoComponent::DestroyActiveEcho()
 	}
 	EchoState = EEchoState::Idle;
 	bIsViewingThroughEcho = false;
+	bCurrentAimIsValid = false;
 }
 
 
@@ -288,10 +343,10 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 	FVector CamLoc;
 	FRotator CamRot;
 	PC->GetPlayerViewPoint(CamLoc, CamRot);
+	OutRotation = CamRot;
 
 	const FVector TraceEnd = CamLoc + (CamRot.Vector() * EchoTraceDistance);
 
-	FHitResult Hit;
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner());
 	if (ActiveEcho)
@@ -299,27 +354,49 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 		QueryParams.AddIgnoredActor(ActiveEcho);
 	}
 
-	const bool bHit = GetWorld()->SweepSingleByChannel(
-		Hit,
-		CamLoc,
-		TraceEnd,
-		FQuat::Identity,
-		ECC_Visibility,
-		FCollisionShape::MakeSphere(EchoTraceRadius),
-		QueryParams
+	//Forward sweep along aim direction
+		FHitResult ForwardHit;
+	const bool bForwardHit = GetWorld()->SweepSingleByChannel(
+		ForwardHit, CamLoc, TraceEnd, FQuat::Identity, ECC_Visibility,
+		FCollisionShape::MakeSphere(EchoTraceRadius), QueryParams
 	);
 
-	OutRotation = FRotator(0.0f, CamRot.Yaw, 0.0f);
-
-	if (bHit)
+	if (!bForwardHit)
 	{
-		OutLocation = Hit.ImpactPoint + (Hit.ImpactNormal * EchoTraceRadius);
+		//Nothing in range
+		OutLocation = TraceEnd;
+		bOutValid = false;
+		return true;
+	}
+
+
+	if (ForwardHit.ImpactNormal.Z >= MinWalkableNormalZ)
+	{
+		OutLocation = ForwardHit.ImpactPoint + (ForwardHit.ImpactNormal * GroundPlacementOffset);
+		bOutValid = true;
+		return true;
+	}
+
+	//If forward hit was a wall, search straight down
+	const FVector DownTraceStart = ForwardHit.ImpactPoint + FVector(0.0f, 0.0f, GroundSearchHeight);
+	const FVector DownTraceEnd = ForwardHit.ImpactPoint - FVector(0.0f, 0.0f, GroundSearchDepth);
+
+	FHitResult DownHit;
+	const bool bDownHit = GetWorld()->SweepSingleByChannel(
+		DownHit, DownTraceStart, DownTraceEnd, FQuat::Identity, ECC_Visibility,
+		FCollisionShape::MakeSphere(EchoTraceRadius), QueryParams
+	);
+
+	if (bDownHit && DownHit.ImpactNormal.Z >= MinWalkableNormalZ)
+	{
+		OutLocation = DownHit.ImpactPoint + (DownHit.ImpactNormal * GroundPlacementOffset);
+		bOutValid = true;
 	}
 	else
 	{
-		OutLocation = TraceEnd;
+		OutLocation = ForwardHit.ImpactPoint;
+		bOutValid = false;
 	}
-	bOutValid = true;
 
 	return true;
 }

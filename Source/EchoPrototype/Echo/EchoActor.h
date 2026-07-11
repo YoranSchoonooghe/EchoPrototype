@@ -44,6 +44,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void SetPreviewValidity(bool bIsValid);
 
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void AddCameraLookInput(float YawDelta, float PitchDelta);
+
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void AddMoveInput(const FVector& WorldSpaceDelta);
+
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void InitializeCameraFacing(const FRotator& WorldRotation);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -83,6 +92,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
 	FLinearColor InvalidPlacementColor = FLinearColor(1.0f, 0.2f, 0.2f, 0.5f);
 
+
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Camera")
+	float MinLookPitch = -80.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Camera")
+	float MaxLookPitch = 80.0f;
+
+
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Movement")
+	float MaxDriftDistance = 150.0f;
+
 private:
 	EEchoVisualState VisualState = EEchoVisualState::Preview;
+
+	FRotator CameraLookRotation = FRotator::ZeroRotator;
+
+	FVector PlacedOriginLocation = FVector::ZeroVector;
 };

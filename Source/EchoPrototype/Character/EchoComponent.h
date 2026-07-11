@@ -60,6 +60,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void AddEchoLookInput(float yawDelta, float PitchDelta);
 
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void AddEchoMoveInput(const FVector2D& MoveInput);
+
+
 
 	UFUNCTION(BlueprintPure, Category = "Echo")
 	FORCEINLINE EEchoState GetEchoState() const { return EchoState; }
@@ -78,7 +82,20 @@ protected:
 	float EchoTraceDistance = 2000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo")
-	float EchoTraceRadius = 10.0f;
+	float EchoTraceRadius = 20.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Echo")
+	float GroundPlacementOffset = 50.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
+	float MinWalkableNormalZ = 0.7f;
+
+	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
+	float GroundSearchHeight = 150.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
+	float GroundSearchDepth = 300.0f;
+
 
 	UPROPERTY(EditAnywhere, Category = "Echo")
 	float PreviewInterpSpeed = 18.0f;
@@ -89,11 +106,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Echo")
 	float ViewBlendTime = 0.5f;
 
+
 	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
 	float TeleportFOV = 130.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
 	float TeleportZoomDuration = 0.3f;
+
+
+	UPROPERTY(EditAnywhere, Category = "Echo|Movement")
+	float EchoMoveSpeed = 60.0f;
 
 private:
 	UPROPERTY(Transient)
@@ -102,6 +124,9 @@ private:
 	EEchoState EchoState = EEchoState::Idle;
 	double PressStartTime = 0.0;
 	bool bIsViewingThroughEcho = false;
+
+
+	bool bCurrentAimIsValid = false;
 
 
 	EEchoFOVEffect FovEffect = EEchoFOVEffect::None;
@@ -119,7 +144,6 @@ private:
 	void UpdateTeleportFovEffect(float DeltaTime);
 
 	bool TraceForEchoLocation(FVector& OutLocation, FRotator& OutRotation, bool& bOutValid) const;
-
 
 	APawn* GetOwnerPawn() const;
 };

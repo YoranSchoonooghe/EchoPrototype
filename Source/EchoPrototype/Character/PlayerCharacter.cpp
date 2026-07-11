@@ -46,6 +46,14 @@ void APlayerCharacter::Move(const FVector2D& Value)
 {
 	if (CurrentState && !CurrentState->CanMove()) return;
 
+
+	if (Echo && Echo->IsViewingThroughEcho())
+	{
+		Echo->AddEchoMoveInput(Value);
+		return;
+	}
+
+
 	if (Controller != nullptr)
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -81,6 +89,12 @@ void APlayerCharacter::StopSneaking()
 
 void APlayerCharacter::CameraMove(const FVector2D& Value)
 {
+	if (Echo && Echo->IsViewingThroughEcho())
+	{
+		Echo->AddEchoLookInput(Value.X, -Value.Y);
+		return;
+	}
+
 	if (Controller != nullptr)
 	{
 		AddControllerYawInput(Value.X);
