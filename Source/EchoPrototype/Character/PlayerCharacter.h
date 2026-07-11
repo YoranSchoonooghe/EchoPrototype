@@ -10,6 +10,7 @@ class UEchoComponent;
 class UCombatComponent;
 class UHealthComponent;
 class UPlayerStateBase;
+class UAIPerceptionStimuliSourceComponent;
 
 //Camere perspective states
 UENUM(BlueprintType)
@@ -84,6 +85,10 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "State Machine")
 	TObjectPtr<UPlayerStateBase> CurrentState;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "EnemyAI")
+	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
+
 public:
 
 	virtual void Tick(float DeltaTime) override;

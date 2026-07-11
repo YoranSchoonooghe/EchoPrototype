@@ -17,9 +17,9 @@ void UCombatComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
-APlayerCharacter* UCombatComponent::GetOwnerCharacter() const
+ACharacter* UCombatComponent::GetOwnerCharacter() const
 {
-	return Cast<APlayerCharacter>(GetOwner());
+	return Cast<ACharacter>(GetOwner());
 }
 
 void UCombatComponent::TryAttack()
@@ -66,7 +66,7 @@ void UCombatComponent::AdvanceCombo()
 
 void UCombatComponent::PlayComboAttack(int32 Index)
 {
-	APlayerCharacter* Character = GetOwnerCharacter();
+	auto* Character = GetOwnerCharacter();
 	if (!Character || !ComboAttacks.IsValidIndex(Index))
 	{
 		EndCombo();
@@ -125,7 +125,7 @@ void UCombatComponent::OnComboWindowClose()
 
 void UCombatComponent::BeginWeaponTrace(FName SocketName, float Radius, float DamageOverride)
 {
-	APlayerCharacter* Character = GetOwnerCharacter();
+	auto* Character = GetOwnerCharacter();
 	if (!Character || !Character->GetMesh())
 	{
 		return;
@@ -148,7 +148,7 @@ void UCombatComponent::UpdateWeaponTrace()
 		return;
 	}
 
-	APlayerCharacter* Character = GetOwnerCharacter();
+	auto* Character = GetOwnerCharacter();
 	if (!Character || !Character->GetMesh())
 	{
 		return;

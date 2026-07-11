@@ -1,11 +1,13 @@
 #include "EnemyCharacter.h"
 #include "../Combat/HealthComponent.h"
+#include "EchoPrototype/Combat/CombatComponent.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 }
 
 void AEnemyCharacter::BeginPlay()

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Perception/AIPerceptionTypes.h"
 #include "EnemyAIController.generated.h"
 
 UCLASS()
@@ -21,6 +22,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BehaviorTree")
 	TObjectPtr<UBehaviorTree> BTEnemy;
 
+	UFUNCTION()
+	void HandlePerception(AActor* Actor, FAIStimulus Stimulus);
+
 private:
 	void InitBBKeys();
+
 };

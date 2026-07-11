@@ -7,6 +7,8 @@
 #include "../Combat/HealthComponent.h"
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h" 
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -33,6 +35,10 @@ APlayerCharacter::APlayerCharacter()
 	Echo = CreateDefaultSubobject<UEchoComponent>(TEXT("EchoComponent"));
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+
+	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AIPerceptionStimuliSourceComponent"));
+	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());
+	StimuliSource->RegisterWithPerceptionSystem();
 
 	// crouching
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;

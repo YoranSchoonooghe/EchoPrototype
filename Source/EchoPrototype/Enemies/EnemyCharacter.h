@@ -6,6 +6,7 @@
 #include "EnemyCharacter.generated.h"
 
 class UHealthComponent;
+class UCombatComponent;
 
 UCLASS()
 class ECHOPROTOTYPE_API AEnemyCharacter : public ACharacter
@@ -20,11 +21,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UHealthComponent> Health;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCombatComponent> Combat;
 
 public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
 	TArray<APatrolPoint*> PatrolPoints;

@@ -62,7 +62,7 @@ private:
 
 	void HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
-	APlayerCharacter* GetOwnerCharacter() const;
+	ACharacter* GetOwnerCharacter() const;
 
 	int32 CurrentComboIndex = INDEX_NONE;
 	bool bComboWindowOpen = false;
