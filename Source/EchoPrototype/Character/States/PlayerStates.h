@@ -65,3 +65,12 @@ public:
 
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
 };
+
+UCLASS()
+class ECHOPROTOTYPE_API UPlayerState_Dead : public UPlayerStateBase
+{
+	GENERATED_BODY()
+
+public:
+	virtual bool CanMove() const override { return false; }
+};

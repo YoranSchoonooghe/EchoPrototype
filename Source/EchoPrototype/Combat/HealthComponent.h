@@ -7,7 +7,19 @@
 #include "HealthComponent.generated.h"
 
 class UDamageType;
+class UAnimSequence;
 class AController;
+
+UENUM(BlueprintType)
+enum class EHitDirection : uint8
+{
+	Front,
+	Back,
+	Left,
+	Right
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ECHOPROTOTYPE_API UHealthComponent : public UActorComponent
@@ -24,7 +36,10 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 	UFUNCTION(BlueprintPure, Category = "Health")
-	FORCEINLINE bool IsDead() const { return CurrentHealth <= 0.0f; }
+	FORCEINLINE bool IsDead() const { return bIsDead; }
+
+	UPROPERTY(BlueprintAssignable, Category = "Health")
+	FOnDeathSignature OnDeath;
 
 protected:
 	virtual void BeginPlay() override;
@@ -32,9 +47,29 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Health")
 	float MaxHealth = 100.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Death")
+	FName DeathSlotName = "FullBody";
+
+	UPROPERTY(EditAnywhere, Category = "Death")
+	TArray<TObjectPtr<UAnimSequence>> FrontDeathAnims;
+
+	UPROPERTY(EditAnywhere, Category = "Death")
+	TArray<TObjectPtr<UAnimSequence>> BackDeathAnims;
+
+	UPROPERTY(EditAnywhere, Category = "Death")
+	TArray<TObjectPtr<UAnimSequence>> LeftDeathAnims;
+
+	UPROPERTY(EditAnywhere, Category = "Death")
+	TArray<TObjectPtr<UAnimSequence>> RightDeathAnims;
+
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
+	void Die(AActor* DamageCauser);
+	EHitDirection ComputeHitDirection(AActor* DamageCauser) const;
+	void PlayDeathAnimation(EHitDirection Direction);
+
 	float CurrentHealth = 0.0f;
+	bool bIsDead = false;
 };

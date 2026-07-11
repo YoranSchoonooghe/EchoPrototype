@@ -91,8 +91,18 @@ void APlayerCharacter::CameraMove(const FVector2D& Value)
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	ChangeState(NewObject<UPlayerState_IdleWalk>(this));
+
+	if (Health)
+	{
+		Health->OnDeath.AddDynamic(this, &APlayerCharacter::HandleDeath);
+	}
+}
+
+void APlayerCharacter::HandleDeath()
+{
+	ChangeState(NewObject<UPlayerState_Dead>(this));
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
