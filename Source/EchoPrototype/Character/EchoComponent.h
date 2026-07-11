@@ -117,6 +117,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Echo|Movement")
 	float EchoMoveSpeed = 60.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Echo Vision")
+	UMaterialInterface* EchoVisionPostProcessMaterial;
+
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<AEchoActor> ActiveEcho;

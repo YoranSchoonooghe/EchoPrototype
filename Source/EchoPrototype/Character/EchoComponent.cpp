@@ -109,6 +109,14 @@ void UEchoComponent::LookThroughEcho()
 		{
 			PC->SetViewTargetWithBlend(ActiveEcho, ViewBlendTime);
 			bIsViewingThroughEcho = true;
+
+			if (EchoVisionPostProcessMaterial)
+			{
+				if (UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera())
+				{
+					EchoCam->PostProcessSettings.AddBlendable(EchoVisionPostProcessMaterial, 1.0f);
+				}
+			}
 		}
 	}
 	
@@ -121,6 +129,14 @@ void UEchoComponent::ReturnViewToSelf()
 		if (APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController()))
 		{
 			PC->SetViewTargetWithBlend(OwnerPawn, ViewBlendTime);
+
+			if (EchoVisionPostProcessMaterial && ActiveEcho)
+			{
+				if (UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera())
+				{
+					EchoCam->PostProcessSettings.RemoveBlendable(EchoVisionPostProcessMaterial);
+				}
+			}
 		}
 	}
 	bIsViewingThroughEcho = false;
