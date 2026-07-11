@@ -8,6 +8,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UEchoComponent;
 class UCombatComponent;
+class UHealthComponent;
 class UPlayerStateBase;
 
 //Camere perspective states
@@ -71,6 +72,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCombatComponent> Combat;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UHealthComponent> Health;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	ECameraPerspective CurrentPerspective;

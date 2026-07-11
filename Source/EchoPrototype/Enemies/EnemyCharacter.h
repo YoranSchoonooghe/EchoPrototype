@@ -5,6 +5,8 @@
 #include "PatrolPoint.h"
 #include "EnemyCharacter.generated.h"
 
+class UHealthComponent;
+
 UCLASS()
 class ECHOPROTOTYPE_API AEnemyCharacter : public ACharacter
 {
@@ -16,7 +18,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-public:	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UHealthComponent> Health;
+
+public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

@@ -4,6 +4,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EchoComponent.h"
 #include "../Combat/CombatComponent.h"
+#include "../Combat/HealthComponent.h"
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
 
@@ -31,6 +32,7 @@ APlayerCharacter::APlayerCharacter()
 
 	Echo = CreateDefaultSubobject<UEchoComponent>(TEXT("EchoComponent"));
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 
 	// crouching
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
