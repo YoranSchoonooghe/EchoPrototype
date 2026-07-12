@@ -24,8 +24,9 @@ protected:
 
 	UFUNCTION()
 	void HandlePerception(AActor* Actor, FAIStimulus Stimulus);
+	UFUNCTION()
+	void SetTargetActor(AActor* Aggressor);
 
 private:
 	void InitBBKeys();
-
 };

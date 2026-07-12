@@ -60,6 +60,10 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 		Die(DamageCauser);
 	}
+	else
+	{
+		OnDamage.Broadcast(DamageCauser);
+	}
 }
 
 EHitDirection UHealthComponent::ComputeHitDirection(AActor* DamageCauser) const

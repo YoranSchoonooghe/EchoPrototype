@@ -20,6 +20,7 @@ enum class EHitDirection : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageSignature, AActor*, Aggressor);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ECHOPROTOTYPE_API UHealthComponent : public UActorComponent
@@ -40,6 +41,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnDeathSignature OnDeath;
+	UPROPERTY(BlueprintAssignable, Category = "Health")
+	FOnDamageSignature OnDamage;
 
 protected:
 	virtual void BeginPlay() override;
