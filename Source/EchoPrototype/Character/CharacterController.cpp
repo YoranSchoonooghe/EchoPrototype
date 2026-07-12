@@ -71,6 +71,10 @@ void ACharacterController::SetupInputComponent()
 			//Combat
 			if (AttackAction)
 				EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &ACharacterController::Attack);
+
+			//Interact
+			if (InteractAction)
+				EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &ACharacterController::Interact);
 		}
 	
 }
@@ -179,4 +183,12 @@ void ACharacterController::Attack()
 	if (!CachedPlayerCharacter) return;
 
 	CachedPlayerCharacter->AttackPressed();
+}
+
+void ACharacterController::Interact()
+{
+	if (UInteractionComponent* Interaction = GetPawn() ? GetPawn()->FindComponentByClass<UInteractionComponent>() : nullptr)
+	{
+		Interaction->OnInteractPressed();
+	}
 }

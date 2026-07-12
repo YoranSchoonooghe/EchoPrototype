@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "../Interactables/InteractionComponent.h"
 #include "PlayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -79,6 +80,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UHealthComponent> Health;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInteractionComponent> Interaction;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	ECameraPerspective CurrentPerspective;

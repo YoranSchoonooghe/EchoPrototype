@@ -56,6 +56,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
 	TObjectPtr<UInputAction> AttackAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Interaction")
+	TObjectPtr<UInputAction> InteractAction;
+
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -86,6 +89,9 @@ private:
 
 	//Combat
 	void Attack();
+
+	//Interact
+	void Interact();
 
 	UPROPERTY()
 	TObjectPtr<APlayerCharacter> CachedPlayerCharacter;

@@ -35,6 +35,7 @@ APlayerCharacter::APlayerCharacter()
 	Echo = CreateDefaultSubobject<UEchoComponent>(TEXT("EchoComponent"));
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	Interaction = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AIPerceptionStimuliSourceComponent"));
 	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());
