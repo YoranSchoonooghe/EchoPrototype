@@ -131,6 +131,8 @@ private:
 
 	bool bCurrentAimIsValid = false;
 
+	FRotator LastAimRotation = FRotator::ZeroRotator;
+
 
 	EEchoFOVEffect FovEffect = EEchoFOVEffect::None;
 	float FovEffectElapsed = 0.0f;

@@ -14,12 +14,6 @@
 UEchoComponent::UEchoComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
-
-	if (APawn* OwnerPawn = GetOwnerPawn())
-	{
-		Camera = OwnerPawn->FindComponentByClass<UCameraComponent>();
-	}
 }
 
 
@@ -27,6 +21,11 @@ UEchoComponent::UEchoComponent()
 void UEchoComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (APawn* OwnerPawn = GetOwnerPawn())
+	{
+		Camera = OwnerPawn->FindComponentByClass<UCameraComponent>();
+	}
 }
 
 
@@ -119,7 +118,6 @@ void UEchoComponent::LookThroughEcho()
 			}
 		}
 	}
-	
 }
 
 void UEchoComponent::ReturnViewToSelf()
@@ -266,6 +264,7 @@ void UEchoComponent::BeginAiming()
 	bool bValid = false;
 	TraceForEchoLocation(SpawnLocation, SpawnRotation, bValid);
 	bCurrentAimIsValid = bValid;
+	LastAimRotation = SpawnRotation;
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
@@ -293,6 +292,7 @@ void UEchoComponent::UpdateAimPreview(float DeltaSeconds)
 	bool bValid = false;
 	TraceForEchoLocation(TargetLocation, TargetRotation, bValid);
 	bCurrentAimIsValid = bValid;
+	LastAimRotation = TargetRotation;
 
 	TargetRotation.Pitch = 0.0f;
 
@@ -326,6 +326,7 @@ void UEchoComponent::PlaceEcho()
 
 
 		ActiveEcho->SetVisualState(EEchoVisualState::Placed);
+		ActiveEcho->InitializeCameraFacing(LastAimRotation);
 		EchoState = EEchoState::Placed;
 	}
 }
