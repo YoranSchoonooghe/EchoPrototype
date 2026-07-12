@@ -30,6 +30,8 @@ void AEnemyAIController::BeginPlay()
 
 void AEnemyAIController::HandlePerception(AActor* Actor, FAIStimulus Stimulus)
 {
+	auto const TargetPlayerKeyName = TEXT("TargetPlayer");
+
 	auto* pPlayer = Cast<APlayerCharacter>(Actor);
 	if (pPlayer)
 	{
@@ -38,11 +40,12 @@ void AEnemyAIController::HandlePerception(AActor* Actor, FAIStimulus Stimulus)
 
 		if (Stimulus.WasSuccessfullySensed())
 		{
-			pBlackboardComponent->SetValueAsObject(TEXT("TargetPlayer"), pPlayer);
+			pBlackboardComponent->SetValueAsObject(TargetPlayerKeyName, pPlayer);
 		}
 		else
 		{
-			pBlackboardComponent->ClearValue(TEXT("TargetPlayer"));
+			pBlackboardComponent->ClearValue(TargetPlayerKeyName);
+			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
 		}
 	}
 }
@@ -71,9 +74,10 @@ void AEnemyAIController::InitBBKeys()
 	auto* pEnemy = Cast<AEnemyCharacter>(GetCharacter());
 	if (!pEnemy) return;
 
-	if (pEnemy->IsStationary)
+	if (pEnemy->bIsGuarding)
 	{
-		pBlackboardComponent->SetValueAsBool(TEXT("IsStationary"), true);
+		pBlackboardComponent->SetValueAsVector(TEXT("GuardLocation"), GetPawn()->GetActorLocation());
+		pBlackboardComponent->SetValueAsRotator(TEXT("GuardRotation"), GetPawn()->GetActorRotation());
 
 		return;
 	}

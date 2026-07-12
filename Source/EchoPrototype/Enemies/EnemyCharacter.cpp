@@ -1,6 +1,8 @@
 #include "EnemyCharacter.h"
 #include "../Combat/HealthComponent.h"
 #include "EchoPrototype/Combat/CombatComponent.h"
+#include "Components/WidgetComponent.h"
+#include "BPWidgets/AlertWidget.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -8,6 +10,8 @@ AEnemyCharacter::AEnemyCharacter()
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	AlertWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
+	AlertWidgetComp->SetupAttachment(GetMesh());
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -26,5 +30,15 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void AEnemyCharacter::ChangeAlertState(EAlertState state)
+{
+	AlertState = state;
+
+	if (UAlertWidget* Widget = Cast<UAlertWidget>(AlertWidgetComp->GetUserWidgetObject()))
+	{
+		Widget->UpdateAlertIcon(state);
+	}
 }
 
