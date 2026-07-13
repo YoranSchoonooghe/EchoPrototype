@@ -69,6 +69,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Landed(const FHitResult& Hit) override;
 
 	UFUNCTION()
 	void HandleDeath();

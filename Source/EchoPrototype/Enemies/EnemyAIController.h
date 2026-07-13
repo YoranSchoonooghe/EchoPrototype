@@ -35,5 +35,8 @@ private:
 	UFUNCTION()
 	void UpdateTargetEcho();
 
+	void HandleSightPerception(AActor* Actor, FAIStimulus Stimulus);
+	void HandleSoundPerception(AActor* Actor, FAIStimulus Stimulus);
+
 	AEchoActor* _targetEcho;
 };

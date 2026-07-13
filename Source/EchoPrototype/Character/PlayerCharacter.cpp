@@ -9,7 +9,8 @@
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "Perception/AISense_Sight.h" 
+#include "Perception/AISense_Sight.h"
+#include "Perception/AISense_Hearing.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -121,6 +122,18 @@ void APlayerCharacter::BeginPlay()
 	{
 		Health->OnDeath.AddDynamic(this, &APlayerCharacter::HandleDeath);
 	}
+}
+
+void APlayerCharacter::Landed(const FHitResult& Hit)
+{
+	UAISense_Hearing::ReportNoiseEvent(
+		GetWorld(),
+		GetActorLocation(),
+		1.0f,
+		this,
+		0.0f,
+		TEXT("Landed")
+	);
 }
 
 void APlayerCharacter::HandleDeath()

@@ -2,6 +2,8 @@
 #include "EnemyCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISense_Sight.h"
+#include "Perception/AISense_Hearing.h"
 #include "EchoPrototype/Character/PlayerCharacter.h"
 #include "EchoPrototype/Combat/HealthComponent.h"
 #include "EchoPrototype/Echo/EchoActor.h"
@@ -31,47 +33,10 @@ void AEnemyAIController::BeginPlay()
 
 void AEnemyAIController::HandlePerception(AActor* Actor, FAIStimulus Stimulus)
 {
-	auto const TargetPlayerKeyName = TEXT("TargetPlayer");
-
-	auto* pPlayer = Cast<APlayerCharacter>(Actor);
-	if (pPlayer)
-	{
-		auto* pBlackboardComponent = GetBlackboardComponent();
-		if (!pBlackboardComponent) return;
-
-		if (Stimulus.WasSuccessfullySensed())
-		{
-			pBlackboardComponent->SetValueAsObject(TargetPlayerKeyName, pPlayer);
-		}
-		else
-		{
-			pBlackboardComponent->ClearValue(TargetPlayerKeyName);
-			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
-		}
-
-		return;
-	}
-
-	auto* pEcho = Cast<AEchoActor>(Actor);
-	if (pEcho)
-	{
-		if (pEcho->GetVisualState() == EEchoVisualState::Placed)
-		{
-			auto* pBlackboardComponent = GetBlackboardComponent();
-			if (!pBlackboardComponent) return;
-
-			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
-		}
-		else
-		{
-			if (_targetEcho)
-				_targetEcho->OnPlaced.RemoveDynamic(this, &AEnemyAIController::UpdateTargetEcho);
-
-			_targetEcho = pEcho;
-			_targetEcho->OnPlaced.AddDynamic(this, &AEnemyAIController::UpdateTargetEcho);
-		}
-
-	}
+	if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
+		HandleSightPerception(Actor, Stimulus);
+	else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
+		HandleSoundPerception(Actor, Stimulus);
 }
 
 void AEnemyAIController::SetTargetActor(AActor* Aggressor)
@@ -119,4 +84,57 @@ void AEnemyAIController::UpdateTargetEcho()
 	if (!pBlackboardComponent) return;
 
 	pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), _targetEcho->GetActorLocation());
+}
+
+void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimulus)
+{
+	auto const TargetPlayerKeyName = TEXT("TargetPlayer");
+
+	auto* pPlayer = Cast<APlayerCharacter>(Actor);
+	if (pPlayer)
+	{
+		auto* pBlackboardComponent = GetBlackboardComponent();
+		if (!pBlackboardComponent) return;
+
+		if (Stimulus.WasSuccessfullySensed())
+		{
+			pBlackboardComponent->SetValueAsObject(TargetPlayerKeyName, pPlayer);
+		}
+		else
+		{
+			pBlackboardComponent->ClearValue(TargetPlayerKeyName);
+			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
+		}
+
+		return;
+	}
+
+	auto* pEcho = Cast<AEchoActor>(Actor);
+	if (pEcho)
+	{
+		if (pEcho->GetVisualState() == EEchoVisualState::Placed)
+		{
+			auto* pBlackboardComponent = GetBlackboardComponent();
+			if (!pBlackboardComponent) return;
+
+			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
+		}
+		else
+		{
+			if (_targetEcho)
+				_targetEcho->OnPlaced.RemoveDynamic(this, &AEnemyAIController::UpdateTargetEcho);
+
+			_targetEcho = pEcho;
+			_targetEcho->OnPlaced.AddDynamic(this, &AEnemyAIController::UpdateTargetEcho);
+		}
+
+	}
+}
+
+void AEnemyAIController::HandleSoundPerception(AActor* Actor, FAIStimulus Stimulus)
+{
+	auto* pBlackboardComponent = GetBlackboardComponent();
+	if (!pBlackboardComponent) return;
+	
+	pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), Stimulus.StimulusLocation);
 }
