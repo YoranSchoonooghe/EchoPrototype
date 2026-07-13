@@ -18,6 +18,7 @@ public:
 	virtual UPlayerStateBase* OnSneakPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnStealthKillPressed(APlayerCharacter* Character) override;
 };
 
 // SPRINT STATE
@@ -49,6 +50,7 @@ public:
 	virtual void ExitState(class APlayerCharacter* Character) override;
 
 	virtual UPlayerStateBase* OnSneakReleased(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnStealthKillPressed(APlayerCharacter* Character) override;
 
 private:
 	float SneakSpeed = 250.0f;
@@ -73,5 +75,17 @@ class ECHOPROTOTYPE_API UPlayerState_Dead : public UPlayerStateBase
 	GENERATED_BODY()
 
 public:
+	virtual bool CanMove() const override { return false; }
+};
+
+// STEALTH KILL STATE
+UCLASS()
+class ECHOPROTOTYPE_API UPlayerState_StealthKilling : public UPlayerStateBase
+{
+	GENERATED_BODY()
+
+public:
+	virtual UPlayerStateBase* UpdateState(APlayerCharacter* Character, float DeltaTime) override;
+
 	virtual bool CanMove() const override { return false; }
 };

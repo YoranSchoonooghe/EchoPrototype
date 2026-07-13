@@ -10,6 +10,7 @@ class UCameraComponent;
 class UEchoComponent;
 class UCombatComponent;
 class UHealthComponent;
+class UStealthKillComponent;
 class UPlayerStateBase;
 class UAIPerceptionStimuliSourceComponent;
 
@@ -58,6 +59,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	bool IsAttacking() const;
 
+	//Stealth Kill
+	void StealthKillPressed();
+
+	FORCEINLINE UStealthKillComponent* GetStealthKillComponent() const { return StealthKill; }
+
 	//States
 	void ChangeState(class UPlayerStateBase* NewState);
 
@@ -81,6 +87,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UHealthComponent> Health;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStealthKillComponent> StealthKill;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInteractionComponent> Interaction;

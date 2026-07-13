@@ -1,6 +1,7 @@
 #include "PlayerStates.h"
 #include "../PlayerCharacter.h"
 #include "../../Combat/CombatComponent.h"
+#include "../../Combat/StealthKillComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // IDLE / WALK STATE
@@ -44,6 +45,18 @@ UPlayerStateBase* UPlayerState_IdleWalk::OnAttackReleased(APlayerCharacter* Char
 		{
 			return NewObject<UPlayerState_Attacking>(Character);
 		}
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_IdleWalk::OnStealthKillPressed(APlayerCharacter* Character)
+{
+	UStealthKillComponent* StealthKill = Character->GetStealthKillComponent();
+	if (StealthKill && StealthKill->GetStealthKillTarget())
+	{
+		StealthKill->TryStealthKill();
+		return NewObject<UPlayerState_StealthKilling>(Character);
 	}
 
 	return nullptr;
@@ -112,6 +125,18 @@ UPlayerStateBase* UPlayerState_Sneak::OnSneakReleased(APlayerCharacter* Characte
 	return NewObject<UPlayerState_IdleWalk>(Character);
 }
 
+UPlayerStateBase* UPlayerState_Sneak::OnStealthKillPressed(APlayerCharacter* Character)
+{
+	UStealthKillComponent* StealthKill = Character->GetStealthKillComponent();
+	if (StealthKill && StealthKill->GetStealthKillTarget())
+	{
+		StealthKill->TryStealthKill();
+		return NewObject<UPlayerState_StealthKilling>(Character);
+	}
+
+	return nullptr;
+}
+
 // ATTACKING STATE
 UPlayerStateBase* UPlayerState_Attacking::UpdateState(APlayerCharacter* Character, float DeltaTime)
 {
@@ -139,6 +164,18 @@ UPlayerStateBase* UPlayerState_Attacking::OnAttackReleased(APlayerCharacter* Cha
 	if (UCombatComponent* Combat = Character->GetCombatComponent())
 	{
 		Combat->OnAttackReleased();
+	}
+
+	return nullptr;
+}
+
+// STEALTH KILL STATE
+UPlayerStateBase* UPlayerState_StealthKilling::UpdateState(APlayerCharacter* Character, float DeltaTime)
+{
+	UStealthKillComponent* StealthKill = Character->GetStealthKillComponent();
+	if (!StealthKill || !StealthKill->IsPerformingKill())
+	{
+		return NewObject<UPlayerState_IdleWalk>(Character);
 	}
 
 	return nullptr;

@@ -35,6 +35,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> AlertWidgetComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> StealthKillPromptWidgetComp;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Alert")
 	EAlertState AlertState{ EAlertState::Neutral };
 
@@ -47,6 +50,12 @@ public:
 	void ChangeAlertState(EAlertState state);
 
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
+
+	UFUNCTION(BlueprintPure, Category = "Alert")
+	FORCEINLINE EAlertState GetAlertState() const { return AlertState; }
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void ShowStealthKillPrompt(bool bShow);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
 	TArray<APatrolPoint*> PatrolPoints;

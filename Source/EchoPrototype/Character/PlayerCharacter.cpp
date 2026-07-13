@@ -5,6 +5,7 @@
 #include "EchoComponent.h"
 #include "../Combat/CombatComponent.h"
 #include "../Combat/HealthComponent.h"
+#include "../Combat/StealthKillComponent.h"
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -35,6 +36,7 @@ APlayerCharacter::APlayerCharacter()
 	Echo = CreateDefaultSubobject<UEchoComponent>(TEXT("EchoComponent"));
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
+	StealthKill = CreateDefaultSubobject<UStealthKillComponent>(TEXT("StealthKillComponent"));
 	Interaction = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AIPerceptionStimuliSourceComponent"));
@@ -192,6 +194,11 @@ void APlayerCharacter::AttackPressed()
 void APlayerCharacter::AttackReleased()
 {
 	if (CurrentState) ChangeState(CurrentState->OnAttackReleased(this));
+}
+
+void APlayerCharacter::StealthKillPressed()
+{
+	if (CurrentState) ChangeState(CurrentState->OnStealthKillPressed(this));
 }
 
 bool APlayerCharacter::IsAttacking() const

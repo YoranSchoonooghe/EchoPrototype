@@ -25,5 +25,7 @@ public:
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) { return nullptr; }
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) { return nullptr; }
 
+	virtual UPlayerStateBase* OnStealthKillPressed(APlayerCharacter* Character) { return nullptr; }
+
 	virtual bool CanMove() const { return true; }
 };

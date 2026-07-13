@@ -28,8 +28,6 @@ void UCombatComponent::OnAttackHoldStarted()
 	bChargeReady = false;
 	GetWorld()->GetTimerManager().SetTimer(ChargeTimerHandle, this, &UCombatComponent::OnChargeThresholdReached, ChargeThreshold, false);
 
-	// Only show the wind-up pose when starting fresh from neutral. If a combo hit is already
-	// playing, spamming the attack button should queue/advance the combo, not interrupt the swing.
 	if (CurrentComboIndex == INDEX_NONE)
 	{
 		PlayChargeStartAnimation();
@@ -64,7 +62,6 @@ void UCombatComponent::PlayChargeStartAnimation()
 
 void UCombatComponent::OnChargeThresholdReached()
 {
-	// The charge fires the instant it's ready - it doesn't wait for release.
 	bChargeReady = true;
 	PlayChargedAttack();
 }
@@ -73,7 +70,6 @@ void UCombatComponent::OnAttackReleased()
 {
 	GetWorld()->GetTimerManager().ClearTimer(ChargeTimerHandle);
 
-	// If the charge already auto-fired, releasing the button does nothing further.
 	if (bChargeReady)
 	{
 		return;

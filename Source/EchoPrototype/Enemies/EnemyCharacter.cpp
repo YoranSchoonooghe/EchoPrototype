@@ -12,6 +12,10 @@ AEnemyCharacter::AEnemyCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	AlertWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
 	AlertWidgetComp->SetupAttachment(GetMesh());
+
+	StealthKillPromptWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("StealthKillPromptWidgetComponent"));
+	StealthKillPromptWidgetComp->SetupAttachment(GetMesh());
+	StealthKillPromptWidgetComp->SetVisibility(false);
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -39,6 +43,14 @@ void AEnemyCharacter::ChangeAlertState(EAlertState state)
 	if (UAlertWidget* Widget = Cast<UAlertWidget>(AlertWidgetComp->GetUserWidgetObject()))
 	{
 		Widget->UpdateAlertIcon(state);
+	}
+}
+
+void AEnemyCharacter::ShowStealthKillPrompt(bool bShow)
+{
+	if (StealthKillPromptWidgetComp)
+	{
+		StealthKillPromptWidgetComp->SetVisibility(bShow);
 	}
 }
 

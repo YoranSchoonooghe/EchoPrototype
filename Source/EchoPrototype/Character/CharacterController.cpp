@@ -80,6 +80,9 @@ void ACharacterController::SetupInputComponent()
 				EIC->BindAction(AttackAction, ETriggerEvent::Completed, this, &ACharacterController::AttackReleased);
 			}
 
+			if (StealthKillAction)
+				EIC->BindAction(StealthKillAction, ETriggerEvent::Started, this, &ACharacterController::StealthKill);
+
 			//Interact
 			if (InteractAction)
 				EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &ACharacterController::Interact);
@@ -220,6 +223,13 @@ void ACharacterController::AttackReleased()
 	if (!CachedPlayerCharacter) return;
 
 	CachedPlayerCharacter->AttackReleased();
+}
+
+void ACharacterController::StealthKill()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->StealthKillPressed();
 }
 
 void ACharacterController::Interact()

@@ -35,28 +35,28 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
 
-	const FString DamageMsg = FString::Printf(TEXT("%s took %.1f damage from %s, health: %.1f / %.1f"),
-		*GetNameSafe(DamagedActor), Damage, *GetNameSafe(DamageCauser), CurrentHealth, MaxHealth);
+	//const FString DamageMsg = FString::Printf(TEXT("%s took %.1f damage from %s, health: %.1f / %.1f"),
+	//	*GetNameSafe(DamagedActor), Damage, *GetNameSafe(DamageCauser), CurrentHealth, MaxHealth);
 
-	UE_LOG(LogTemp, Log, TEXT("%s"), *DamageMsg);
+	//UE_LOG(LogTemp, Log, TEXT("%s"), *DamageMsg);
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 3.0f, FColor::Yellow, DamageMsg);
-	}
+	//if (GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 3.0f, FColor::Yellow, DamageMsg);
+	//}
 
 	if (CurrentHealth <= 0.0f)
 	{
 		bIsDead = true;
 
-		const FString DeathMsg = FString::Printf(TEXT("%s died"), *GetNameSafe(DamagedActor));
+		//const FString DeathMsg = FString::Printf(TEXT("%s died"), *GetNameSafe(DamagedActor));
 
-		UE_LOG(LogTemp, Log, TEXT("%s"), *DeathMsg);
+		//UE_LOG(LogTemp, Log, TEXT("%s"), *DeathMsg);
 
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.0f, FColor::Red, DeathMsg);
-		}
+		//if (GEngine)
+		//{
+		//	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.0f, FColor::Red, DeathMsg);
+		//}
 
 		Die(DamageCauser);
 	}
@@ -64,6 +64,28 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 	{
 		OnDamage.Broadcast(DamageCauser);
 	}
+}
+
+void UHealthComponent::Kill(AActor* Instigator)
+{
+	if (bIsDead)
+	{
+		return;
+	}
+
+	CurrentHealth = 0.0f;
+	bIsDead = true;
+
+	//const FString KillMsg = FString::Printf(TEXT("%s was silently killed by %s"), *GetNameSafe(GetOwner()), *GetNameSafe(Instigator));
+
+	//UE_LOG(LogTemp, Log, TEXT("%s"), *KillMsg);
+
+	//if (GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 5.0f, FColor::Red, KillMsg);
+	//}
+
+	Die(Instigator);
 }
 
 EHitDirection UHealthComponent::ComputeHitDirection(AActor* DamageCauser) const

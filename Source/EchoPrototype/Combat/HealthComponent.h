@@ -39,6 +39,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Health")
 	FORCEINLINE bool IsDead() const { return bIsDead; }
 
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void Kill(AActor* Instigator);
+
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnDeathSignature OnDeath;
 	UPROPERTY(BlueprintAssignable, Category = "Health")

@@ -59,6 +59,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
 	TObjectPtr<UInputAction> AttackAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> StealthKillAction;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Interaction")
 	TObjectPtr<UInputAction> InteractAction;
 
@@ -96,6 +99,7 @@ private:
 	//Combat
 	void Attack();
 	void AttackReleased();
+	void StealthKill();
 
 	//Interact
 	void Interact();
