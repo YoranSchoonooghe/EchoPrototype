@@ -112,6 +112,8 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 	auto* pEcho = Cast<AEchoActor>(Actor);
 	if (pEcho)
 	{
+		if (_spottedEchoes.Contains(pEcho)) return;
+
 		if (pEcho->GetVisualState() == EEchoVisualState::Placed)
 		{
 			auto* pBlackboardComponent = GetBlackboardComponent();
@@ -128,6 +130,8 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 			_targetEcho->OnPlaced.AddDynamic(this, &AEnemyAIController::UpdateTargetEcho);
 		}
 
+		_spottedEchoes.Add(pEcho);
+		return;
 	}
 }
 

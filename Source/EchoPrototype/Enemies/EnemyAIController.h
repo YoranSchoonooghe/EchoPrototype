@@ -39,4 +39,5 @@ private:
 	void HandleSoundPerception(AActor* Actor, FAIStimulus Stimulus);
 
 	AEchoActor* _targetEcho;
+	TArray<AActor*> _spottedEchoes;
 };
