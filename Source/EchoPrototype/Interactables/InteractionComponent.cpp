@@ -35,39 +35,47 @@ APawn* UInteractionComponent::GetOwnerPawn() const
 
 void UInteractionComponent::UpdateFocus()
 {
+	AActor* PreviousFocusedActor = CurrentFocusedActor.Get();
+
 	APawn* OwnerPawn = GetOwnerPawn();
 	APlayerController* PC = OwnerPawn ? Cast<APlayerController>(OwnerPawn->GetController()) : nullptr;
 	if (!PC)
 	{
 		CurrentFocusedActor = nullptr;
-		return;
-	}
-
-	FVector CamLoc;
-	FRotator CamRot;
-	PC->GetPlayerViewPoint(CamLoc, CamRot);
-
-	const FVector TraceEnd = CamLoc + (CamRot.Vector() * InteractionDistance);
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(GetOwner());
-
-	FHitResult Hit;
-	const bool bHit = GetWorld()->SweepSingleByChannel(
-		Hit, CamLoc, TraceEnd, FQuat::Identity, ECC_Visibility,
-		FCollisionShape::MakeSphere(InteractionRadius), QueryParams
-	);
-
-	AActor* HitActor = (bHit && Hit.GetActor()) ? Hit.GetActor() : nullptr;
-
-
-	if (HitActor && HitActor->Implements<UInteractableInterface>())
-	{
-		CurrentFocusedActor = HitActor;
 	}
 	else
 	{
-		CurrentFocusedActor = nullptr;
+		FVector CamLoc;
+		FRotator CamRot;
+		PC->GetPlayerViewPoint(CamLoc, CamRot);
+
+		const FVector TraceEnd = CamLoc + (CamRot.Vector() * InteractionDistance);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(GetOwner());
+
+		FHitResult Hit;
+		const bool bHit = GetWorld()->SweepSingleByChannel(
+			Hit, CamLoc, TraceEnd, FQuat::Identity, ECC_Visibility,
+			FCollisionShape::MakeSphere(InteractionRadius), QueryParams
+		);
+
+		AActor* HitActor = (bHit && Hit.GetActor()) ? Hit.GetActor() : nullptr;
+
+		CurrentFocusedActor = (HitActor && HitActor->Implements<UInteractableInterface>()) ? HitActor : nullptr;
+	}
+
+	AActor* NewFocusedActor = CurrentFocusedActor.Get();
+
+	if (NewFocusedActor != PreviousFocusedActor)
+	{
+		FText Prompt = FText::GetEmpty();
+		if (NewFocusedActor && NewFocusedActor->Implements<UInteractableInterface>())
+		{
+			Prompt = IInteractableInterface::Execute_GetInteractionPrompt(NewFocusedActor);
+		}
+
+		OnFocusedActorChanged.Broadcast(NewFocusedActor, Prompt);
 	}
 }
 

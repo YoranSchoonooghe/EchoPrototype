@@ -4,6 +4,11 @@
 #include "PlayerCharacterCameraManager.h"
 #include "PlayerCharacter.h"
 
+#include "../HUD/InteractionPromptWidget.h"
+#include "../Interactables/InteractionComponent.h"
+#include "Blueprint/UserWidget.h"
+
+
 
 ACharacterController::ACharacterController()
 {
@@ -87,6 +92,28 @@ void ACharacterController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	CachedPlayerCharacter = Cast<APlayerCharacter>(InPawn);
+
+	if (!InPawn || !InteractionPromptWidgetClass)
+	{
+		return;
+	}
+
+	if (!InteractionPromptWidgetInstance)
+	{
+		InteractionPromptWidgetInstance = CreateWidget<UInteractionPromptWidget>(this, InteractionPromptWidgetClass);
+		if (InteractionPromptWidgetInstance)
+		{
+			InteractionPromptWidgetInstance->AddToViewport();
+		}
+	}
+
+	if (UInteractionComponent* Interaction = InPawn->FindComponentByClass<UInteractionComponent>())
+	{
+		if (InteractionPromptWidgetInstance)
+		{
+			InteractionPromptWidgetInstance->InitializeForInteractionComponent(Interaction);
+		}
+	}
 }
 
 void ACharacterController::OnUnPossess()

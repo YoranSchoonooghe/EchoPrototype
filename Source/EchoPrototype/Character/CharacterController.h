@@ -12,6 +12,9 @@ class UInputMappingContext;
 class UInputAction;
 class APlayerCharacter;
 
+class UInteractionComponent;
+class UInteractionPromptWidget;
+
 UCLASS()
 class ECHOPROTOTYPE_API ACharacterController : public APlayerController
 {
@@ -60,6 +63,9 @@ protected:
 	TObjectPtr<UInputAction> InteractAction;
 
 
+	UPROPERTY(EditDefaultsOnly, Category = "Interaction UI")
+	TSubclassOf<UInteractionPromptWidget> InteractionPromptWidgetClass;
+
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
@@ -96,4 +102,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<APlayerCharacter> CachedPlayerCharacter;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UInteractionPromptWidget> InteractionPromptWidgetInstance;
 };

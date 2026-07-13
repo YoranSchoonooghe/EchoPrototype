@@ -24,6 +24,8 @@ public:
 
 protected:
 
+	virtual void BeginPlay() override;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lever", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> LeverMesh;
 
@@ -33,7 +35,7 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, Category = "Lever")
-	float PulledPitchAngle = -45.0f;
+	float PulledPitchAngle = -90.0f;
 
 private:
 	bool bIsPulled = false;

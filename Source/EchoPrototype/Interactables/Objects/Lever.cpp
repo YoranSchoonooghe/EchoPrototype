@@ -7,8 +7,23 @@
 
 ALever::ALever()
 {
+	USceneComponent* NewRoot = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+	RootComponent = NewRoot;
+
 	LeverMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeverMesh"));
-	SetRootComponent(LeverMesh);
+	LeverMesh->SetupAttachment(RootComponent);
+
+	bIsPulled = false;
+}
+
+void ALever::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (LeverMesh)
+	{
+		RestRotation = LeverMesh->GetRelativeRotation();
+	}
 }
 
 void ALever::Interact_Implementation(AActor* Interactor)
@@ -16,11 +31,9 @@ void ALever::Interact_Implementation(AActor* Interactor)
 	bIsPulled = !bIsPulled;
 
 
-	if (RestRotation.IsZero() && !LeverMesh->GetRelativeRotation().IsZero())
-	{
-		RestRotation = LeverMesh->GetRelativeRotation();
-	}
 	const FRotator NewRotation = RestRotation + FRotator(bIsPulled ? PulledPitchAngle : 0.0f, 0.0f, 0.0f);
+
+
 	LeverMesh->SetRelativeRotation(NewRotation);
 
 	if (LinkedDoor)
@@ -31,5 +44,5 @@ void ALever::Interact_Implementation(AActor* Interactor)
 
 FText ALever::GetInteractionPrompt_Implementation() const
 {
-	return bIsPulled ? FText::FromString(TEXT("Push Lever")) : FText::FromString(TEXT("Pull Lever"));
+	return bIsPulled ? FText::FromString(TEXT("Press 'F' to Pull Lever")) : FText::FromString(TEXT("Press 'F' to Pull Lever"));
 }

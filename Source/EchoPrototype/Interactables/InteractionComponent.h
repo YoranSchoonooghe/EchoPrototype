@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "InteractionComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnFocusedActorChanged, AActor*, NewFocusedActor, FText, InteractionPrompt);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ECHOPROTOTYPE_API UInteractionComponent : public UActorComponent
@@ -25,6 +27,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Interaction")
 	AActor* GetCurrentFocusedActor() const { return CurrentFocusedActor.Get(); }
+
+
+	UPROPERTY(BlueprintAssignable, Category = "Interaction")
+	FOnFocusedActorChanged OnFocusedActorChanged;
 
 protected:
 	// Called when the game starts
