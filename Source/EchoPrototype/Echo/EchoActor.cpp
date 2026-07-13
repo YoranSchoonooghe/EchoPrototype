@@ -5,6 +5,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h" 
 
 // Sets default values
 AEchoActor::AEchoActor()
@@ -34,6 +36,10 @@ AEchoActor::AEchoActor()
 	EchoCamera->SetFieldOfView(90.0f);
 
 	EchoCamera->SetActive(false);
+
+	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AIPerceptionStimuliSourceComponent"));
+	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());
+	StimuliSource->RegisterWithPerceptionSystem();
 }
 
 // Called when the game starts or when spawned
@@ -108,6 +114,8 @@ void AEchoActor::SetVisualState(EEchoVisualState NewState)
 		EchoCamera->SetActive(true);
 
 		PlacedOriginLocation = GetActorLocation();
+
+		OnPlaced.Broadcast();
 		break;
 	}
 }

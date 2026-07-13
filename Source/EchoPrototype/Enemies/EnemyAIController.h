@@ -5,6 +5,8 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "EnemyAIController.generated.h"
 
+class AEchoActor;
+
 UCLASS()
 class ECHOPROTOTYPE_API AEnemyAIController : public AAIController
 {
@@ -29,4 +31,9 @@ protected:
 
 private:
 	void InitBBKeys();
+
+	UFUNCTION()
+	void UpdateTargetEcho();
+
+	AEchoActor* _targetEcho;
 };

@@ -13,6 +13,7 @@ class USkeletalMeshComponent;
 class USkeletalMesh;
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
+class UAIPerceptionStimuliSourceComponent;
 
 UENUM(BlueprintType)
 enum class EEchoVisualState : uint8
@@ -20,6 +21,8 @@ enum class EEchoVisualState : uint8
 	Preview,	//Following player's aim
 	Placed
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlacedSignature);
 
 UCLASS()
 class ECHOPROTOTYPE_API AEchoActor : public AActor
@@ -52,6 +55,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void InitializeCameraFacing(const FRotator& WorldRotation);
+
+	UPROPERTY(BlueprintAssignable, Category = "Echo|VisualState")
+	FOnPlacedSignature OnPlaced;
 
 protected:
 	// Called when the game starts or when spawned
@@ -104,6 +110,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Movement")
 	float MaxDriftDistance = 150.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo|Perception")
+	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
 
 private:
 	EEchoVisualState VisualState = EEchoVisualState::Preview;

@@ -4,6 +4,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "EchoPrototype/Character/PlayerCharacter.h"
 #include "EchoPrototype/Combat/HealthComponent.h"
+#include "EchoPrototype/Echo/EchoActor.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -47,6 +48,29 @@ void AEnemyAIController::HandlePerception(AActor* Actor, FAIStimulus Stimulus)
 			pBlackboardComponent->ClearValue(TargetPlayerKeyName);
 			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
 		}
+
+		return;
+	}
+
+	auto* pEcho = Cast<AEchoActor>(Actor);
+	if (pEcho)
+	{
+		if (pEcho->GetVisualState() == EEchoVisualState::Placed)
+		{
+			auto* pBlackboardComponent = GetBlackboardComponent();
+			if (!pBlackboardComponent) return;
+
+			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
+		}
+		else
+		{
+			if (_targetEcho)
+				_targetEcho->OnPlaced.RemoveDynamic(this, &AEnemyAIController::UpdateTargetEcho);
+
+			_targetEcho = pEcho;
+			_targetEcho->OnPlaced.AddDynamic(this, &AEnemyAIController::UpdateTargetEcho);
+		}
+
 	}
 }
 
@@ -87,4 +111,12 @@ void AEnemyAIController::InitBBKeys()
 
 	pBlackboardComponent->SetValueAsObject(TEXT("PatrolPointIndex"), 0);
 	pBlackboardComponent->SetValueAsObject(TEXT("PatrolPoint"), patrolPoints[0]);
+}
+
+void AEnemyAIController::UpdateTargetEcho()
+{
+	auto* pBlackboardComponent = GetBlackboardComponent();
+	if (!pBlackboardComponent) return;
+
+	pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), _targetEcho->GetActorLocation());
 }
