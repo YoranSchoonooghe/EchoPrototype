@@ -44,5 +44,5 @@ void ALever::Interact_Implementation(AActor* Interactor)
 
 FText ALever::GetInteractionPrompt_Implementation() const
 {
-	return bIsPulled ? FText::FromString(TEXT("Press 'F' to Pull Lever")) : FText::FromString(TEXT("Press 'F' to Pull Lever"));
+	return bIsPulled ? FText::FromString(TEXT("Press 'E' to Pull Lever")) : FText::FromString(TEXT("Press 'E' to Pull Lever"));
 }

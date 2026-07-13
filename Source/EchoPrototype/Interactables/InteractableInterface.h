@@ -27,4 +27,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Interaction")
 	FText GetInteractionPrompt() const;
+
+	UFUNCTION(BlueprintNativeEvent, Category = "Interaction")
+	bool RequiresEchoVision();
 };

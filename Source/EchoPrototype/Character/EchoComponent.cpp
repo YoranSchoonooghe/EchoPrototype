@@ -17,6 +17,23 @@ UEchoComponent::UEchoComponent()
 }
 
 
+void UEchoComponent::GetEchoViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	{
+		if (ActiveEcho)
+		{
+			if (UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera())
+			{
+				OutLocation = EchoCam->GetComponentLocation();
+				OutRotation = EchoCam->GetComponentRotation();
+				return;
+			}
+		}
+		OutLocation = FVector::ZeroVector;
+		OutRotation = FRotator::ZeroRotator;
+	}
+}
+
 // Called when the game starts
 void UEchoComponent::BeginPlay()
 {

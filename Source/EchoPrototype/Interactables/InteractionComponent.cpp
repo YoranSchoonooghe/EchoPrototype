@@ -5,6 +5,7 @@
 #include "InteractableInterface.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "../Character/EchoComponent.h"
 
 // Sets default values for this component's properties
 UInteractionComponent::UInteractionComponent()
@@ -47,7 +48,21 @@ void UInteractionComponent::UpdateFocus()
 	{
 		FVector CamLoc;
 		FRotator CamRot;
-		PC->GetPlayerViewPoint(CamLoc, CamRot);
+		bool bIsViewingThroughEcho = false;
+
+		if (UEchoComponent* EchoComp = GetOwner()->FindComponentByClass<UEchoComponent>())
+		{
+			bIsViewingThroughEcho = EchoComp->IsViewingThroughEcho();
+			if (bIsViewingThroughEcho)
+			{
+				EchoComp->GetEchoViewPoint(CamLoc, CamRot);
+			}
+		}
+
+		if (!bIsViewingThroughEcho)
+		{
+			PC->GetPlayerViewPoint(CamLoc, CamRot);
+		}
 
 		const FVector TraceEnd = CamLoc + (CamRot.Vector() * InteractionDistance);
 
@@ -62,7 +77,23 @@ void UInteractionComponent::UpdateFocus()
 
 		AActor* HitActor = (bHit && Hit.GetActor()) ? Hit.GetActor() : nullptr;
 
-		CurrentFocusedActor = (HitActor && HitActor->Implements<UInteractableInterface>()) ? HitActor : nullptr;
+		if (HitActor && HitActor->Implements<UInteractableInterface>())
+		{
+			const bool bRequiresEcho = IInteractableInterface::Execute_RequiresEchoVision(HitActor);
+
+			if (bRequiresEcho && !bIsViewingThroughEcho)
+			{
+				CurrentFocusedActor = nullptr;
+			}
+			else
+			{
+				CurrentFocusedActor = HitActor;
+			}
+		}
+		else
+		{
+			CurrentFocusedActor = nullptr;
+		}
 	}
 
 	AActor* NewFocusedActor = CurrentFocusedActor.Get();

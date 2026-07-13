@@ -16,8 +16,11 @@ void UEchoVisibilityComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AActor* Owner = GetOwner();
+	if (!Owner) return;
+
 	TArray<UPrimitiveComponent*> PrimeComps;
-	GetOwner()->GetComponents<UPrimitiveComponent>(PrimeComps);
+	Owner->GetComponents<UPrimitiveComponent>(PrimeComps);
 
 	for (UPrimitiveComponent* Comp : PrimeComps)
 	{
@@ -25,12 +28,10 @@ void UEchoVisibilityComponent::BeginPlay()
 		{
 			Comp->SetCustomDepthStencilValue(EchoStencilValue);
 			Comp->SetRenderCustomDepth(true);
-
-
 			Comp->SetVisibleInSceneCaptureOnly(false);
-
-
 			Comp->SetCastHiddenShadow(false);
+
+			Comp->MarkRenderStateDirty();
 		}
 	}
 }

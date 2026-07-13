@@ -28,9 +28,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Interaction")
 	AActor* GetCurrentFocusedActor() const { return CurrentFocusedActor.Get(); }
 
-
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnFocusedActorChanged OnFocusedActorChanged;
+
 
 protected:
 	// Called when the game starts
@@ -49,4 +49,6 @@ private:
 
 	APawn* GetOwnerPawn() const;
 
+	FVector EchoViewLocation;
+	FRotator EchoViewRotation;
 };

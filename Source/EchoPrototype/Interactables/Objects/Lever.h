@@ -22,6 +22,8 @@ public:
 	virtual void Interact_Implementation(AActor* Interactor) override;
 	virtual FText GetInteractionPrompt_Implementation() const override;
 
+	virtual bool RequiresEchoVision_Implementation() override { return bRequiresEchoVision; }
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -36,6 +38,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Lever")
 	float PulledPitchAngle = -90.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	bool bRequiresEchoVision = true;
 
 private:
 	bool bIsPulled = false;

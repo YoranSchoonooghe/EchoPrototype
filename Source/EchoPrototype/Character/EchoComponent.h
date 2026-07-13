@@ -71,6 +71,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Echo")
 	FORCEINLINE bool IsViewingThroughEcho() const { return bIsViewingThroughEcho; }
 
+	void GetEchoViewPoint(FVector& OutLocation, FRotator& OutRotation) const;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
