@@ -70,7 +70,10 @@ void ACharacterController::SetupInputComponent()
 
 			//Combat
 			if (AttackAction)
+			{
 				EIC->BindAction(AttackAction, ETriggerEvent::Started, this, &ACharacterController::Attack);
+				EIC->BindAction(AttackAction, ETriggerEvent::Completed, this, &ACharacterController::AttackReleased);
+			}
 
 			//Interact
 			if (InteractAction)
@@ -183,6 +186,13 @@ void ACharacterController::Attack()
 	if (!CachedPlayerCharacter) return;
 
 	CachedPlayerCharacter->AttackPressed();
+}
+
+void ACharacterController::AttackReleased()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->AttackReleased();
 }
 
 void ACharacterController::Interact()

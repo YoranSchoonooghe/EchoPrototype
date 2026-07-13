@@ -15,7 +15,7 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
 
     if (UCombatComponent* pCombatComponent = pCharacter->GetCombatComponent())
     {
-        pCombatComponent->TryAttack();
+        pCombatComponent->OnAttackReleased();
         return EBTNodeResult::Succeeded;
     }
 

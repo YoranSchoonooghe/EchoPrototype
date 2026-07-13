@@ -21,7 +21,32 @@ UPlayerStateBase* UPlayerState_IdleWalk::OnSneakPressed(APlayerCharacter* Charac
 
 UPlayerStateBase* UPlayerState_IdleWalk::OnAttackPressed(APlayerCharacter* Character)
 {
-	return NewObject<UPlayerState_Attacking>(Character);
+	if (UCombatComponent* Combat = Character->GetCombatComponent())
+	{
+		Combat->OnAttackHoldStarted();
+
+		if (Combat->IsAttacking())
+		{
+			return NewObject<UPlayerState_Attacking>(Character);
+		}
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_IdleWalk::OnAttackReleased(APlayerCharacter* Character)
+{
+	if (UCombatComponent* Combat = Character->GetCombatComponent())
+	{
+		Combat->OnAttackReleased();
+
+		if (Combat->IsAttacking())
+		{
+			return NewObject<UPlayerState_Attacking>(Character);
+		}
+	}
+
+	return nullptr;
 }
 
 // SPRINT STATE
@@ -42,7 +67,32 @@ UPlayerStateBase* UPlayerState_Sprint::OnSneakPressed(APlayerCharacter* Characte
 
 UPlayerStateBase* UPlayerState_Sprint::OnAttackPressed(APlayerCharacter* Character)
 {
-	return NewObject<UPlayerState_Attacking>(Character);
+	if (UCombatComponent* Combat = Character->GetCombatComponent())
+	{
+		Combat->OnAttackHoldStarted();
+
+		if (Combat->IsAttacking())
+		{
+			return NewObject<UPlayerState_Attacking>(Character);
+		}
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Sprint::OnAttackReleased(APlayerCharacter* Character)
+{
+	if (UCombatComponent* Combat = Character->GetCombatComponent())
+	{
+		Combat->OnAttackReleased();
+
+		if (Combat->IsAttacking())
+		{
+			return NewObject<UPlayerState_Attacking>(Character);
+		}
+	}
+
+	return nullptr;
 }
 
 // SNEAK STATE
@@ -63,14 +113,6 @@ UPlayerStateBase* UPlayerState_Sneak::OnSneakReleased(APlayerCharacter* Characte
 }
 
 // ATTACKING STATE
-void UPlayerState_Attacking::EnterState(APlayerCharacter* Character)
-{
-	if (UCombatComponent* Combat = Character->GetCombatComponent())
-	{
-		Combat->TryAttack();
-	}
-}
-
 UPlayerStateBase* UPlayerState_Attacking::UpdateState(APlayerCharacter* Character, float DeltaTime)
 {
 	UCombatComponent* Combat = Character->GetCombatComponent();
@@ -86,7 +128,17 @@ UPlayerStateBase* UPlayerState_Attacking::OnAttackPressed(APlayerCharacter* Char
 {
 	if (UCombatComponent* Combat = Character->GetCombatComponent())
 	{
-		Combat->TryAttack();
+		Combat->OnAttackHoldStarted();
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Attacking::OnAttackReleased(APlayerCharacter* Character)
+{
+	if (UCombatComponent* Combat = Character->GetCombatComponent())
+	{
+		Combat->OnAttackReleased();
 	}
 
 	return nullptr;

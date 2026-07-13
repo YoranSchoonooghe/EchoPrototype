@@ -89,6 +89,7 @@ private:
 
 	//Combat
 	void Attack();
+	void AttackReleased();
 
 	//Interact
 	void Interact();

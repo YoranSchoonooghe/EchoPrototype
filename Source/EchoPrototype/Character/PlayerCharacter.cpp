@@ -189,6 +189,11 @@ void APlayerCharacter::AttackPressed()
 	if (CurrentState) ChangeState(CurrentState->OnAttackPressed(this));
 }
 
+void APlayerCharacter::AttackReleased()
+{
+	if (CurrentState) ChangeState(CurrentState->OnAttackReleased(this));
+}
+
 bool APlayerCharacter::IsAttacking() const
 {
 	return Combat && Combat->IsAttacking();

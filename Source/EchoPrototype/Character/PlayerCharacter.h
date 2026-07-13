@@ -51,6 +51,7 @@ public:
 
 	//Combat
 	void AttackPressed();
+	void AttackReleased();
 
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
 

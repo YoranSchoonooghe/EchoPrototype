@@ -17,6 +17,7 @@ public:
 	virtual UPlayerStateBase* OnSprintPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnSneakPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
 };
 
 // SPRINT STATE
@@ -31,6 +32,7 @@ public:
 	virtual UPlayerStateBase* OnSprintReleased(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnSneakPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
 
 private:
 	 float SprintSpeed = 800.0f;
@@ -59,11 +61,10 @@ class ECHOPROTOTYPE_API UPlayerState_Attacking : public UPlayerStateBase
 	GENERATED_BODY()
 
 public:
-	virtual void EnterState(class APlayerCharacter* Character) override;
-
 	virtual UPlayerStateBase* UpdateState(APlayerCharacter* Character, float DeltaTime) override;
 
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
 };
 
 UCLASS()

@@ -57,6 +57,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FMacheteComboAttack ChargeAttack;
 
+	// Wind-up animation played the instant the attack button is held. Set "Enable Auto Blend Out"
+	// to false on this montage's Blend Option settings so it holds its last frame while charging.
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TObjectPtr<UAnimMontage> ChargeStartMontage;
 
