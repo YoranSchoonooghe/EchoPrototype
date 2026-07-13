@@ -99,6 +99,15 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 		if (Stimulus.WasSuccessfullySensed())
 		{
 			pBlackboardComponent->SetValueAsObject(TargetPlayerKeyName, pPlayer);
+
+			UAISense_Hearing::ReportNoiseEvent(
+				GetWorld(),
+				GetPawn()->GetActorLocation(),
+				1.0f,
+				this,
+				0.0f,
+				TEXT("Spotted")
+			);
 		}
 		else
 		{
