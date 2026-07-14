@@ -55,7 +55,8 @@ void UClimbingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 }
 
-void UClimbingComponent::StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation, float Duration)
+void UClimbingComponent::StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation, float Duration,
+	const FVector& ArcDirection, float ArcAmount)
 {
 	ACharacter* Character = GetOwnerCharacter();
 	if (!Character)
@@ -67,6 +68,8 @@ void UClimbingComponent::StartBlendTo(const FVector& TargetLocation, const FRota
 	BlendStartRotation = Character->GetActorQuat();
 	BlendTargetLocation = TargetLocation;
 	BlendTargetRotation = TargetRotation.Quaternion();
+	BlendArcDirection = ArcDirection;
+	BlendArcAmount = ArcAmount;
 	BlendElapsed = 0.0f;
 	ActiveBlendDuration = Duration;
 	bIsBlending = true;
@@ -85,7 +88,14 @@ void UClimbingComponent::UpdateBlend(float DeltaTime)
 	const float Alpha = ActiveBlendDuration > 0.0f ? FMath::Clamp(BlendElapsed / ActiveBlendDuration, 0.0f, 1.0f) : 1.0f;
 	const float EasedAlpha = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, 2.0f);
 
-	const FVector NewLocation = FMath::Lerp(BlendStartLocation, BlendTargetLocation, EasedAlpha);
+	FVector NewLocation = FMath::Lerp(BlendStartLocation, BlendTargetLocation, EasedAlpha);
+
+	if (!BlendArcDirection.IsNearlyZero() && !FMath::IsNearlyZero(BlendArcAmount))
+	{
+		const float ArcCurve = FMath::Sin(PI * Alpha);
+		NewLocation += BlendArcDirection * BlendArcAmount * ArcCurve;
+	}
+
 	const FQuat NewRotation = FQuat::Slerp(BlendStartRotation, BlendTargetRotation, EasedAlpha);
 
 	Character->SetActorLocationAndRotation(NewLocation, NewRotation);
@@ -313,7 +323,7 @@ void UClimbingComponent::TryStartHang(bool bPrintFailures)
 	}
 }
 
-void UClimbingComponent::ApplyHangTransform(const FLedgeTraceResult& LedgeResult, float BlendDurationOverride)
+void UClimbingComponent::ApplyHangTransform(const FLedgeTraceResult& LedgeResult, float BlendDurationOverride, bool bApplyShimmyArc)
 {
 	ACharacter* Character = GetOwnerCharacter();
 	if (!Character)
@@ -337,7 +347,15 @@ void UClimbingComponent::ApplyHangTransform(const FLedgeTraceResult& LedgeResult
 		+ HangRightVector * SidewaysOffset + FVector(0.0f, 0.0f, HeightOffset);
 
 	const float BlendDuration = BlendDurationOverride >= 0.0f ? BlendDurationOverride : HangBlendDuration;
-	StartBlendTo(HangLocation, HangRotation, BlendDuration);
+
+	if (bApplyShimmyArc)
+	{
+		StartBlendTo(HangLocation, HangRotation, BlendDuration, CachedWallNormal, ShimmyArcOffset);
+	}
+	else
+	{
+		StartBlendTo(HangLocation, HangRotation, BlendDuration);
+	}
 }
 
 void UClimbingComponent::SetJumpModifierHeld(bool bHeld)
@@ -458,7 +476,7 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 	if (ScanForLedge(Direction, StepDistance, MaxShimmyDistance, LedgeResult))
 	{
 		const float BlendDuration = PlayMoveMontage(MontageToPlay);
-		ApplyHangTransform(LedgeResult, BlendDuration);
+		ApplyHangTransform(LedgeResult, BlendDuration, true);
 		return;
 	}
 
@@ -483,7 +501,7 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 				}
 
 				const float BlendDuration = PlayMoveMontage(MontageToPlay);
-				ApplyHangTransform(CornerResult, BlendDuration);
+				ApplyHangTransform(CornerResult, BlendDuration, true);
 				return;
 			}
 		}

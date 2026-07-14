@@ -125,6 +125,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Climbing|Position")
 	float HangBlendDuration = 0.2f;
 
+	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
+	float ShimmyArcOffset = 29.0f;
+
 	// Normal shimmy step
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
 	float ShimmyStepDistance = 120.0f;
@@ -192,7 +195,7 @@ private:
 	bool IsVerticalMoveValid(const FVector& Direction, const FLedgeTraceResult& LedgeResult) const;
 	void TryStartHang(bool bPrintFailures = true);
 	void StopHanging();
-	void ApplyHangTransform(const FLedgeTraceResult& LedgeResult, float BlendDurationOverride = -1.0f);
+	void ApplyHangTransform(const FLedgeTraceResult& LedgeResult, float BlendDurationOverride = -1.0f, bool bApplyShimmyArc = false);
 	void TryShimmyStep(const FVector& Direction, float StepDistance);
 	void TryJumpToLedge(const FVector& Direction, const FVector2D& RawInput);
 	UAnimMontage* SelectMoveMontage(const FVector2D& RawInput) const;
@@ -205,7 +208,8 @@ private:
 	void StartMoveCooldown(float Duration);
 	void ClearMoveCooldown();
 
-	void StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation, float Duration);
+	void StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation, float Duration,
+		const FVector& ArcDirection = FVector::ZeroVector, float ArcAmount = 0.0f);
 	void UpdateBlend(float DeltaTime);
 
 	ACharacter* GetOwnerCharacter() const;
@@ -241,6 +245,8 @@ private:
 	FVector BlendTargetLocation = FVector::ZeroVector;
 	FQuat BlendStartRotation = FQuat::Identity;
 	FQuat BlendTargetRotation = FQuat::Identity;
+	FVector BlendArcDirection = FVector::ZeroVector;
+	float BlendArcAmount = 0.0f;
 
 	FTimerHandle MoveCooldownTimerHandle;
 };
