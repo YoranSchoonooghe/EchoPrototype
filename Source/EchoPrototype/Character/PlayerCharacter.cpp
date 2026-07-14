@@ -203,9 +203,6 @@ void APlayerCharacter::EchoPressed()
 {
 	if (!Echo) return;
 
-	// Any Echo interaction (aiming, placing, or teleporting) is incompatible with the hang's flying
-	// movement mode/plane constraint - drop off the ledge first rather than only guarding the
-	// teleport case, which left aiming/placing while hanging able to soft-lock the character.
 	if (Climbing && Climbing->IsHanging())
 	{
 		Climbing->CancelHanging();
