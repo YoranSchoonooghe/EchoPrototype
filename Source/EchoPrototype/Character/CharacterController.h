@@ -97,7 +97,7 @@ private:
 	//Echo
 	void EchoPressed();
 	void EchoReleased();
-	void LookThroughEcho();
+	void SwapPressed();
 
 	//Combat
 	void Attack();

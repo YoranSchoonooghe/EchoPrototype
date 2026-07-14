@@ -54,7 +54,7 @@ public:
 	//Echo
 	void EchoPressed();
 	void EchoReleased();
-	void LookThroughEcho();
+	virtual void SwapPressed();
 	void TeleportToEcho();
 
 	//Combat

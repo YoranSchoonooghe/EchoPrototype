@@ -203,8 +203,6 @@ void APlayerCharacter::EchoPressed()
 {
 	if (!Echo) return;
 
-	// Pressing Echo while one is placed teleports (see UEchoComponent::OnEchoPressed) - same
-	// hang-cancel guard as TeleportToEcho, or the character arrives stuck in flying mode.
 	if (Climbing && Climbing->IsHanging() && Echo->GetEchoState() == EEchoState::Placed)
 	{
 		Climbing->CancelHanging();
@@ -219,19 +217,16 @@ void APlayerCharacter::EchoReleased()
 		Echo->OnEchoReleased();
 }
 
-void APlayerCharacter::LookThroughEcho()
+void APlayerCharacter::SwapPressed()
 {
 	if (Echo)
-		Echo->LookThroughEcho();
+		Echo->SwapPressed();
 }
 
 void APlayerCharacter::TeleportToEcho()
 {
 	if (!Echo) return;
 
-	// A teleport while hanging would leave the character stuck in flying mode with the hang
-	// constraints still active at the destination. Only cancel when the teleport will actually
-	// happen (an echo is placed) - otherwise the key press shouldn't drop the character.
 	if (Climbing && Climbing->IsHanging() && Echo->GetEchoState() == EEchoState::Placed)
 	{
 		Climbing->CancelHanging();

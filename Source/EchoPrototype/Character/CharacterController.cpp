@@ -71,7 +71,7 @@ void ACharacterController::SetupInputComponent()
 			}
 
 			if (LookThroughEchoAction)
- 				EIC->BindAction(LookThroughEchoAction, ETriggerEvent::Started, this, &ACharacterController::LookThroughEcho);
+ 				EIC->BindAction(LookThroughEchoAction, ETriggerEvent::Started, this, &ACharacterController::SwapPressed);
 
 			//Combat
 			if (AttackAction)
@@ -207,11 +207,11 @@ void ACharacterController::EchoReleased()
 	CachedPlayerCharacter->EchoReleased();
 }
 
-void ACharacterController::LookThroughEcho()
+void ACharacterController::SwapPressed()
 {
 	if (!CachedPlayerCharacter) return;
 
-	CachedPlayerCharacter->LookThroughEcho();
+	CachedPlayerCharacter->SwapPressed();
 }
 
 void ACharacterController::Attack()

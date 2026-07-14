@@ -48,7 +48,7 @@ public:
 	void OnEchoReleased();
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
-	void LookThroughEcho();
+	void SwapPressed();
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void TeleportToEcho();

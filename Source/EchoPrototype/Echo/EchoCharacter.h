@@ -8,6 +8,8 @@
 
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
+class UStaticMesh;
+class UStaticMeshComponent;
 
 UENUM(BlueprintType)
 enum class EEchoVisualState : uint8
@@ -41,6 +43,8 @@ public:
 
 	virtual void Jump() override {}
 
+	virtual void SwapPressed() override;
+
 	UPROPERTY(BlueprintAssignable, Category = "Echo")
 	FOnEchoPlaced OnPlaced;
 
@@ -48,13 +52,17 @@ protected:
 	virtual void BeginPlay() override;
 
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> PreviewOrbVisual;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<UStaticMesh> PreviewMesh;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
 	TObjectPtr<UMaterialInterface> PreviewMaterial;
 
-
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
 	TObjectPtr<UMaterialInterface> PlacedMaterial;
-
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> PreviewMID;

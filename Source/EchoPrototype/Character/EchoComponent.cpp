@@ -63,15 +63,11 @@ APawn* UEchoComponent::GetOwnerPawn() const
 
 APlayerController* UEchoComponent::GetPlayerController() const
 {
-	if (APawn* OwnerPawn = GetOwnerPawn())
+	if (UWorld* World = GetWorld())
 	{
-		if (APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController()))
-		{
-			return PC;
-		}
+		return World->GetFirstPlayerController();
 	}
-
-	return GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+	return nullptr;
 }
 
 #pragma region input
@@ -110,7 +106,7 @@ void UEchoComponent::OnEchoReleased()
 	}
 }
 
-void UEchoComponent::LookThroughEcho()
+void UEchoComponent::SwapPressed()
 {
 	if (EchoState != EEchoState::Placed || !ActiveEcho)
 	{
