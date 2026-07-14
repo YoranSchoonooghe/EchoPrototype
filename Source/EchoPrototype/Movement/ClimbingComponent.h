@@ -208,6 +208,8 @@ private:
 	void StartMoveCooldown(float Duration);
 	void ClearMoveCooldown();
 
+	void RestoreMoveCollision();
+
 	void StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation, float Duration,
 		const FVector& ArcDirection = FVector::ZeroVector, float ArcAmount = 0.0f);
 	void UpdateBlend(float DeltaTime);
@@ -228,6 +230,10 @@ private:
 	bool bClimbUpRootMotionDriven = false;
 
 	uint8 SavedCapsuleCollisionType = 0;
+
+	bool bMoveCollisionDisabled = false;
+	uint8 SavedMoveCollisionType = 0;
+	FTimerHandle MoveCollisionTimerHandle;
 
 	FVector2D LastShimmyInput = FVector2D::ZeroVector;
 	float LastShimmyInputTime = -10.0f;

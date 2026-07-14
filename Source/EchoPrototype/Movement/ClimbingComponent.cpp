@@ -542,7 +542,37 @@ void UClimbingComponent::TryJumpToLedge(const FVector& Direction, const FVector2
 	}
 
 	StartMoveCooldown(FMath::Max(MoveCooldown, BlendDuration + 0.05f));
-	ApplyHangTransform(LedgeResult, BlendDuration);
+
+	if (bVertical)
+	{
+		if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+		{
+			SavedMoveCollisionType = static_cast<uint8>(Capsule->GetCollisionEnabled());
+			Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			bMoveCollisionDisabled = true;
+		}
+		GetWorld()->GetTimerManager().SetTimer(MoveCollisionTimerHandle, this, &UClimbingComponent::RestoreMoveCollision, BlendDuration, false);
+	}
+
+	ApplyHangTransform(LedgeResult, BlendDuration, bVertical);
+}
+
+void UClimbingComponent::RestoreMoveCollision()
+{
+	if (!bMoveCollisionDisabled)
+	{
+		return;
+	}
+
+	if (ACharacter* Character = GetOwnerCharacter())
+	{
+		if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+		{
+			Capsule->SetCollisionEnabled(static_cast<ECollisionEnabled::Type>(SavedMoveCollisionType));
+		}
+	}
+
+	bMoveCollisionDisabled = false;
 }
 
 bool UClimbingComponent::TryClimbUp()
@@ -792,6 +822,9 @@ void UClimbingComponent::StopHanging()
 
 	GetWorld()->GetTimerManager().ClearTimer(MoveCooldownTimerHandle);
 	GetWorld()->GetTimerManager().ClearTimer(ClimbUpTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(MoveCollisionTimerHandle);
+
+	RestoreMoveCollision();
 
 	bIsHanging = false;
 	bIsClimbingUp = false;

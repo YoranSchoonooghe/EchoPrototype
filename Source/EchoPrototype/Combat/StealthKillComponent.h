@@ -48,6 +48,9 @@ private:
 	UFUNCTION()
 	void HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
+	void ForceFinishStealthKill();
+
 	TWeakObjectPtr<AEnemyCharacter> CurrentTarget;
 	bool bIsPerformingKill = false;
+	FTimerHandle StealthKillTimerHandle;
 };

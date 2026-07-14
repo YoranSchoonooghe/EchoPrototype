@@ -8,6 +8,7 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "Engine/OverlapResult.h"
+#include "TimerManager.h"
 
 UStealthKillComponent::UStealthKillComponent()
 {
@@ -127,11 +128,20 @@ void UStealthKillComponent::TryStealthKill()
 	UAnimInstance* AnimInstance = OwnerCharacter->GetMesh() ? OwnerCharacter->GetMesh()->GetAnimInstance() : nullptr;
 	if (StealthKillMontage && AnimInstance)
 	{
-		AnimInstance->Montage_Play(StealthKillMontage);
+		const float PlayedDuration = AnimInstance->Montage_Play(StealthKillMontage, 1.0f, EMontagePlayReturnType::Duration);
 
 		FOnMontageEnded EndDelegate;
 		EndDelegate.BindUObject(this, &UStealthKillComponent::HandleMontageEnded);
 		AnimInstance->Montage_SetEndDelegate(EndDelegate, StealthKillMontage);
+
+		if (PlayedDuration > 0.0f)
+		{
+			GetWorld()->GetTimerManager().SetTimer(StealthKillTimerHandle, this, &UStealthKillComponent::ForceFinishStealthKill, PlayedDuration + 0.1f, false);
+		}
+		else
+		{
+			bIsPerformingKill = false;
+		}
 	}
 	else
 	{
@@ -147,6 +157,12 @@ void UStealthKillComponent::TryStealthKill()
 }
 
 void UStealthKillComponent::HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	GetWorld()->GetTimerManager().ClearTimer(StealthKillTimerHandle);
+	bIsPerformingKill = false;
+}
+
+void UStealthKillComponent::ForceFinishStealthKill()
 {
 	bIsPerformingKill = false;
 }
