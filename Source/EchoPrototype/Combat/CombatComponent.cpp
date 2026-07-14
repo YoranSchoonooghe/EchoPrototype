@@ -135,11 +135,6 @@ void UCombatComponent::PlayChargedAttack()
 {
 	CurrentComboIndex = INDEX_NONE;
 	PlayAttackMontage(ChargeAttack.Montage, ChargeAttack.DamageAmount);
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.0f, FColor::Cyan, TEXT("Charged attack unleashed!"));
-	}
 }
 
 void UCombatComponent::PlayAttackMontage(UAnimMontage* Montage, float Damage)

@@ -440,15 +440,30 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 		return;
 	}
 
-	FLedgeTraceResult CornerResult;
-	if (DetectLedge(Character->GetActorLocation(), Direction.Rotation(), CornerResult, /*bPrintFailures=*/false))
-	{
-		if (bPrintDebugMessages)
-		{
-			PrintClimbDebug(TEXT("Inside corner: turning onto the adjacent ledge."), FColor::Green);
-		}
+	const FVector ActorForward = Character->GetActorForwardVector();
+	const float AlongDirOffsets[3] = { 0.0f, -40.0f, 40.0f };
+	const float AwayFromWallOffsets[2] = { 0.0f, -40.0f };
 
-		ApplyHangTransform(CornerResult);
+	for (float AlongDir : AlongDirOffsets)
+	{
+		for (float AwayFromWall : AwayFromWallOffsets)
+		{
+			const FVector ProbeOrigin = Character->GetActorLocation()
+				+ Direction * AlongDir
+				+ ActorForward * AwayFromWall;
+
+			FLedgeTraceResult CornerResult;
+			if (DetectLedge(ProbeOrigin, Direction.Rotation(), CornerResult, false))
+			{
+				if (bPrintDebugMessages)
+				{
+					PrintClimbDebug(TEXT("Inside corner: turning onto the adjacent ledge."), FColor::Green);
+				}
+
+				ApplyHangTransform(CornerResult);
+				return;
+			}
+		}
 	}
 }
 

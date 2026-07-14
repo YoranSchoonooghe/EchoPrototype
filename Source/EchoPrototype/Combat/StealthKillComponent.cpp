@@ -73,7 +73,7 @@ AEnemyCharacter* UStealthKillComponent::FindStealthKillTarget() const
 	for (const FOverlapResult& Overlap : Overlaps)
 	{
 		AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(Overlap.GetActor());
-		if (!Enemy || Enemy->GetAlertState() != EAlertState::Neutral)
+		if (!Enemy || Enemy->GetAlertState() == EAlertState::Alert)
 		{
 			continue;
 		}
