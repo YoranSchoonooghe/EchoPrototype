@@ -19,30 +19,24 @@ UEchoComponent::UEchoComponent()
 
 void UEchoComponent::GetEchoViewPoint(FVector& OutLocation, FRotator& OutRotation) const
 {
+	if (ActiveEcho)
 	{
-		if (ActiveEcho)
+		if (UCameraComponent* EchoCam = ActiveEcho->FindComponentByClass<UCameraComponent>())
 		{
-			if (UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera())
-			{
-				OutLocation = EchoCam->GetComponentLocation();
-				OutRotation = EchoCam->GetComponentRotation();
-				return;
-			}
+			OutLocation = EchoCam->GetComponentLocation();
+			OutRotation = EchoCam->GetComponentRotation();
+			return;
 		}
-		OutLocation = FVector::ZeroVector;
-		OutRotation = FRotator::ZeroRotator;
 	}
+
+	OutLocation = FVector::ZeroVector;
+	OutRotation = FRotator::ZeroRotator;
 }
 
 // Called when the game starts
 void UEchoComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (APawn* OwnerPawn = GetOwnerPawn())
-	{
-		Camera = OwnerPawn->FindComponentByClass<UCameraComponent>();
-	}
 }
 
 
@@ -56,7 +50,7 @@ void UEchoComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 		UpdateAimPreview(DeltaTime);
 	}
 
-	if (FovEffect == EEchoFOVEffect::ZoomingIn)
+	if (FovEffectPhase == EEchoFOVEffect::ZoomingIn)
 	{
 		UpdateTeleportFovEffect(DeltaTime);
 	}
@@ -67,25 +61,35 @@ APawn* UEchoComponent::GetOwnerPawn() const
 	return Cast<APawn>(GetOwner());
 }
 
+APlayerController* UEchoComponent::GetPlayerController() const
+{
+	if (APawn* OwnerPawn = GetOwnerPawn())
+	{
+		if (APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController()))
+		{
+			return PC;
+		}
+	}
+
+	return GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+}
+
 #pragma region input
 
 void UEchoComponent::OnEchoPressed()
 {
 	PressStartTime = GetWorld()->GetTimeSeconds();
-
 	switch (EchoState)
 	{
 	case EEchoState::Idle:
 		BeginAiming();
 		break;
-	
 	case EEchoState::Aiming:
-
 		if (bCurrentAimIsValid)
+		{
 			PlaceEcho();
-		
+		}
 		break;
-
 	case EEchoState::Placed:
 		TeleportToEcho();
 		break;
@@ -115,79 +119,57 @@ void UEchoComponent::LookThroughEcho()
 
 	if (bIsViewingThroughEcho)
 	{
-		ReturnViewToSelf(); 
+		ReturnViewToSelf();
 		return;
 	}
 
-	if (APawn* OwnerPawn = GetOwnerPawn())
+	APlayerController* PC = GetPlayerController();
+	if (!PC)
 	{
-		if (APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController()))
-		{
-			PC->SetViewTargetWithBlend(ActiveEcho, ViewBlendTime);
-			bIsViewingThroughEcho = true;
-
-			if (EchoVisionPostProcessMaterial)
-			{
-				if (UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera())
-				{
-					EchoCam->PostProcessSettings.AddBlendable(EchoVisionPostProcessMaterial, 1.0f);
-				}
-			}
-		}
+		return;
 	}
-}
 
+	PC->SetViewTargetWithBlend(ActiveEcho, ViewBlendTime);
+	PC->Possess(ActiveEcho);
+
+	bIsViewingThroughEcho = true;
+}
 void UEchoComponent::ReturnViewToSelf()
 {
-	if (APawn* OwnerPawn = GetOwnerPawn())
+	APlayerController* PC = GetPlayerController();
+	APawn* OwnerPawn = GetOwnerPawn();
+	if (PC && OwnerPawn)
 	{
-		if (APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController()))
-		{
-			PC->SetViewTargetWithBlend(OwnerPawn, ViewBlendTime);
-
-			if (EchoVisionPostProcessMaterial && ActiveEcho)
-			{
-				if (UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera())
-				{
-					EchoCam->PostProcessSettings.RemoveBlendable(EchoVisionPostProcessMaterial);
-				}
-			}
-		}
+		PC->SetViewTargetWithBlend(OwnerPawn, ViewBlendTime);
+		PC->Possess(OwnerPawn);
 	}
 	bIsViewingThroughEcho = false;
 }
 
-void UEchoComponent::AddEchoLookInput(float YawDelta, float PitchDelta)
+void UEchoComponent::AddEchoMoveInput(const FVector2D& Value)
 {
-	if (ActiveEcho && bIsViewingThroughEcho)
+	if (ActiveEcho)
 	{
-		ActiveEcho->AddCameraLookInput(YawDelta, PitchDelta);
+		const FRotator Rotation = ActiveEcho->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		ActiveEcho->AddMovementInput(ForwardDirection, Value.Y);
+
+		ActiveEcho->AddMovementInput(RightDirection, Value.X);
 	}
 }
 
-void UEchoComponent::AddEchoMoveInput(const FVector2D& MoveInput)
+void UEchoComponent::AddEchoLookInput(float Rate, float Yaw)
 {
-	if (!ActiveEcho || !bIsViewingThroughEcho || MoveInput.IsNearlyZero())
+	if (ActiveEcho)
 	{
-		return;
+		ActiveEcho->AddControllerYawInput(Rate);
+		ActiveEcho->AddControllerPitchInput(Yaw);
 	}
-
-	UCameraComponent* EchoCam = ActiveEcho->GetEchoCamera();
-	if (!EchoCam)
-	{
-		return;
-	}
-
-	const FRotator YawOnly(0.0f, EchoCam->GetComponentRotation().Yaw, 0.0f);
-	const FVector Forward = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::X);
-	const FVector Right = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::Y);
-
-	const float DeltaSeconds = GetWorld()->GetDeltaSeconds();
-	const FVector WorldDelta = (Forward * MoveInput.Y + Right * MoveInput.X) * EchoMoveSpeed * DeltaSeconds;
-
-	ActiveEcho->AddMoveInput(WorldDelta);
 }
-
 
 void UEchoComponent::TeleportToEcho()
 {
@@ -196,31 +178,24 @@ void UEchoComponent::TeleportToEcho()
 		return;
 	}
 
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
-	if (!OwnerCharacter)
+	APawn* OwnerPawn = GetOwnerPawn();
+	if (!OwnerPawn)
 	{
 		return;
 	}
 
-	FVector TargetLocation = ActiveEcho->GetActorLocation();
+	const FVector TargetLocation = ActiveEcho->GetActorLocation();
 	const FRotator TargetRotation = ActiveEcho->GetActorRotation();
-
-	if (UCapsuleComponent* CharacterCapsule = OwnerCharacter->GetCapsuleComponent())
-	{
-		TargetLocation.Z += CharacterCapsule->GetScaledCapsuleHalfHeight();
-	}
 
 	StartTeleportFovEffect();
 
-
-	if (!OwnerCharacter->TeleportTo(TargetLocation, TargetRotation, true, false))
+	if (!OwnerPawn->TeleportTo(TargetLocation, TargetRotation, false, false))
 	{
-		if (Camera)
+		if (FovEffectCamera.IsValid())
 		{
-			Camera->SetFieldOfView(FovEffectBaseFOV);
+			FovEffectCamera->SetFieldOfView(FovEffectBaseFOV);
 		}
-		FovEffect = EEchoFOVEffect::None;
-
+		FovEffectPhase = EEchoFOVEffect::None;
 		return;
 	}
 
@@ -233,41 +208,41 @@ void UEchoComponent::TeleportToEcho()
 
 void UEchoComponent::StartTeleportFovEffect()
 {
-	if (!Camera) return;
-
-
-	FovEffectBaseFOV = Camera->FieldOfView;
-
-	FovEffectStartFOV = TeleportFOV;
-
-	Camera->SetFieldOfView(TeleportFOV);
-	FovEffectElapsed = 0.0f;
-
-	FovEffect = EEchoFOVEffect::ZoomingIn;
-}
-
-void UEchoComponent::UpdateTeleportFovEffect(float DeltaTime)
-{
-	if (!Camera)
+	APlayerController* PC = GetPlayerController();
+	UCameraComponent* Cam = (PC && PC->GetPawn()) ? PC->GetPawn()->FindComponentByClass<UCameraComponent>() : nullptr;
+	if (!Cam)
 	{
-		FovEffect = EEchoFOVEffect::None;
 		return;
 	}
 
-	FovEffectElapsed += DeltaTime;
+	FovEffectCamera = Cam;
+	FovEffectBaseFOV = Cam->FieldOfView;
+	FovEffectStartFOV = TeleportSpikeFOV;
+	Cam->SetFieldOfView(TeleportSpikeFOV);
+	FovEffectElapsed = 0.0f;
+	FovEffectPhase = EEchoFOVEffect::ZoomingIn;
+}
 
-	const float Alpha = FMath::Clamp(FovEffectElapsed / TeleportZoomDuration, 0.0f, 1.0f);
+void UEchoComponent::UpdateTeleportFovEffect(float DeltaSeconds)
+{
+	if (!FovEffectCamera.IsValid())
+	{
+		FovEffectPhase = EEchoFOVEffect::None;
+		return;
+	}
 
+	FovEffectElapsed += DeltaSeconds;
+	const float Alpha = FMath::Clamp(FovEffectElapsed / TeleportZoomInDuration, 0.0f, 1.0f);
 	const float Eased = 1.0f - FMath::Pow(1.0f - Alpha, 3.0f);
-	Camera->SetFieldOfView(FMath::Lerp(FovEffectStartFOV, FovEffectBaseFOV, Eased));
+	FovEffectCamera->SetFieldOfView(FMath::Lerp(FovEffectStartFOV, FovEffectBaseFOV, Eased));
 
 	if (Alpha >= 1.0f)
 	{
-		Camera->SetFieldOfView(FovEffectBaseFOV);
-		FovEffect = EEchoFOVEffect::None;
+		FovEffectCamera->SetFieldOfView(FovEffectBaseFOV);
+		FovEffectPhase = EEchoFOVEffect::None;
+		FovEffectCamera.Reset();
 	}
 }
-
 
 void UEchoComponent::BeginAiming()
 {
@@ -281,13 +256,13 @@ void UEchoComponent::BeginAiming()
 	bool bValid = false;
 	TraceForEchoLocation(SpawnLocation, SpawnRotation, bValid);
 	bCurrentAimIsValid = bValid;
-	LastAimRotation = SpawnRotation;
 
+	const FRotator BodyRotation(0.0f, SpawnRotation.Yaw, 0.0f);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	ActiveEcho = GetWorld()->SpawnActor<AEchoActor>(EchoActorClass, FTransform(SpawnRotation, SpawnLocation), SpawnParams);
+	ActiveEcho = GetWorld()->SpawnActor<AEchoCharacter>(EchoActorClass, FTransform(BodyRotation, SpawnLocation), SpawnParams);
 	if (ActiveEcho)
 	{
 		ActiveEcho->SetVisualState(EEchoVisualState::Preview);
@@ -309,13 +284,10 @@ void UEchoComponent::UpdateAimPreview(float DeltaSeconds)
 	bool bValid = false;
 	TraceForEchoLocation(TargetLocation, TargetRotation, bValid);
 	bCurrentAimIsValid = bValid;
-	LastAimRotation = TargetRotation;
-
-	TargetRotation.Pitch = 0.0f;
 
 	const FVector NewLocation = FMath::VInterpTo(ActiveEcho->GetActorLocation(), TargetLocation, DeltaSeconds, PreviewInterpSpeed);
 	ActiveEcho->SetActorLocation(NewLocation);
-	ActiveEcho->SetActorRotation(TargetRotation);
+	ActiveEcho->SetActorRotation(FRotator(0.0f, TargetRotation.Yaw, 0.0f));
 	ActiveEcho->SetPreviewValidity(bValid);
 }
 
@@ -325,27 +297,8 @@ void UEchoComponent::PlaceEcho()
 	{
 		return;
 	}
-
-	FVector FinalLocation;
-	FRotator FinalRotation;
-	bool bValid = false;
-	TraceForEchoLocation(FinalLocation, FinalRotation, bValid);
-
-	if (bValid)
-	{
-		FinalRotation.Pitch = 0.0f;
-		FinalRotation.Roll = 0.0f;
-
-		const float VerticalSpawnBuffer = 10.0f;
-		FinalLocation.Z += VerticalSpawnBuffer;
-
-		ActiveEcho->SetActorLocationAndRotation(FinalLocation, FinalRotation);
-
-
-		ActiveEcho->SetVisualState(EEchoVisualState::Placed);
-		ActiveEcho->InitializeCameraFacing(LastAimRotation);
-		EchoState = EEchoState::Placed;
-	}
+	ActiveEcho->SetVisualState(EEchoVisualState::Placed);
+	EchoState = EEchoState::Placed;
 }
 
 void UEchoComponent::DestroyActiveEcho()

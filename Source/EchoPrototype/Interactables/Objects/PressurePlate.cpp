@@ -6,7 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/Pawn.h"
-#include "../../Echo/EchoActor.h"
+#include "EchoPrototype/Echo/EchoCharacter.h"
 
 // Sets default values
 APressurePlate::APressurePlate()
@@ -47,7 +47,7 @@ bool APressurePlate::IsValidTrigger(AActor* OtherActor) const
 
 	if (bOnlyEchoTriggers)
 	{
-		return (Cast<AEchoActor>(OtherActor) != nullptr);
+		return (Cast<AEchoCharacter>(OtherActor) != nullptr);
 	}
 
 	return bOnlyPawnsTrigger ? (Cast<APawn>(OtherActor) != nullptr) : true;

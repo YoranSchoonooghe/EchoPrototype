@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "../Echo/EchoCharacter.h"
 #include "EchoComponent.generated.h"
 
-class AEchoActor;
 class UCameraComponent;
 
 
@@ -56,14 +56,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void ReturnViewToSelf();
 
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	void AddEchoMoveInput(const FVector2D& Value);
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
-	void AddEchoLookInput(float yawDelta, float PitchDelta);
-
-	UFUNCTION(BlueprintCallable, Category = "Echo")
-	void AddEchoMoveInput(const FVector2D& MoveInput);
-
-
+	void AddEchoLookInput(float Rate, float Yaw);
 
 	UFUNCTION(BlueprintPure, Category = "Echo")
 	FORCEINLINE EEchoState GetEchoState() const { return EchoState; }
@@ -71,6 +68,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Echo")
 	FORCEINLINE bool IsViewingThroughEcho() const { return bIsViewingThroughEcho; }
 
+	UFUNCTION(BlueprintPure, Category = "Echo")
+	FORCEINLINE AEchoCharacter* GetActiveEcho() const { return ActiveEcho; }
+
+	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void GetEchoViewPoint(FVector& OutLocation, FRotator& OutRotation) const;
 
 protected:
@@ -78,26 +79,31 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo")
-	TSubclassOf<AEchoActor> EchoActorClass;
+	TSubclassOf<AEchoCharacter> EchoActorClass;
 
 	UPROPERTY(EditAnywhere, Category = "Echo")
 	float EchoTraceDistance = 2000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo")
-	float EchoTraceRadius = 20.0f;
+	float EchoTraceRadius = 10.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo")
-	float GroundPlacementOffset = 50.0f;
+	float GroundPlacementOffset = 20.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
 	float MinWalkableNormalZ = 0.7f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
+	float GroundSearchStep = 75.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
 	float GroundSearchHeight = 150.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
-	float GroundSearchDepth = 300.0f;
+	float GroundSearchDepth = 500.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Echo|Ground Detection")
+	float MinPlacementDistanceFromPlayer = 150.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo")
 	float PreviewInterpSpeed = 18.0f;
@@ -108,49 +114,37 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Echo")
 	float ViewBlendTime = 0.5f;
 
+	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
+	float TeleportSpikeFOV = 130.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
-	float TeleportFOV = 130.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
-	float TeleportZoomDuration = 0.3f;
-
-
-	UPROPERTY(EditAnywhere, Category = "Echo|Movement")
-	float EchoMoveSpeed = 60.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Echo Vision")
-	UMaterialInterface* EchoVisionPostProcessMaterial;
+	float TeleportZoomInDuration = 0.3f;
 
 private:
 	UPROPERTY(Transient)
-	TObjectPtr<AEchoActor> ActiveEcho;
+	TObjectPtr<AEchoCharacter> ActiveEcho;
 
 	EEchoState EchoState = EEchoState::Idle;
 	double PressStartTime = 0.0;
 	bool bIsViewingThroughEcho = false;
-
-
 	bool bCurrentAimIsValid = false;
 
-	FRotator LastAimRotation = FRotator::ZeroRotator;
 
-
-	EEchoFOVEffect FovEffect = EEchoFOVEffect::None;
+	EEchoFOVEffect FovEffectPhase = EEchoFOVEffect::None;
 	float FovEffectElapsed = 0.0f;
 	float FovEffectStartFOV = 90.0f;
 	float FovEffectBaseFOV = 90.0f;
-	UCameraComponent* Camera;
+	TWeakObjectPtr<UCameraComponent> FovEffectCamera;
 
 	void BeginAiming();
 	void UpdateAimPreview(float DeltaSeconds);
 	void PlaceEcho();
 	void DestroyActiveEcho();
-
 	void StartTeleportFovEffect();
-	void UpdateTeleportFovEffect(float DeltaTime);
+	void UpdateTeleportFovEffect(float DeltaSeconds);
 
 	bool TraceForEchoLocation(FVector& OutLocation, FRotator& OutRotation, bool& bOutValid) const;
 
 	APawn* GetOwnerPawn() const;
+	APlayerController* GetPlayerController() const;
 };

@@ -5,7 +5,7 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "EnemyAIController.generated.h"
 
-class AEchoActor;
+class AEchoCharacter;
 
 UCLASS()
 class ECHOPROTOTYPE_API AEnemyAIController : public AAIController
@@ -38,6 +38,6 @@ private:
 	void HandleSightPerception(AActor* Actor, FAIStimulus Stimulus);
 	void HandleSoundPerception(AActor* Actor, FAIStimulus Stimulus);
 
-	AEchoActor* _targetEcho;
+	AEchoCharacter* _targetEcho;
 	TArray<AActor*> _spottedEchoes;
 };

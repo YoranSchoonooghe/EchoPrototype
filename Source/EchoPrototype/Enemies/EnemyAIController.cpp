@@ -6,7 +6,7 @@
 #include "Perception/AISense_Hearing.h"
 #include "EchoPrototype/Character/PlayerCharacter.h"
 #include "EchoPrototype/Combat/HealthComponent.h"
-#include "EchoPrototype/Echo/EchoActor.h"
+#include "EchoPrototype/Echo/EchoCharacter.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -118,7 +118,7 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 		return;
 	}
 
-	auto* pEcho = Cast<AEchoActor>(Actor);
+	auto* pEcho = Cast<AEchoCharacter>(Actor);
 	if (pEcho)
 	{
 		if (_spottedEchoes.Contains(pEcho)) return;

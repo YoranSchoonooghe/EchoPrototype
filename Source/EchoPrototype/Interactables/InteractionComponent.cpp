@@ -38,8 +38,9 @@ void UInteractionComponent::UpdateFocus()
 {
 	AActor* PreviousFocusedActor = CurrentFocusedActor.Get();
 
-	APawn* OwnerPawn = GetOwnerPawn();
-	APlayerController* PC = OwnerPawn ? Cast<APlayerController>(OwnerPawn->GetController()) : nullptr;
+	// FIX: Grab the player controller safely even if the main pawn is temporarily unpossessed
+	APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+
 	if (!PC)
 	{
 		CurrentFocusedActor = nullptr;
@@ -68,6 +69,20 @@ void UInteractionComponent::UpdateFocus()
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(GetOwner());
+
+		if (UEchoComponent* EchoComp = GetOwner()->FindComponentByClass<UEchoComponent>())
+		{
+			bIsViewingThroughEcho = EchoComp->IsViewingThroughEcho();
+			if (bIsViewingThroughEcho)
+			{
+				EchoComp->GetEchoViewPoint(CamLoc, CamRot);
+			}
+
+			if (AActor* ActiveEchoActor = EchoComp->GetActiveEcho())
+			{
+				QueryParams.AddIgnoredActor(ActiveEchoActor);
+			}
+		}
 
 		FHitResult Hit;
 		const bool bHit = GetWorld()->SweepSingleByChannel(
