@@ -5,6 +5,7 @@
 #include "../CollisionChannels.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Animation/AnimInstance.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
@@ -54,7 +55,7 @@ void UClimbingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	}
 }
 
-void UClimbingComponent::StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation)
+void UClimbingComponent::StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation, float Duration)
 {
 	ACharacter* Character = GetOwnerCharacter();
 	if (!Character)
@@ -67,6 +68,7 @@ void UClimbingComponent::StartBlendTo(const FVector& TargetLocation, const FRota
 	BlendTargetLocation = TargetLocation;
 	BlendTargetRotation = TargetRotation.Quaternion();
 	BlendElapsed = 0.0f;
+	ActiveBlendDuration = Duration;
 	bIsBlending = true;
 }
 
@@ -80,7 +82,7 @@ void UClimbingComponent::UpdateBlend(float DeltaTime)
 	}
 
 	BlendElapsed += DeltaTime;
-	const float Alpha = HangBlendDuration > 0.0f ? FMath::Clamp(BlendElapsed / HangBlendDuration, 0.0f, 1.0f) : 1.0f;
+	const float Alpha = ActiveBlendDuration > 0.0f ? FMath::Clamp(BlendElapsed / ActiveBlendDuration, 0.0f, 1.0f) : 1.0f;
 	const float EasedAlpha = FMath::InterpEaseInOut(0.0f, 1.0f, Alpha, 2.0f);
 
 	const FVector NewLocation = FMath::Lerp(BlendStartLocation, BlendTargetLocation, EasedAlpha);
@@ -252,11 +254,17 @@ bool UClimbingComponent::DetectLedge(const FVector& Origin, const FRotator& Sear
 	OutResult.LedgeEdgeLocation = CandidateLedgeEdge;
 	OutResult.WallNormal = CandidateWallNormal;
 	OutResult.bLegsContact = bLegsContact;
+	OutResult.HitActor = WallHit.GetActor();
 	return true;
 }
 
 void UClimbingComponent::OnClimbActionPressed()
 {
+	if (bIsClimbingUp)
+	{
+		return;
+	}
+
 	if (bPrintDebugMessages)
 	{
 		PrintClimbDebug(TEXT("OnClimbActionPressed() called."), FColor::Cyan);
@@ -290,6 +298,12 @@ void UClimbingComponent::TryStartHang(bool bPrintFailures)
 		bSavedUseControllerRotationYaw = Character->bUseControllerRotationYaw;
 		Character->bUseControllerRotationYaw = false;
 
+		if (UAnimInstance* AnimInstance = Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr)
+		{
+			SavedRootMotionMode = static_cast<uint8>(AnimInstance->RootMotionMode.GetValue());
+			AnimInstance->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
+		}
+
 		ApplyHangTransform(LedgeResult);
 
 		Movement->SetPlaneConstraintEnabled(true);
@@ -299,7 +313,7 @@ void UClimbingComponent::TryStartHang(bool bPrintFailures)
 	}
 }
 
-void UClimbingComponent::ApplyHangTransform(const FLedgeTraceResult& LedgeResult)
+void UClimbingComponent::ApplyHangTransform(const FLedgeTraceResult& LedgeResult, float BlendDurationOverride)
 {
 	ACharacter* Character = GetOwnerCharacter();
 	if (!Character)
@@ -310,16 +324,20 @@ void UClimbingComponent::ApplyHangTransform(const FLedgeTraceResult& LedgeResult
 	CachedLedgeEdge = LedgeResult.LedgeEdgeLocation;
 	CachedWallNormal = LedgeResult.WallNormal;
 	bHasLegsContact = LedgeResult.bLegsContact;
-
-	const FVector HangLocation = CachedLedgeEdge + CachedWallNormal * ForwardOffset + FVector(0.0f, 0.0f, HeightOffset);
-	const FRotator HangRotation = (-CachedWallNormal).Rotation();
-
-	StartBlendTo(HangLocation, HangRotation);
+	CachedLedgeActor = LedgeResult.HitActor;
 
 	if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
 	{
 		Movement->SetPlaneConstraintNormal(CachedWallNormal);
 	}
+
+	const FRotator HangRotation = (-CachedWallNormal).Rotation();
+	const FVector HangRightVector = FRotationMatrix(HangRotation).GetUnitAxis(EAxis::Y);
+	const FVector HangLocation = CachedLedgeEdge + CachedWallNormal * ForwardOffset
+		+ HangRightVector * SidewaysOffset + FVector(0.0f, 0.0f, HeightOffset);
+
+	const float BlendDuration = BlendDurationOverride >= 0.0f ? BlendDurationOverride : HangBlendDuration;
+	StartBlendTo(HangLocation, HangRotation, BlendDuration);
 }
 
 void UClimbingComponent::SetJumpModifierHeld(bool bHeld)
@@ -337,7 +355,7 @@ void UClimbingComponent::HandleShimmyInput(const FVector2D& MoveInput)
 	LastShimmyInput = MoveInput;
 	LastShimmyInputTime = GetWorld()->GetTimeSeconds();
 
-	if (bMoveOnCooldown || bIsBlending)
+	if (bMoveOnCooldown || bIsBlending || bIsClimbingUp)
 	{
 		return;
 	}
@@ -433,10 +451,14 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 		return;
 	}
 
+	const bool bMovingRight = FVector::DotProduct(Direction, Character->GetActorRightVector()) > 0.0f;
+	UAnimMontage* MontageToPlay = bMovingRight ? MoveRightMontage : MoveLeftMontage;
+
 	FLedgeTraceResult LedgeResult;
 	if (ScanForLedge(Direction, StepDistance, MaxShimmyDistance, LedgeResult))
 	{
-		ApplyHangTransform(LedgeResult);
+		const float BlendDuration = PlayMoveMontage(MontageToPlay);
+		ApplyHangTransform(LedgeResult, BlendDuration);
 		return;
 	}
 
@@ -460,7 +482,8 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 					PrintClimbDebug(TEXT("Inside corner: turning onto the adjacent ledge."), FColor::Green);
 				}
 
-				ApplyHangTransform(CornerResult);
+				const float BlendDuration = PlayMoveMontage(MontageToPlay);
+				ApplyHangTransform(CornerResult, BlendDuration);
 				return;
 			}
 		}
@@ -484,49 +507,199 @@ void UClimbingComponent::TryJumpToLedge(const FVector& Direction, const FVector2
 	FLedgeTraceResult LedgeResult;
 	if (!ScanForLedge(Direction, MinReach, MaxReach, LedgeResult))
 	{
+		if (Direction.Z > 0.5f && TryClimbUp())
+		{
+			return;
+		}
+
 		if (bPrintDebugMessages) PrintClimbDebug(TEXT("Jump: no reachable ledge found in that direction."), FColor::Orange);
 		return;
 	}
 
-	StartMoveCooldown(FMath::Max(MoveCooldown, JumpRepositionDelay + 0.05f));
-
-	UAnimMontage* MontageToPlay = SelectJumpMontage(RawInput);
-	UAnimInstance* AnimInstance = Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
-	if (MontageToPlay && AnimInstance)
+	UAnimMontage* MontageToPlay = SelectMoveMontage(RawInput);
+	float BlendDuration = PlayMoveMontage(MontageToPlay);
+	if (BlendDuration < 0.0f)
 	{
-		AnimInstance->Montage_Play(MontageToPlay);
+		BlendDuration = JumpFallbackBlendDuration;
 	}
 
-	PendingJumpLedgeEdge = LedgeResult.LedgeEdgeLocation;
-	PendingJumpWallNormal = LedgeResult.WallNormal;
-	bPendingJumpLegsContact = LedgeResult.bLegsContact;
-
-	GetWorld()->GetTimerManager().SetTimer(JumpRepositionTimerHandle, this, &UClimbingComponent::ApplyPendingJumpReposition, JumpRepositionDelay, false);
+	StartMoveCooldown(FMath::Max(MoveCooldown, BlendDuration + 0.05f));
+	ApplyHangTransform(LedgeResult, BlendDuration);
 }
 
-void UClimbingComponent::ApplyPendingJumpReposition()
+bool UClimbingComponent::TryClimbUp()
 {
-	if (!bIsHanging)
+	ACharacter* Character = GetOwnerCharacter();
+	if (!Character)
+	{
+		return false;
+	}
+
+	if (!CachedLedgeActor.IsValid() || !CachedLedgeActor->ActorHasTag(ClimbUpRequiredTag))
+	{
+		if (bPrintDebugMessages) PrintClimbDebug(TEXT("Climb up rejected: this ledge isn't tagged for climbing up."), FColor::Red);
+		return false;
+	}
+
+	float CapsuleRadius = 0.0f;
+	float CapsuleHalfHeight = 0.0f;
+	Character->GetSimpleCollisionCylinder(CapsuleRadius, CapsuleHalfHeight);
+
+	const FVector StandLocation = CachedLedgeEdge + CachedWallNormal * ClimbUpForwardOffset
+		+ FVector(0.0f, 0.0f, CapsuleHalfHeight + 2.0f);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(Character);
+
+	const bool bBlocked = GetWorld()->OverlapBlockingTestByChannel(
+		StandLocation,
+		FQuat::Identity,
+		ECC_Pawn,
+		FCollisionShape::MakeCapsule(CapsuleRadius * HangSpaceCheckScale, CapsuleHalfHeight * HangSpaceCheckScale),
+		QueryParams
+	);
+
+	if (bDrawDebugShapes)
+	{
+		DrawDebugCapsule(GetWorld(), StandLocation, CapsuleHalfHeight * HangSpaceCheckScale, CapsuleRadius * HangSpaceCheckScale,
+			FQuat::Identity, bBlocked ? FColor::Red : FColor::Cyan, false, 2.0f, 0, 1.0f);
+	}
+
+	if (bBlocked)
+	{
+		if (bPrintDebugMessages) PrintClimbDebug(TEXT("Climb up rejected: no room to stand on top of the ledge."), FColor::Red);
+		return false;
+	}
+
+	bIsClimbingUp = true;
+	PendingClimbUpStandLocation = StandLocation;
+
+	// The mantle needs to move up and forward through the wall-normal axis, which the hang's plane
+	// constraint would otherwise block.
+	if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+	{
+		Movement->SetPlaneConstraintEnabled(false);
+	}
+
+	if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+	{
+		SavedCapsuleCollisionType = static_cast<uint8>(Capsule->GetCollisionEnabled());
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	float Duration = ClimbUpFallbackDuration;
+	bClimbUpRootMotionDriven = false;
+
+	UAnimInstance* AnimInstance = Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
+	if (ClimbUpMontage && AnimInstance)
+	{
+		AnimInstance->SetRootMotionMode(ERootMotionMode::RootMotionFromMontagesOnly);
+
+		const float PlayedDuration = AnimInstance->Montage_Play(ClimbUpMontage, 1.0f, EMontagePlayReturnType::Duration);
+		if (PlayedDuration > 0.0f)
+		{
+			Duration = PlayedDuration;
+			bClimbUpRootMotionDriven = true;
+
+			FOnMontageBlendingOutStarted BlendOutDelegate;
+			BlendOutDelegate.BindUObject(this, &UClimbingComponent::HandleClimbUpMontageBlendingOut);
+			AnimInstance->Montage_SetBlendingOutDelegate(BlendOutDelegate, ClimbUpMontage);
+		}
+	}
+
+	if (bPrintDebugMessages) PrintClimbDebug(TEXT("Climbing up onto the ledge."), FColor::Green);
+
+	GetWorld()->GetTimerManager().SetTimer(ClimbUpTimerHandle, this, &UClimbingComponent::FinishClimbUp, Duration, false);
+	return true;
+}
+
+void UClimbingComponent::HandleClimbUpMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted)
+{
+	FinishClimbUp();
+}
+
+void UClimbingComponent::FinishClimbUp()
+{
+	if (!bIsClimbingUp)
 	{
 		return;
 	}
 
-	FLedgeTraceResult Result;
-	Result.bValid = true;
-	Result.LedgeEdgeLocation = PendingJumpLedgeEdge;
-	Result.WallNormal = PendingJumpWallNormal;
-	Result.bLegsContact = bPendingJumpLegsContact;
+	if (ACharacter* Character = GetOwnerCharacter())
+	{
+		UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+		Movement->SetPlaneConstraintEnabled(false);
+		Movement->SetMovementMode(MOVE_Walking);
+		Movement->StopMovementImmediately();
+		Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
 
-	ApplyHangTransform(Result);
+		if (!bClimbUpRootMotionDriven)
+		{
+			Character->SetActorLocation(PendingClimbUpStandLocation);
+		}
+
+		if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+		{
+			Capsule->SetCollisionEnabled(static_cast<ECollisionEnabled::Type>(SavedCapsuleCollisionType));
+		}
+
+		if (UAnimInstance* AnimInstance = Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr)
+		{
+			AnimInstance->SetRootMotionMode(static_cast<ERootMotionMode::Type>(SavedRootMotionMode));
+		}
+	}
+
+	bIsHanging = false;
+	bIsClimbingUp = false;
+	bHasLegsContact = false;
+	LastDetachTime = GetWorld()->GetTimeSeconds();
 }
 
-UAnimMontage* UClimbingComponent::SelectJumpMontage(const FVector2D& RawInput) const
+UAnimMontage* UClimbingComponent::SelectMoveMontage(const FVector2D& RawInput) const
 {
-	if (RawInput.Y > 0.0f) return JumpUpMontage;
-	if (RawInput.Y < 0.0f) return JumpDownMontage;
-	if (RawInput.X > 0.0f) return JumpRightMontage;
-	if (RawInput.X < 0.0f) return JumpLeftMontage;
+	if (RawInput.Y > 0.0f) return MoveUpMontage;
+	if (RawInput.Y < 0.0f) return MoveDownMontage;
+	if (RawInput.X > 0.0f) return MoveRightMontage;
+	if (RawInput.X < 0.0f) return MoveLeftMontage;
 	return nullptr;
+}
+
+float UClimbingComponent::PlayMoveMontage(UAnimMontage* Montage)
+{
+	if (!Montage)
+	{
+		return -1.0f;
+	}
+
+	ACharacter* Character = GetOwnerCharacter();
+	UAnimInstance* AnimInstance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
+	if (!AnimInstance)
+	{
+		return -1.0f;
+	}
+
+	const float PlayedDuration = AnimInstance->Montage_Play(Montage, 1.0f, EMontagePlayReturnType::Duration);
+	if (PlayedDuration <= 0.0f)
+	{
+		return -1.0f;
+	}
+
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this, &UClimbingComponent::HandleMoveMontageEnded);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, Montage);
+
+	return PlayedDuration;
+}
+
+void UClimbingComponent::HandleMoveMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (ACharacter* Character = GetOwnerCharacter())
+	{
+		if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+		{
+			Movement->StopMovementImmediately();
+		}
+	}
 }
 
 void UClimbingComponent::StartMoveCooldown(float Duration)
@@ -542,7 +715,7 @@ void UClimbingComponent::ClearMoveCooldown()
 
 void UClimbingComponent::JumpFromLedge()
 {
-	if (!bIsHanging)
+	if (!bIsHanging || bIsClimbingUp)
 	{
 		return;
 	}
@@ -592,12 +765,18 @@ void UClimbingComponent::StopHanging()
 		Movement->SetMovementMode(MOVE_Falling);
 
 		Character->bUseControllerRotationYaw = bSavedUseControllerRotationYaw;
+
+		if (UAnimInstance* AnimInstance = Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr)
+		{
+			AnimInstance->SetRootMotionMode(static_cast<ERootMotionMode::Type>(SavedRootMotionMode));
+		}
 	}
 
-	GetWorld()->GetTimerManager().ClearTimer(JumpRepositionTimerHandle);
 	GetWorld()->GetTimerManager().ClearTimer(MoveCooldownTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(ClimbUpTimerHandle);
 
 	bIsHanging = false;
+	bIsClimbingUp = false;
 	bHasLegsContact = false;
 	bMoveOnCooldown = false;
 	bJumpModifierHeld = false;

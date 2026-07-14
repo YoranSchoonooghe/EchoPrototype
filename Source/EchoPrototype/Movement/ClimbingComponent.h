@@ -16,6 +16,7 @@ struct FLedgeTraceResult
 	FVector LedgeEdgeLocation = FVector::ZeroVector;
 	FVector WallNormal = FVector::ForwardVector;
 	bool bLegsContact = false;
+	AActor* HitActor = nullptr;
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -116,19 +117,21 @@ protected:
 	float ForwardOffset = 35.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Position")
-	float HeightOffset = -110.0f;
+	float HeightOffset = -63.0f;
 
-	// How long the character takes to smoothly blend into a new hang position
+	UPROPERTY(EditAnywhere, Category = "Climbing|Position")
+	float SidewaysOffset = 10.0f;
+
 	UPROPERTY(EditAnywhere, Category = "Climbing|Position")
 	float HangBlendDuration = 0.2f;
 
 	// Normal shimmy step
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
-	float ShimmyStepDistance = 60.0f;
+	float ShimmyStepDistance = 120.0f;
 
 	// if no ledge exists at ShimmyStepDistance, the shimmy keeps scanning outward up to this distance
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
-	float MaxShimmyDistance = 140.0f;
+	float MaxShimmyDistance = 280.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
 	float ShimmyVerticalTolerance = 50.0f;
@@ -148,23 +151,34 @@ protected:
 	float ScanStepSize = 40.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
-	float JumpRepositionDelay = 0.3f;
-
+	float JumpFallbackBlendDuration = 0.3f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
 	float MoveCooldown = 0.25f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
-	TObjectPtr<UAnimMontage> JumpUpMontage;
+	TObjectPtr<UAnimMontage> MoveUpMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
-	TObjectPtr<UAnimMontage> JumpDownMontage;
+	TObjectPtr<UAnimMontage> MoveDownMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
-	TObjectPtr<UAnimMontage> JumpLeftMontage;
+	TObjectPtr<UAnimMontage> MoveLeftMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
-	TObjectPtr<UAnimMontage> JumpRightMontage;
+	TObjectPtr<UAnimMontage> MoveRightMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Climbing|ClimbUp")
+	TObjectPtr<UAnimMontage> ClimbUpMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Climbing|ClimbUp")
+	float ClimbUpForwardOffset = 60.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Climbing|ClimbUp")
+	float ClimbUpFallbackDuration = 0.8f;
+
+	UPROPERTY(EditAnywhere, Category = "Climbing|ClimbUp")
+	FName ClimbUpRequiredTag = "Up";
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Debug")
 	bool bDrawDebugShapes = false;
@@ -178,44 +192,55 @@ private:
 	bool IsVerticalMoveValid(const FVector& Direction, const FLedgeTraceResult& LedgeResult) const;
 	void TryStartHang(bool bPrintFailures = true);
 	void StopHanging();
-	void ApplyHangTransform(const FLedgeTraceResult& LedgeResult);
+	void ApplyHangTransform(const FLedgeTraceResult& LedgeResult, float BlendDurationOverride = -1.0f);
 	void TryShimmyStep(const FVector& Direction, float StepDistance);
 	void TryJumpToLedge(const FVector& Direction, const FVector2D& RawInput);
-	void ApplyPendingJumpReposition();
-	UAnimMontage* SelectJumpMontage(const FVector2D& RawInput) const;
+	UAnimMontage* SelectMoveMontage(const FVector2D& RawInput) const;
+	float PlayMoveMontage(UAnimMontage* Montage);
+	void HandleMoveMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	bool TryClimbUp();
+	void FinishClimbUp();
+	void HandleClimbUpMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted);
 
 	void StartMoveCooldown(float Duration);
 	void ClearMoveCooldown();
 
-	void StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation);
+	void StartBlendTo(const FVector& TargetLocation, const FRotator& TargetRotation, float Duration);
 	void UpdateBlend(float DeltaTime);
 
 	ACharacter* GetOwnerCharacter() const;
 
 	bool bIsHanging = false;
+	bool bIsClimbingUp = false;
 	bool bHasLegsContact = false;
 	bool bJumpModifierHeld = false;
 	bool bMoveOnCooldown = false;
 	bool bSavedUseControllerRotationYaw = false;
 	float LastDetachTime = -10.0f;
 
+	FVector PendingClimbUpStandLocation = FVector::ZeroVector;
+	FTimerHandle ClimbUpTimerHandle;
+
+	bool bClimbUpRootMotionDriven = false;
+
+	uint8 SavedCapsuleCollisionType = 0;
+
 	FVector2D LastShimmyInput = FVector2D::ZeroVector;
 	float LastShimmyInputTime = -10.0f;
 
+	uint8 SavedRootMotionMode = 0;
+
 	FVector CachedLedgeEdge = FVector::ZeroVector;
 	FVector CachedWallNormal = FVector::ForwardVector;
-
-	FVector PendingJumpLedgeEdge = FVector::ZeroVector;
-	FVector PendingJumpWallNormal = FVector::ForwardVector;
-	bool bPendingJumpLegsContact = false;
+	TWeakObjectPtr<AActor> CachedLedgeActor;
 
 	bool bIsBlending = false;
 	float BlendElapsed = 0.0f;
+	float ActiveBlendDuration = 0.2f;
 	FVector BlendStartLocation = FVector::ZeroVector;
 	FVector BlendTargetLocation = FVector::ZeroVector;
 	FQuat BlendStartRotation = FQuat::Identity;
 	FQuat BlendTargetRotation = FQuat::Identity;
 
 	FTimerHandle MoveCooldownTimerHandle;
-	FTimerHandle JumpRepositionTimerHandle;
 };
