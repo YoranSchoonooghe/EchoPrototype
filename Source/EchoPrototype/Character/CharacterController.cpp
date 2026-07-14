@@ -43,7 +43,7 @@ void ACharacterController::SetupInputComponent()
 				EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACharacterController::Move);
 
 			if (JumpAction)
-				EIC->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacterController::Jump);
+				EIC->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacterController::Jump);
 			
 			if (SneakAction)
 			{
