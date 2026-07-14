@@ -818,6 +818,13 @@ void UClimbingComponent::StopHanging()
 		{
 			AnimInstance->SetRootMotionMode(static_cast<ERootMotionMode::Type>(SavedRootMotionMode));
 		}
+		if (bIsClimbingUp)
+		{
+			if (UCapsuleComponent* Capsule = Character->GetCapsuleComponent())
+			{
+				Capsule->SetCollisionEnabled(static_cast<ECollisionEnabled::Type>(SavedCapsuleCollisionType));
+			}
+		}
 	}
 
 	GetWorld()->GetTimerManager().ClearTimer(MoveCooldownTimerHandle);
