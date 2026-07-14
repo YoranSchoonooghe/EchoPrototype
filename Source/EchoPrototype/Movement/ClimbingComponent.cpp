@@ -378,23 +378,31 @@ bool UClimbingComponent::ScanForLedge(const FVector& Direction, float MinDistanc
 		return false;
 	}
 
+	const bool bVerticalScan = FMath::Abs(Direction.Z) > 0.5f;
+	const float VerticalOffsets[3] = { 0.0f, ShimmyVerticalTolerance, -ShimmyVerticalTolerance };
+	const int32 NumOffsets = bVerticalScan ? 1 : 3;
+
 	for (float Distance = MinDistance; Distance <= MaxDistance; Distance += ScanStepSize)
 	{
-		const FVector ProbeOrigin = Character->GetActorLocation() + Direction * Distance;
-
-		FLedgeTraceResult Candidate;
-		if (!DetectLedge(ProbeOrigin, Character->GetActorRotation(), Candidate, false))
+		for (int32 OffsetIndex = 0; OffsetIndex < NumOffsets; ++OffsetIndex)
 		{
-			continue;
-		}
+			const FVector ProbeOrigin = Character->GetActorLocation() + Direction * Distance
+				+ FVector(0.0f, 0.0f, VerticalOffsets[OffsetIndex]);
 
-		if (!IsVerticalMoveValid(Direction, Candidate))
-		{
-			continue;
-		}
+			FLedgeTraceResult Candidate;
+			if (!DetectLedge(ProbeOrigin, Character->GetActorRotation(), Candidate, false))
+			{
+				continue;
+			}
 
-		OutResult = Candidate;
-		return true;
+			if (!IsVerticalMoveValid(Direction, Candidate))
+			{
+				continue;
+			}
+
+			OutResult = Candidate;
+			return true;
+		}
 	}
 
 	return false;
@@ -426,12 +434,22 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 	}
 
 	FLedgeTraceResult LedgeResult;
-	if (!ScanForLedge(Direction, StepDistance, MaxShimmyDistance, LedgeResult))
+	if (ScanForLedge(Direction, StepDistance, MaxShimmyDistance, LedgeResult))
 	{
+		ApplyHangTransform(LedgeResult);
 		return;
 	}
 
-	ApplyHangTransform(LedgeResult);
+	FLedgeTraceResult CornerResult;
+	if (DetectLedge(Character->GetActorLocation(), Direction.Rotation(), CornerResult, /*bPrintFailures=*/false))
+	{
+		if (bPrintDebugMessages)
+		{
+			PrintClimbDebug(TEXT("Inside corner: turning onto the adjacent ledge."), FColor::Green);
+		}
+
+		ApplyHangTransform(CornerResult);
+	}
 }
 
 void UClimbingComponent::TryJumpToLedge(const FVector& Direction, const FVector2D& RawInput)

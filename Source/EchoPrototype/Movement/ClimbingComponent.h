@@ -95,7 +95,7 @@ protected:
 	float MaxLedgeSlopeAngle = 45.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Detection", meta = (ClampMin = "0", ClampMax = "1"))
-	float MaxWallNormalZ = 0.4f;
+	float MaxWallNormalZ = 0.6f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Detection", meta = (ClampMin = "0.1", ClampMax = "1"))
 	float HangSpaceCheckScale = 0.85f;
@@ -126,9 +126,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
 	float ShimmyStepDistance = 60.0f;
 
-	// if no ledge exists at ShimmyStepDistance, the shimmy keeps scanning outward up to this distance 
+	// if no ledge exists at ShimmyStepDistance, the shimmy keeps scanning outward up to this distance
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
 	float MaxShimmyDistance = 140.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
+	float ShimmyVerticalTolerance = 50.0f;
 
 	// minimum Z difference between the current ledge and a new one for an up/down move to count
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
