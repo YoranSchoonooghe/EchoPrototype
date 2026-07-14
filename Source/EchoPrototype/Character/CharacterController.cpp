@@ -83,6 +83,9 @@ void ACharacterController::SetupInputComponent()
 			if (StealthKillAction)
 				EIC->BindAction(StealthKillAction, ETriggerEvent::Started, this, &ACharacterController::StealthKill);
 
+			if (ClimbAction)
+				EIC->BindAction(ClimbAction, ETriggerEvent::Started, this, &ACharacterController::Climb);
+
 			//Interact
 			if (InteractAction)
 				EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &ACharacterController::Interact);
@@ -230,6 +233,13 @@ void ACharacterController::StealthKill()
 	if (!CachedPlayerCharacter) return;
 
 	CachedPlayerCharacter->StealthKillPressed();
+}
+
+void ACharacterController::Climb()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->ClimbPressed();
 }
 
 void ACharacterController::Interact()

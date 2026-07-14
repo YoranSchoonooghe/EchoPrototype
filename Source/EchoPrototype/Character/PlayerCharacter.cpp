@@ -6,6 +6,7 @@
 #include "../Combat/CombatComponent.h"
 #include "../Combat/HealthComponent.h"
 #include "../Combat/StealthKillComponent.h"
+#include "../Movement/ClimbingComponent.h"
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -38,6 +39,7 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	StealthKill = CreateDefaultSubobject<UStealthKillComponent>(TEXT("StealthKillComponent"));
+	Climbing = CreateDefaultSubobject<UClimbingComponent>(TEXT("ClimbingComponent"));
 	Interaction = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AIPerceptionStimuliSourceComponent"));
@@ -54,6 +56,12 @@ APlayerCharacter::APlayerCharacter()
 
 void APlayerCharacter::Move(const FVector2D& Value)
 {
+	if (Climbing && Climbing->IsHanging())
+	{
+		Climbing->HandleShimmyInput(Value);
+		return;
+	}
+
 	if (CurrentState && !CurrentState->CanMove()) return;
 
 
@@ -75,6 +83,17 @@ void APlayerCharacter::Move(const FVector2D& Value)
 		AddMovementInput(ForwardDirection, Value.Y);
 		AddMovementInput(RightDirection, Value.X);
 	}
+}
+
+void APlayerCharacter::Jump()
+{
+	if (Climbing && Climbing->IsHanging())
+	{
+		Climbing->JumpFromLedge();
+		return;
+	}
+
+	Super::Jump();
 }
 
 void APlayerCharacter::StartSprinting()
@@ -138,6 +157,12 @@ void APlayerCharacter::Landed(const FHitResult& Hit)
 
 void APlayerCharacter::HandleDeath()
 {
+	// Dying while hanging would otherwise leave the corpse floating in flying mode.
+	if (Climbing && Climbing->IsHanging())
+	{
+		Climbing->CancelHanging();
+	}
+
 	ChangeState(NewObject<UPlayerState_Dead>(this));
 }
 
@@ -176,9 +201,16 @@ void APlayerCharacter::ChangeState(UPlayerStateBase* NewState)
 
 void APlayerCharacter::EchoPressed()
 {
-	if (Echo)
-		Echo->OnEchoPressed();
-	
+	if (!Echo) return;
+
+	// Pressing Echo while one is placed teleports (see UEchoComponent::OnEchoPressed) - same
+	// hang-cancel guard as TeleportToEcho, or the character arrives stuck in flying mode.
+	if (Climbing && Climbing->IsHanging() && Echo->GetEchoState() == EEchoState::Placed)
+	{
+		Climbing->CancelHanging();
+	}
+
+	Echo->OnEchoPressed();
 }
 
 void APlayerCharacter::EchoReleased()
@@ -195,8 +227,17 @@ void APlayerCharacter::LookThroughEcho()
 
 void APlayerCharacter::TeleportToEcho()
 {
-	if (Echo)
-		Echo->TeleportToEcho();
+	if (!Echo) return;
+
+	// A teleport while hanging would leave the character stuck in flying mode with the hang
+	// constraints still active at the destination. Only cancel when the teleport will actually
+	// happen (an echo is placed) - otherwise the key press shouldn't drop the character.
+	if (Climbing && Climbing->IsHanging() && Echo->GetEchoState() == EEchoState::Placed)
+	{
+		Climbing->CancelHanging();
+	}
+
+	Echo->TeleportToEcho();
 }
 
 void APlayerCharacter::AttackPressed()
@@ -212,6 +253,11 @@ void APlayerCharacter::AttackReleased()
 void APlayerCharacter::StealthKillPressed()
 {
 	if (CurrentState) ChangeState(CurrentState->OnStealthKillPressed(this));
+}
+
+void APlayerCharacter::ClimbPressed()
+{
+	if (CurrentState) ChangeState(CurrentState->OnClimbPressed(this));
 }
 
 bool APlayerCharacter::IsAttacking() const

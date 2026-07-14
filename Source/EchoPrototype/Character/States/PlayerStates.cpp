@@ -2,12 +2,24 @@
 #include "../PlayerCharacter.h"
 #include "../../Combat/CombatComponent.h"
 #include "../../Combat/StealthKillComponent.h"
+#include "../../Movement/ClimbingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 // IDLE / WALK STATE
 void UPlayerState_IdleWalk::EnterState(APlayerCharacter* Character)
 {
 	Character->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+}
+
+UPlayerStateBase* UPlayerState_IdleWalk::UpdateState(APlayerCharacter* Character, float DeltaTime)
+{
+	UClimbingComponent* Climbing = Character->GetClimbingComponent();
+	if (Climbing && Climbing->IsHanging())
+	{
+		return NewObject<UPlayerState_Hanging>(Character);
+	}
+
+	return nullptr;
 }
 
 UPlayerStateBase* UPlayerState_IdleWalk::OnSprintPressed(APlayerCharacter* Character)
@@ -62,10 +74,36 @@ UPlayerStateBase* UPlayerState_IdleWalk::OnStealthKillPressed(APlayerCharacter* 
 	return nullptr;
 }
 
+UPlayerStateBase* UPlayerState_IdleWalk::OnClimbPressed(APlayerCharacter* Character)
+{
+	if (UClimbingComponent* Climbing = Character->GetClimbingComponent())
+	{
+		Climbing->OnClimbActionPressed();
+
+		if (Climbing->IsHanging())
+		{
+			return NewObject<UPlayerState_Hanging>(Character);
+		}
+	}
+
+	return nullptr;
+}
+
 // SPRINT STATE
 void UPlayerState_Sprint::EnterState(APlayerCharacter* Character)
 {
 	Character->GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+}
+
+UPlayerStateBase* UPlayerState_Sprint::UpdateState(APlayerCharacter* Character, float DeltaTime)
+{
+	UClimbingComponent* Climbing = Character->GetClimbingComponent();
+	if (Climbing && Climbing->IsHanging())
+	{
+		return NewObject<UPlayerState_Hanging>(Character);
+	}
+
+	return nullptr;
 }
 
 UPlayerStateBase* UPlayerState_Sprint::OnSprintReleased(APlayerCharacter* Character)
@@ -102,6 +140,21 @@ UPlayerStateBase* UPlayerState_Sprint::OnAttackReleased(APlayerCharacter* Charac
 		if (Combat->IsAttacking())
 		{
 			return NewObject<UPlayerState_Attacking>(Character);
+		}
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Sprint::OnClimbPressed(APlayerCharacter* Character)
+{
+	if (UClimbingComponent* Climbing = Character->GetClimbingComponent())
+	{
+		Climbing->OnClimbActionPressed();
+
+		if (Climbing->IsHanging())
+		{
+			return NewObject<UPlayerState_Hanging>(Character);
 		}
 	}
 
@@ -176,6 +229,48 @@ UPlayerStateBase* UPlayerState_StealthKilling::UpdateState(APlayerCharacter* Cha
 	if (!StealthKill || !StealthKill->IsPerformingKill())
 	{
 		return NewObject<UPlayerState_IdleWalk>(Character);
+	}
+
+	return nullptr;
+}
+
+// HANGING STATE (ledge climbing)
+UPlayerStateBase* UPlayerState_Hanging::UpdateState(APlayerCharacter* Character, float DeltaTime)
+{
+	UClimbingComponent* Climbing = Character->GetClimbingComponent();
+	if (!Climbing || !Climbing->IsHanging())
+	{
+		return NewObject<UPlayerState_IdleWalk>(Character);
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Hanging::OnClimbPressed(APlayerCharacter* Character)
+{
+	if (UClimbingComponent* Climbing = Character->GetClimbingComponent())
+	{
+		Climbing->OnClimbActionPressed();
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Hanging::OnSprintPressed(APlayerCharacter* Character)
+{
+	if (UClimbingComponent* Climbing = Character->GetClimbingComponent())
+	{
+		Climbing->SetJumpModifierHeld(true);
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Hanging::OnSprintReleased(APlayerCharacter* Character)
+{
+	if (UClimbingComponent* Climbing = Character->GetClimbingComponent())
+	{
+		Climbing->SetJumpModifierHeld(false);
 	}
 
 	return nullptr;

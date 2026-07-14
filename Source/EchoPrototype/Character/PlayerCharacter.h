@@ -11,6 +11,7 @@ class UEchoComponent;
 class UCombatComponent;
 class UHealthComponent;
 class UStealthKillComponent;
+class UClimbingComponent;
 class UPlayerStateBase;
 class UAIPerceptionStimuliSourceComponent;
 
@@ -33,12 +34,18 @@ public:
 
 	//Movement
 	void Move(const FVector2D& Value);
+	virtual void Jump() override;
 
 	void StartSprinting();
 	void StopSprinting();
 
 	void StartSneaking();
 	void StopSneaking();
+
+	//Climbing
+	void ClimbPressed();
+
+	FORCEINLINE UClimbingComponent* GetClimbingComponent() const { return Climbing; }
 	
 	//Camera
 	void CameraMove(const FVector2D& Value);
@@ -91,6 +98,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStealthKillComponent> StealthKill;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UClimbingComponent> Climbing;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInteractionComponent> Interaction;

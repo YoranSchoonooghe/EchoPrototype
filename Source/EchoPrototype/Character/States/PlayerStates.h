@@ -14,11 +14,14 @@ class ECHOPROTOTYPE_API UPlayerState_IdleWalk : public UPlayerStateBase
 public:
 	virtual void EnterState(class APlayerCharacter* Character) override;
 
+	virtual UPlayerStateBase* UpdateState(APlayerCharacter* Character, float DeltaTime) override;
+
 	virtual UPlayerStateBase* OnSprintPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnSneakPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnStealthKillPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) override;
 };
 
 // SPRINT STATE
@@ -30,10 +33,13 @@ class ECHOPROTOTYPE_API UPlayerState_Sprint : public UPlayerStateBase
 public:
 	virtual void EnterState(class APlayerCharacter* Character) override;
 
+	virtual UPlayerStateBase* UpdateState(APlayerCharacter* Character, float DeltaTime) override;
+
 	virtual UPlayerStateBase* OnSprintReleased(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnSneakPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) override;
 
 private:
 	 float SprintSpeed = 800.0f;
@@ -86,6 +92,22 @@ class ECHOPROTOTYPE_API UPlayerState_StealthKilling : public UPlayerStateBase
 
 public:
 	virtual UPlayerStateBase* UpdateState(APlayerCharacter* Character, float DeltaTime) override;
+
+	virtual bool CanMove() const override { return false; }
+};
+
+// HANGING STATE (ledge climbing)
+UCLASS()
+class ECHOPROTOTYPE_API UPlayerState_Hanging : public UPlayerStateBase
+{
+	GENERATED_BODY()
+
+public:
+	virtual UPlayerStateBase* UpdateState(APlayerCharacter* Character, float DeltaTime) override;
+
+	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnSprintPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnSprintReleased(APlayerCharacter* Character) override;
 
 	virtual bool CanMove() const override { return false; }
 };

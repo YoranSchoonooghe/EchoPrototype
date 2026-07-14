@@ -27,5 +27,7 @@ public:
 
 	virtual UPlayerStateBase* OnStealthKillPressed(APlayerCharacter* Character) { return nullptr; }
 
+	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) { return nullptr; }
+
 	virtual bool CanMove() const { return true; }
 };

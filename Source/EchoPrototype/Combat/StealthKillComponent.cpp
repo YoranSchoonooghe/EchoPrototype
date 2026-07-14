@@ -87,7 +87,7 @@ AEnemyCharacter* UStealthKillComponent::FindStealthKillTarget() const
 		const FVector ToPlayer = (OwnerCharacter->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal2D();
 		if (ToPlayer.IsNearlyZero())
 		{
-			continue;
+			continue;	
 		}
 
 		const float DotFromBehind = FVector::DotProduct(-Enemy->GetActorForwardVector(), ToPlayer);
