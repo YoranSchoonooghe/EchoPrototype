@@ -16,7 +16,7 @@ void USE_ToggleVisibility::Execute(AActor* OwningActor)
 
 void USE_ToggleVisibility::UpdateVisibility(AActor* OwningActor)
 {
-	OwningActor->SetActorHiddenInGame(_bIsVisible);
+	OwningActor->SetActorHiddenInGame(!_bIsVisible);
 	if (bUseCollision)
-		OwningActor->SetActorEnableCollision(!_bIsVisible);
+		OwningActor->SetActorEnableCollision(_bIsVisible);
 }

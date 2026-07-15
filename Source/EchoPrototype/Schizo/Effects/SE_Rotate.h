@@ -17,6 +17,12 @@ public:
 	FRotator TargetRotation{ FRotator(0, 90, 0) };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation", meta = (EditCondition = "!bRotateInfinitely"))
 	float Duration{ 1.0f };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation", meta = (EditCondition = "!bRotateInfinitely"))
+	float Delay{ 0.0f };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation", meta = (EditCondition = "!bRotateInfinitely"))
+	bool bRepeat{ false };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation", meta = (EditCondition = "!bRotateInfinitely && bRepeat"))
+	float RestTime{ 0.0f };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation", meta = (EditCondition = "bRotateInfinitely"))
 	float AngularSpeed{ 90.0f };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotation", meta = (EditCondition = "bRotateInfinitely"))
@@ -27,8 +33,11 @@ public:
 	virtual void Execute(AActor* OwningActor) override;
 
 private:
+	bool FinishedDelay();
+
 	FRotator _startRotation;
+	FRotator _targetRotation;
 	bool _bIsRotating{ false };
 	float _elapsedTime{ 0.0f };
-
+	bool _bFinishedDelay{ false };
 };

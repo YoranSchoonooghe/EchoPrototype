@@ -2,17 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "MovingPlatform.generated.h"
+#include "SpinningBlade.generated.h"
 
 class USchizoComponent;
 
 UCLASS()
-class ECHOPROTOTYPE_API AMovingPlatform : public AActor
+class ECHOPROTOTYPE_API ASpinningBlade : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	AMovingPlatform();
+	ASpinningBlade();
 
 protected:
 	virtual void BeginPlay() override;

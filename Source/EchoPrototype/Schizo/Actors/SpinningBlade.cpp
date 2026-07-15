@@ -1,7 +1,7 @@
-#include "MovingPlatform.h"
+#include "SpinningBlade.h"
 #include "EchoPrototype/Schizo/SchizoComponent.h"
 
-AMovingPlatform::AMovingPlatform()
+ASpinningBlade::ASpinningBlade()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -14,13 +14,13 @@ AMovingPlatform::AMovingPlatform()
 	SchizoComponent = CreateDefaultSubobject<USchizoComponent>(TEXT("SchizoComponent"));
 }
 
-void AMovingPlatform::BeginPlay()
+void ASpinningBlade::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-void AMovingPlatform::Tick(float DeltaTime)
+void ASpinningBlade::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
