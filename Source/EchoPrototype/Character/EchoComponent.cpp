@@ -295,6 +295,7 @@ void UEchoComponent::PlaceEcho()
 	}
 	ActiveEcho->SetVisualState(EEchoVisualState::Placed);
 	EchoState = EEchoState::Placed;
+	OnPlaced.Broadcast();
 }
 
 void UEchoComponent::DestroyActiveEcho()

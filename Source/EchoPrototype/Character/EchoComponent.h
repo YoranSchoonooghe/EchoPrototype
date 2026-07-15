@@ -27,6 +27,7 @@ enum class EEchoFOVEffect : uint8
 	ZoomingIn
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEchoPlacedSignature);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ECHOPROTOTYPE_API UEchoComponent : public UActorComponent
@@ -73,6 +74,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void GetEchoViewPoint(FVector& OutLocation, FRotator& OutRotation) const;
+
+	UPROPERTY(BlueprintAssignable, Category = "Echo")
+	FOnEchoPlacedSignature OnPlaced;
 
 protected:
 	// Called when the game starts
