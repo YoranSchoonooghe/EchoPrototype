@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "ActivatableInterface.h"
 #include "Effects/SchizoEffect.h"
 #include "SchizoComponent.generated.h"
 
@@ -19,8 +18,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Schizo")
 	int EchoCountTrigger{ 1 };
-
-	TArray<UActorComponent*> ActivatableComponents;
 
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

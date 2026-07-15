@@ -1,5 +1,4 @@
 #include "RotatingStaircase.h"
-#include "EchoPrototype/Schizo/RotationActivationComponent.h"
 #include "EchoPrototype/Schizo/SchizoComponent.h"
 
 ARotatingStaircase::ARotatingStaircase()
@@ -12,7 +11,6 @@ ARotatingStaircase::ARotatingStaircase()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(RootComponent);
 
-	RotationComponent = CreateDefaultSubobject<URotationActivationComponent>(TEXT("RotationActivationComponent"));
 	SchizoComponent = CreateDefaultSubobject<USchizoComponent>(TEXT("SchizoComponent"));
 }
 

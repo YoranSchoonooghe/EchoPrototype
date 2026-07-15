@@ -13,7 +13,6 @@ void USchizoComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ActivatableComponents = GetOwner()->GetComponentsByInterface(UActivatableInterface::StaticClass());
 	BindToPlayerEchoPlaced();
 
 	for (USchizoEffect* pSchizoEffect : SchizoEffects)
@@ -66,10 +65,5 @@ void USchizoComponent::ActivateSchizoEffect()
 		pSchizoEffect->Execute(GetOwner());
 	}
 	
-	//for (auto* pComponent : ActivatableComponents)
-	//{
-	//	IActivatableInterface::Execute_Activate(pComponent);
-	//}
-
 	OnActivated.Broadcast();
 }

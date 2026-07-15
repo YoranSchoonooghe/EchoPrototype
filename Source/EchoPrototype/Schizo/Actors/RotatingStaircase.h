@@ -4,7 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "RotatingStaircase.generated.h"
 
-class URotationActivationComponent;
 class USchizoComponent;
 
 UCLASS()
@@ -20,8 +19,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> Mesh;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
-	TObjectPtr<URotationActivationComponent> RotationComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
 	TObjectPtr<USchizoComponent> SchizoComponent;
 
