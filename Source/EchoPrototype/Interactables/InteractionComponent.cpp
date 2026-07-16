@@ -38,10 +38,10 @@ void UInteractionComponent::UpdateFocus()
 {
 	AActor* PreviousFocusedActor = CurrentFocusedActor.Get();
 
-	// FIX: Grab the player controller safely even if the main pawn is temporarily unpossessed
 	APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+	APawn* PossessedPawn = PC ? PC->GetPawn() : nullptr;
 
-	if (!PC)
+	if (!PC || !PossessedPawn)
 	{
 		CurrentFocusedActor = nullptr;
 	}
@@ -49,40 +49,15 @@ void UInteractionComponent::UpdateFocus()
 	{
 		FVector CamLoc;
 		FRotator CamRot;
-		bool bIsViewingThroughEcho = false;
+		
+		PC->GetPlayerViewPoint(CamLoc, CamRot);
 
-		if (UEchoComponent* EchoComp = GetOwner()->FindComponentByClass<UEchoComponent>())
-		{
-			bIsViewingThroughEcho = EchoComp->IsViewingThroughEcho();
-			if (bIsViewingThroughEcho)
-			{
-				EchoComp->GetEchoViewPoint(CamLoc, CamRot);
-			}
-		}
-
-		if (!bIsViewingThroughEcho)
-		{
-			PC->GetPlayerViewPoint(CamLoc, CamRot);
-		}
+		const bool bIsPossessingEcho = PossessedPawn->IsA<AEchoCharacter>();
 
 		const FVector TraceEnd = CamLoc + (CamRot.Vector() * InteractionDistance);
 
 		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(GetOwner());
-
-		if (UEchoComponent* EchoComp = GetOwner()->FindComponentByClass<UEchoComponent>())
-		{
-			bIsViewingThroughEcho = EchoComp->IsViewingThroughEcho();
-			if (bIsViewingThroughEcho)
-			{
-				EchoComp->GetEchoViewPoint(CamLoc, CamRot);
-			}
-
-			if (AActor* ActiveEchoActor = EchoComp->GetActiveEcho())
-			{
-				QueryParams.AddIgnoredActor(ActiveEchoActor);
-			}
-		}
+		QueryParams.AddIgnoredActor(PossessedPawn);
 
 		FHitResult Hit;
 		const bool bHit = GetWorld()->SweepSingleByChannel(
@@ -96,32 +71,25 @@ void UInteractionComponent::UpdateFocus()
 		{
 			const bool bRequiresEcho = IInteractableInterface::Execute_RequiresEchoVision(HitActor);
 
-			if (bRequiresEcho && !bIsViewingThroughEcho)
-			{
-				CurrentFocusedActor = nullptr;
-			}
-			else
-			{
-				CurrentFocusedActor = HitActor;
-			}
+			CurrentFocusedActor = (bRequiresEcho && !bIsPossessingEcho) ? nullptr : HitActor;
 		}
 		else
 		{
 			CurrentFocusedActor = nullptr;
 		}
-	}
 
-	AActor* NewFocusedActor = CurrentFocusedActor.Get();
+		AActor* NewFocusedActor = CurrentFocusedActor.Get();
 
-	if (NewFocusedActor != PreviousFocusedActor)
-	{
-		FText Prompt = FText::GetEmpty();
-		if (NewFocusedActor && NewFocusedActor->Implements<UInteractableInterface>())
+		if (NewFocusedActor != PreviousFocusedActor)
 		{
-			Prompt = IInteractableInterface::Execute_GetInteractionPrompt(NewFocusedActor);
-		}
+			FText Prompt = FText::GetEmpty();
+			if (NewFocusedActor && NewFocusedActor->Implements<UInteractableInterface>())
+			{
+				Prompt = IInteractableInterface::Execute_GetInteractionPrompt(NewFocusedActor);
+			}
 
-		OnFocusedActorChanged.Broadcast(NewFocusedActor, Prompt);
+			OnFocusedActorChanged.Broadcast(NewFocusedActor, Prompt);
+		}
 	}
 }
 
@@ -133,5 +101,8 @@ void UInteractionComponent::OnInteractPressed()
 		return;
 	}
 
-	IInteractableInterface::Execute_Interact(Focused, GetOwner());
+	APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+	AActor* Interactor = (PC && PC->GetPawn()) ? static_cast<AActor*>(PC->GetPawn()) : GetOwner();
+
+	IInteractableInterface::Execute_Interact(Focused, Interactor);
 }

@@ -4,6 +4,8 @@
 #include "Lever.h"
 #include "Door.h"
 #include "Components/StaticMeshComponent.h"
+#include "EchoPrototype/Echo/EchoCharacter.h"
+#include "EchoPrototype/Character/EchoComponent.h"
 
 ALever::ALever()
 {
@@ -28,17 +30,51 @@ void ALever::BeginPlay()
 
 void ALever::Interact_Implementation(AActor* Interactor)
 {
-	bIsPulled = !bIsPulled;
+	if (!Interactor) return;
 
+	bool bCanInteract = false;
 
-	const FRotator NewRotation = RestRotation + FRotator(bIsPulled ? PulledPitchAngle : 0.0f, 0.0f, 0.0f);
-
-
-	LeverMesh->SetRelativeRotation(NewRotation);
-
-	if (LinkedDoor)
+	if (!bRequiresEcho)
 	{
-		LinkedDoor->ToggleDoor();
+		bCanInteract = true;
+	}
+	else
+	{
+		bool bIsEcho = Interactor->IsA<AEchoCharacter>();
+		bool bIsPlayerViewingThroughEcho = false;
+
+		if (UEchoComponent* EchoComp = Interactor->FindComponentByClass<UEchoComponent>())
+		{
+			if (EchoComp->IsViewingThroughEcho())
+			{
+				bIsPlayerViewingThroughEcho = true;
+			}
+		}
+
+		if (bIsEcho || bIsPlayerViewingThroughEcho)
+		{
+			bCanInteract = true;
+		}
+	}
+
+	if (bCanInteract)
+	{
+		bIsPulled = !bIsPulled;
+
+		const FRotator NewRotation = RestRotation + FRotator(bIsPulled ? PulledPitchAngle : 0.0f, 0.0f, 0.0f);
+		LeverMesh->SetRelativeRotation(NewRotation);
+
+		if (LinkedDoor)
+		{
+			LinkedDoor->ToggleDoor();
+		}
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("Lever requires Echo"));
+		}
 	}
 }
 

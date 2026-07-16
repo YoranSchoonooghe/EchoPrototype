@@ -2,6 +2,7 @@
 
 
 #include "EchoVisibilityComponent.h"
+#include "Components/PrimitiveComponent.h"
 
 // Sets default values for this component's properties
 UEchoVisibilityComponent::UEchoVisibilityComponent()
@@ -28,8 +29,11 @@ void UEchoVisibilityComponent::BeginPlay()
 		{
 			Comp->SetCustomDepthStencilValue(EchoStencilValue);
 			Comp->SetRenderCustomDepth(true);
-			Comp->SetVisibleInSceneCaptureOnly(false);
-			Comp->SetCastHiddenShadow(false);
+
+			Comp->bRenderInDepthPass = false;
+			Comp->bRenderInMainPass = false;
+
+			Comp->SetCastShadow(false);
 
 			Comp->MarkRenderStateDirty();
 		}

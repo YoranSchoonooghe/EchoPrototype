@@ -16,9 +16,6 @@
 #include "EchoPrototype/Character/EchoComponent.h"
 #include "EngineUtils.h"
 
-#include "Perception/AIPerceptionStimuliSourceComponent.h"
-#include "Perception/AISense_Sight.h"
-
 AEchoCharacter::AEchoCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
