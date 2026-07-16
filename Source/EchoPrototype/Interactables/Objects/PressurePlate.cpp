@@ -24,6 +24,7 @@ APressurePlate::APressurePlate()
 	PressureZone->SetRelativeLocation(FVector(0.0f, 0.0f, 25.0f));
 	PressureZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	PressureZone->SetCollisionResponseToAllChannels(ECR_Ignore);
+	PressureZone->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	PressureZone->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 }
 
@@ -47,7 +48,8 @@ bool APressurePlate::IsValidTrigger(AActor* OtherActor) const
 
 	if (bOnlyEchoTriggers)
 	{
-		return (Cast<AEchoCharacter>(OtherActor) != nullptr);
+		AEchoCharacter* EchoActor = Cast<AEchoCharacter>(OtherActor);
+		return (EchoActor && EchoActor->IsPlayerControlled());
 	}
 
 	return bOnlyPawnsTrigger ? (Cast<APawn>(OtherActor) != nullptr) : true;
