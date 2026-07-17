@@ -7,6 +7,7 @@
 #include "EchoPrototype/Character/PlayerCharacter.h"
 #include "EchoPrototype/Combat/HealthComponent.h"
 #include "EchoPrototype/Echo/EchoCharacter.h"
+#include "NavigationSystem.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -90,6 +91,31 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 {
 	auto const TargetPlayerKeyName = TEXT("TargetPlayer");
 
+	auto* pEcho = Cast<AEchoCharacter>(Actor);
+	if (pEcho)
+	{
+		if (_spottedEchoes.Contains(pEcho)) return;
+
+		if (pEcho->GetVisualState() == EEchoVisualState::Placed)
+		{
+			auto* pBlackboardComponent = GetBlackboardComponent();
+			if (!pBlackboardComponent) return;
+
+			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
+		}
+		else
+		{
+			if (_targetEcho)
+				_targetEcho->OnPlaced.RemoveDynamic(this, &AEnemyAIController::UpdateTargetEcho);
+
+			_targetEcho = pEcho;
+			_targetEcho->OnPlaced.AddDynamic(this, &AEnemyAIController::UpdateTargetEcho);
+		}
+
+		_spottedEchoes.Add(pEcho);
+		return;
+	}
+
 	auto* pPlayer = Cast<APlayerCharacter>(Actor);
 	if (pPlayer)
 	{
@@ -117,31 +143,6 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 
 		return;
 	}
-
-	auto* pEcho = Cast<AEchoCharacter>(Actor);
-	if (pEcho)
-	{
-		if (_spottedEchoes.Contains(pEcho)) return;
-
-		if (pEcho->GetVisualState() == EEchoVisualState::Placed)
-		{
-			auto* pBlackboardComponent = GetBlackboardComponent();
-			if (!pBlackboardComponent) return;
-
-			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
-		}
-		else
-		{
-			if (_targetEcho)
-				_targetEcho->OnPlaced.RemoveDynamic(this, &AEnemyAIController::UpdateTargetEcho);
-
-			_targetEcho = pEcho;
-			_targetEcho->OnPlaced.AddDynamic(this, &AEnemyAIController::UpdateTargetEcho);
-		}
-
-		_spottedEchoes.Add(pEcho);
-		return;
-	}
 }
 
 void AEnemyAIController::HandleSoundPerception(AActor* Actor, FAIStimulus Stimulus)
@@ -149,5 +150,12 @@ void AEnemyAIController::HandleSoundPerception(AActor* Actor, FAIStimulus Stimul
 	auto* pBlackboardComponent = GetBlackboardComponent();
 	if (!pBlackboardComponent) return;
 	
-	pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), Stimulus.StimulusLocation);
+	auto* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+	if (!navSystem) return;
+
+	FNavLocation projectedLocation;
+	if (navSystem->ProjectPointToNavigation(Stimulus.StimulusLocation, projectedLocation))
+	{
+		pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), projectedLocation);
+	}
 }
