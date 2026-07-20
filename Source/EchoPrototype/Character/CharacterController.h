@@ -14,6 +14,7 @@ class APlayerCharacter;
 
 class UInteractionComponent;
 class UInteractionPromptWidget;
+class UMenuStateBase;
 
 UCLASS()
 class ECHOPROTOTYPE_API ACharacterController : public APlayerController
@@ -68,9 +69,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Interaction")
 	TObjectPtr<UInputAction> InteractAction;
 
+	//Menu
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> PauseAction;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction UI")
 	TSubclassOf<UInteractionPromptWidget> InteractionPromptWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Menu")
+	TSubclassOf<UMenuStateBase> DefaultRootMenuState;
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -107,6 +115,9 @@ private:
 
 	//Interact
 	void Interact();
+
+	//Menu
+	void RequestPause();
 
 	UPROPERTY()
 	TObjectPtr<APlayerCharacter> CachedPlayerCharacter;

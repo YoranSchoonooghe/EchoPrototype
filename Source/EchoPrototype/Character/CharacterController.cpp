@@ -5,6 +5,8 @@
 #include "PlayerCharacter.h"
 
 #include "../HUD/InteractionPromptWidget.h"
+#include "../HUD/MenuFlowSubsystem.h"
+#include "../HUD/States/MenuStateBase.h"
 #include "../Interactables/InteractionComponent.h"
 #include "Blueprint/UserWidget.h"
 
@@ -18,6 +20,14 @@ ACharacterController::ACharacterController()
 void ACharacterController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (DefaultRootMenuState)
+	{
+		if (UMenuFlowSubsystem* Flow = GetGameInstance() ? GetGameInstance()->GetSubsystem<UMenuFlowSubsystem>() : nullptr)
+		{
+			Flow->SetRootState(DefaultRootMenuState);
+		}
+	}
 }
 
 void ACharacterController::SetupInputComponent()
@@ -89,6 +99,10 @@ void ACharacterController::SetupInputComponent()
 			//Interact
 			if (InteractAction)
 				EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &ACharacterController::Interact);
+
+			//Menu
+			if (PauseAction)
+				EIC->BindAction(PauseAction, ETriggerEvent::Started, this, &ACharacterController::RequestPause);
 		}
 	
 }
@@ -247,5 +261,13 @@ void ACharacterController::Interact()
 	if (UInteractionComponent* Interaction = GetPawn() ? GetPawn()->FindComponentByClass<UInteractionComponent>() : nullptr)
 	{
 		Interaction->OnInteractPressed();
+	}
+}
+
+void ACharacterController::RequestPause()
+{
+	if (UMenuFlowSubsystem* Flow = GetGameInstance() ? GetGameInstance()->GetSubsystem<UMenuFlowSubsystem>() : nullptr)
+	{
+		Flow->RequestBack();
 	}
 }
