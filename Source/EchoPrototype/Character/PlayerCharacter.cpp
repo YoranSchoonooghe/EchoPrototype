@@ -50,8 +50,8 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	// default speed
-	GetCharacterMovement()->MaxWalkSpeed = 500.0f;
-	GetCharacterMovement()->MaxWalkSpeedCrouched = 250.0f;
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = SneakSpeed;
 }
 
 void APlayerCharacter::Move(const FVector2D& Value)

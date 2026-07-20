@@ -8,7 +8,7 @@
 // IDLE / WALK STATE
 void UPlayerState_IdleWalk::EnterState(APlayerCharacter* Character)
 {
-	Character->GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+	Character->GetCharacterMovement()->MaxWalkSpeed = Character->GetWalkSpeed();
 }
 
 UPlayerStateBase* UPlayerState_IdleWalk::UpdateState(APlayerCharacter* Character, float DeltaTime)
@@ -92,7 +92,7 @@ UPlayerStateBase* UPlayerState_IdleWalk::OnClimbPressed(APlayerCharacter* Charac
 // SPRINT STATE
 void UPlayerState_Sprint::EnterState(APlayerCharacter* Character)
 {
-	Character->GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeed = Character->GetSprintSpeed();
 }
 
 UPlayerStateBase* UPlayerState_Sprint::UpdateState(APlayerCharacter* Character, float DeltaTime)
@@ -164,7 +164,7 @@ UPlayerStateBase* UPlayerState_Sprint::OnClimbPressed(APlayerCharacter* Characte
 // SNEAK STATE
 void UPlayerState_Sneak::EnterState(APlayerCharacter* Character)
 {
-	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = SneakSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = Character->GetSneakSpeed();
 	Character->Crouch();
 }
 

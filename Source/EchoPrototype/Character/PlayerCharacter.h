@@ -39,6 +39,10 @@ public:
 	void StartSprinting();
 	void StopSprinting();
 
+	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
+	FORCEINLINE float GetSprintSpeed() const { return SprintSpeed; }
+	FORCEINLINE float GetSneakSpeed() const { return SneakSpeed; }
+
 	void StartSneaking();
 	void StopSneaking();
 
@@ -104,6 +108,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInteractionComponent> Interaction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float WalkSpeed = 500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float SprintSpeed = 800.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	float SneakSpeed = 250.0f;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	ECameraPerspective CurrentPerspective;

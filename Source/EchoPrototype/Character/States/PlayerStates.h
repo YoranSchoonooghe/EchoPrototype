@@ -40,9 +40,6 @@ public:
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) override;
-
-private:
-	 float SprintSpeed = 800.0f;
 };
 
 // SNEAK STATE
@@ -57,9 +54,6 @@ public:
 
 	virtual UPlayerStateBase* OnSneakReleased(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnStealthKillPressed(APlayerCharacter* Character) override;
-
-private:
-	float SneakSpeed = 250.0f;
 };
 
 // ATTACKING STATE
