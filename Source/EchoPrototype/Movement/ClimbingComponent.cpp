@@ -42,6 +42,16 @@ void UClimbingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		UpdateBlend(DeltaTime);
 	}
 
+	if (bIsHanging && !bIsClimbingUp && !IsCachedLedgeStillValid())
+	{
+		if (bPrintDebugMessages)
+		{
+			PrintClimbDebug(TEXT("The ledge is gone."), FColor::Magenta);
+		}
+
+		StopHanging();
+	}
+
 	if (bAutoGrabWhileAirborne && !bIsHanging)
 	{
 		ACharacter* Character = GetOwnerCharacter();
@@ -321,6 +331,30 @@ void UClimbingComponent::TryStartHang(bool bPrintFailures)
 
 		bIsHanging = true;
 	}
+}
+
+bool UClimbingComponent::IsCachedLedgeStillValid() const
+{
+	if (!CachedLedgeActor.IsValid())
+	{
+		return false;
+	}
+
+	FCollisionQueryParams QueryParams;
+	if (ACharacter* Character = GetOwnerCharacter())
+	{
+		QueryParams.AddIgnoredActor(Character);
+	}
+
+	const FVector ProbePoint = CachedLedgeEdge - CachedWallNormal * 5.0f;
+
+	return GetWorld()->OverlapBlockingTestByChannel(
+		ProbePoint,
+		FQuat::Identity,
+		ECC_Climbable,
+		FCollisionShape::MakeSphere(LedgeValidityCheckRadius),
+		QueryParams
+	);
 }
 
 void UClimbingComponent::ApplyHangTransform(const FLedgeTraceResult& LedgeResult, float BlendDurationOverride, bool bApplyShimmyArc)
@@ -622,8 +656,6 @@ bool UClimbingComponent::TryClimbUp()
 	bIsClimbingUp = true;
 	PendingClimbUpStandLocation = StandLocation;
 
-	// The mantle needs to move up and forward through the wall-normal axis, which the hang's plane
-	// constraint would otherwise block.
 	if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
 	{
 		Movement->SetPlaneConstraintEnabled(false);

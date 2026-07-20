@@ -44,6 +44,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Climbing")
 	FORCEINLINE bool HasLegsContact() const { return bHasLegsContact; }
 
+	UFUNCTION(BlueprintPure, Category = "Climbing")
+	AActor* GetGrabbedLedgeActor() const { return bIsHanging ? CachedLedgeActor.Get() : nullptr; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -112,6 +115,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Detection")
 	float LegsContactTraceDistance = 60.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Climbing|Detection")
+	float LedgeValidityCheckRadius = 12.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Climbing|Position")
 	float ForwardOffset = 35.0f;
@@ -204,6 +210,8 @@ private:
 	bool TryClimbUp();
 	void FinishClimbUp();
 	void HandleClimbUpMontageBlendingOut(UAnimMontage* Montage, bool bInterrupted);
+
+	bool IsCachedLedgeStillValid() const;
 
 	void StartMoveCooldown(float Duration);
 	void ClearMoveCooldown();
