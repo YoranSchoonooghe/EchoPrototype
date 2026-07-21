@@ -8,11 +8,14 @@
 #include "../Combat/StealthKillComponent.h"
 #include "../Movement/ClimbingComponent.h"
 #include "../SkillTree/SkillTreeComponent.h"
+#include "../SkillTree/SkillTreeNodeData.h"
+#include "../SaveGame/EchoSaveGame.h"
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
+#include "Kismet/GameplayStatics.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -182,6 +185,52 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+UEchoSaveGame* APlayerCharacter::CaptureSaveGame() const
+{
+	UEchoSaveGame* SaveGameObject = NewObject<UEchoSaveGame>();
+
+	if (SkillTree)
+	{
+		SaveGameObject->SkillPoints = SkillTree->GetAvailableSkillPoints();
+		for (USkillTreeNodeData* Node : SkillTree->GetUnlockedNodes())
+		{
+			SaveGameObject->UnlockedNodes.Add(Node);
+		}
+	}
+
+	SaveGameObject->LevelName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+	SaveGameObject->PlayerLocation = GetActorLocation();
+	SaveGameObject->PlayerRotation = GetActorRotation();
+
+	return SaveGameObject;
+}
+
+void APlayerCharacter::ApplySaveGame(UEchoSaveGame* SaveGameObject)
+{
+	if (!SaveGameObject)
+	{
+		return;
+	}
+
+	SetActorLocationAndRotation(SaveGameObject->PlayerLocation, SaveGameObject->PlayerRotation);
+
+	if (SkillTree)
+	{
+		TArray<USkillTreeNodeData*> ResolvedNodes;
+		ResolvedNodes.Reserve(SaveGameObject->UnlockedNodes.Num());
+
+		for (const TSoftObjectPtr<USkillTreeNodeData>& SoftNode : SaveGameObject->UnlockedNodes)
+		{
+			if (USkillTreeNodeData* Node = SoftNode.LoadSynchronous())
+			{
+				ResolvedNodes.Add(Node);
+			}
+		}
+
+		SkillTree->LoadUnlockedNodes(SaveGameObject->SkillPoints, ResolvedNodes);
+	}
 }
 
 void APlayerCharacter::ChangeState(UPlayerStateBase* NewState)

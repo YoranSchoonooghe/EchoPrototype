@@ -35,11 +35,19 @@ public:
 
 	void UnlockTag(const FGameplayTag& Tag) { UnlockedAbilityTags.AddTag(Tag); }
 
+	UFUNCTION(BlueprintPure, Category = "Skill Tree")
+	TArray<USkillTreeNodeData*> GetUnlockedNodes() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Skill Tree")
+	void LoadUnlockedNodes(int32 SavedSkillPoints, const TArray<USkillTreeNodeData*>& SavedUnlockedNodes);
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "Skill Tree")
 	int32 AvailableSkillPoints = 0;
 
 private:
+	void ApplyNodeEffects(USkillTreeNodeData* Node);
+
 	UPROPERTY()
 	TArray<TObjectPtr<USkillTreeNodeData>> UnlockedNodes;
 

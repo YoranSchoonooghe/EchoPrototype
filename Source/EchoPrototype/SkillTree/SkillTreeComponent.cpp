@@ -46,6 +46,48 @@ bool USkillTreeComponent::TryUnlock(USkillTreeNodeData* Node)
 
 	AvailableSkillPoints -= Node->Cost;
 	UnlockedNodes.Add(Node);
+	ApplyNodeEffects(Node);
+
+	return true;
+}
+
+TArray<USkillTreeNodeData*> USkillTreeComponent::GetUnlockedNodes() const
+{
+	TArray<USkillTreeNodeData*> Result;
+	Result.Reserve(UnlockedNodes.Num());
+
+	for (USkillTreeNodeData* Node : UnlockedNodes)
+	{
+		Result.Add(Node);
+	}
+
+	return Result;
+}
+
+void USkillTreeComponent::LoadUnlockedNodes(int32 SavedSkillPoints, const TArray<USkillTreeNodeData*>& SavedUnlockedNodes)
+{
+	AvailableSkillPoints = SavedSkillPoints;
+	UnlockedNodes.Reset();
+	UnlockedAbilityTags.Reset();
+
+	for (USkillTreeNodeData* Node : SavedUnlockedNodes)
+	{
+		if (!Node)
+		{
+			continue;
+		}
+
+		UnlockedNodes.Add(Node);
+		ApplyNodeEffects(Node);
+	}
+}
+
+void USkillTreeComponent::ApplyNodeEffects(USkillTreeNodeData* Node)
+{
+	if (!Node)
+	{
+		return;
+	}
 
 	APlayerCharacter* Character = Cast<APlayerCharacter>(GetOwner());
 	for (USkillEffect* Effect : Node->Effects)
@@ -55,6 +97,4 @@ bool USkillTreeComponent::TryUnlock(USkillTreeNodeData* Node)
 			Effect->Apply(Character);
 		}
 	}
-
-	return true;
 }

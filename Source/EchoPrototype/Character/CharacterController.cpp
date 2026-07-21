@@ -8,6 +8,7 @@
 #include "../HUD/MenuFlowSubsystem.h"
 #include "../HUD/States/MenuStateBase.h"
 #include "../Interactables/InteractionComponent.h"
+#include "../SaveGame/SaveGameSubsystem.h"
 #include "Blueprint/UserWidget.h"
 
 
@@ -112,6 +113,14 @@ void ACharacterController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	CachedPlayerCharacter = Cast<APlayerCharacter>(InPawn);
+
+	if (CachedPlayerCharacter)
+	{
+		if (USaveGameSubsystem* SaveGameSys = GetGameInstance() ? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr)
+		{
+			SaveGameSys->ApplyPendingLoadIfAny(CachedPlayerCharacter);
+		}
+	}
 
 	if (!InPawn || !InteractionPromptWidgetClass)
 	{

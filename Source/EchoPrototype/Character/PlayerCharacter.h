@@ -15,6 +15,7 @@ class UClimbingComponent;
 class UPlayerStateBase;
 class UAIPerceptionStimuliSourceComponent;
 class USkillTreeComponent;
+class UEchoSaveGame;
 
 //Camere perspective states
 UENUM(BlueprintType)
@@ -84,6 +85,13 @@ public:
 
 	//Skill Tree
 	FORCEINLINE USkillTreeComponent* GetSkillTreeComponent() const { return SkillTree; }
+
+	//Save Game
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	UEchoSaveGame* CaptureSaveGame() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	void ApplySaveGame(UEchoSaveGame* SaveGameObject);
 
 	//States
 	void ChangeState(class UPlayerStateBase* NewState);
