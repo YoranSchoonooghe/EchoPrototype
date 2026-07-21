@@ -14,6 +14,7 @@ class UStealthKillComponent;
 class UClimbingComponent;
 class UPlayerStateBase;
 class UAIPerceptionStimuliSourceComponent;
+class USkillTreeComponent;
 
 //Camere perspective states
 UENUM(BlueprintType)
@@ -42,6 +43,10 @@ public:
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetSprintSpeed() const { return SprintSpeed; }
 	FORCEINLINE float GetSneakSpeed() const { return SneakSpeed; }
+
+	void AddWalkSpeedBonus(float Delta) { WalkSpeed += Delta; }
+	void AddSprintSpeedBonus(float Delta) { SprintSpeed += Delta; }
+	void AddSneakSpeedBonus(float Delta) { SneakSpeed += Delta; }
 
 	void StartSneaking();
 	void StopSneaking();
@@ -74,6 +79,11 @@ public:
 	void StealthKillPressed();
 
 	FORCEINLINE UStealthKillComponent* GetStealthKillComponent() const { return StealthKill; }
+
+	FORCEINLINE UHealthComponent* GetHealthComponent() const { return Health; }
+
+	//Skill Tree
+	FORCEINLINE USkillTreeComponent* GetSkillTreeComponent() const { return SkillTree; }
 
 	//States
 	void ChangeState(class UPlayerStateBase* NewState);
@@ -108,6 +118,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInteractionComponent> Interaction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill Tree", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USkillTreeComponent> SkillTree;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float WalkSpeed = 500.0f;

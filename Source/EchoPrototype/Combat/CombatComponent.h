@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	FORCEINLINE bool IsChargeReady() const { return bChargeReady; }
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void AddAttackDamageMultiplierBonus(float Delta);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -65,6 +68,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	TSubclassOf<UDamageType> DamageTypeClass;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float AttackDamageMultiplier = 1.0f;
 
 private:
 	void TryAttack();

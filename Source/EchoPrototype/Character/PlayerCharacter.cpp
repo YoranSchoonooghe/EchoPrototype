@@ -7,6 +7,7 @@
 #include "../Combat/HealthComponent.h"
 #include "../Combat/StealthKillComponent.h"
 #include "../Movement/ClimbingComponent.h"
+#include "../SkillTree/SkillTreeComponent.h"
 #include "States/PlayerStateBase.h"
 #include "States/PlayerStates.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
@@ -41,6 +42,7 @@ APlayerCharacter::APlayerCharacter()
 	StealthKill = CreateDefaultSubobject<UStealthKillComponent>(TEXT("StealthKillComponent"));
 	Climbing = CreateDefaultSubobject<UClimbingComponent>(TEXT("ClimbingComponent"));
 	Interaction = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
+	SkillTree = CreateDefaultSubobject<USkillTreeComponent>(TEXT("SkillTreeComponent"));
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("AIPerceptionStimuliSourceComponent"));
 	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());

@@ -42,6 +42,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void Kill(AActor* Instigator);
 
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void AddMaxHealthBonus(float Delta);
+
 	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnDeathSignature OnDeath;
 	UPROPERTY(BlueprintAssignable, Category = "Health")

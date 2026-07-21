@@ -23,6 +23,11 @@ ACharacter* UCombatComponent::GetOwnerCharacter() const
 	return Cast<ACharacter>(GetOwner());
 }
 
+void UCombatComponent::AddAttackDamageMultiplierBonus(float Delta)
+{
+	AttackDamageMultiplier += Delta;
+}
+
 void UCombatComponent::OnAttackHoldStarted()
 {
 	bChargeReady = false;
@@ -202,7 +207,7 @@ void UCombatComponent::BeginWeaponTrace(FName SocketName, float Radius, float Da
 
 	TraceSocketName = SocketName;
 	TraceRadius = Radius;
-	TraceDamage = DamageOverride >= 0.0f ? DamageOverride : CurrentAttackDamage;
+	TraceDamage = (DamageOverride >= 0.0f ? DamageOverride : CurrentAttackDamage) * AttackDamageMultiplier;
 
 	ActorsHitThisSwing.Reset();
 	PreviousTraceLocation = Character->GetMesh()->GetSocketLocation(TraceSocketName);
