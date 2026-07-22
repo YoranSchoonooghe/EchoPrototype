@@ -80,6 +80,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Menu")
 	TSubclassOf<UMenuStateBase> DefaultRootMenuState;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Save")
+	float AutosaveInterval = 120.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Save")
+	FString AutosaveSlotName = TEXT("Save0");
+
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 
@@ -119,8 +125,13 @@ private:
 	//Menu
 	void RequestPause();
 
+	//Save
+	void PerformAutosave();
+
 	UPROPERTY()
 	TObjectPtr<APlayerCharacter> CachedPlayerCharacter;
+
+	FTimerHandle AutosaveTimerHandle;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInteractionPromptWidget> InteractionPromptWidgetInstance;

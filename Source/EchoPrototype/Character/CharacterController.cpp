@@ -120,6 +120,11 @@ void ACharacterController::OnPossess(APawn* InPawn)
 		{
 			SaveGameSys->ApplyPendingLoadIfAny(CachedPlayerCharacter);
 		}
+
+		if (AutosaveInterval > 0.0f)
+		{
+			GetWorld()->GetTimerManager().SetTimer(AutosaveTimerHandle, this, &ACharacterController::PerformAutosave, AutosaveInterval, true);
+		}
 	}
 
 	if (!InPawn || !InteractionPromptWidgetClass)
@@ -149,7 +154,22 @@ void ACharacterController::OnUnPossess()
 {
 	Super::OnUnPossess();
 
+	GetWorldTimerManager().ClearTimer(AutosaveTimerHandle);
+
 	CachedPlayerCharacter = nullptr;
+}
+
+void ACharacterController::PerformAutosave()
+{
+	if (!CachedPlayerCharacter)
+	{
+		return;
+	}
+
+	if (USaveGameSubsystem* SaveGameSys = GetGameInstance() ? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr)
+	{
+		SaveGameSys->SaveGame(CachedPlayerCharacter, AutosaveSlotName);
+	}
 }
 
 void ACharacterController::Move(const FInputActionValue& Value)
