@@ -70,6 +70,30 @@ APlayerController* UEchoComponent::GetPlayerController() const
 	return nullptr;
 }
 
+float UEchoComponent::GetEchoCapsuleHalfHeight() const
+{
+	if (ActiveEcho)
+	{
+		if (UCapsuleComponent* Capsule = ActiveEcho->GetCapsuleComponent())
+		{
+			return Capsule->GetScaledCapsuleHalfHeight();
+		}
+	}
+
+	if (EchoActorClass)
+	{
+		if (const AEchoCharacter* CDO = EchoActorClass->GetDefaultObject<AEchoCharacter>())
+		{
+			if (UCapsuleComponent* Capsule = CDO->GetCapsuleComponent())
+			{
+				return Capsule->GetScaledCapsuleHalfHeight();
+			}
+		}
+	}
+
+	return 88.0f;
+}
+
 #pragma region input
 
 void UEchoComponent::OnEchoPressed()
@@ -180,13 +204,25 @@ void UEchoComponent::TeleportToEcho()
 		return;
 	}
 
-	const FVector TargetLocation = ActiveEcho->GetActorLocation();
-	const FRotator TargetRotation = ActiveEcho->GetActorRotation();
+	AEchoCharacter* EchoToTeleportTo = ActiveEcho;
+	const FVector TargetLocation = EchoToTeleportTo->GetActorLocation();
+	const FRotator TargetRotation = EchoToTeleportTo->GetActorRotation();
 
 	StartTeleportFovEffect();
 
+	if (UCapsuleComponent* EchoCapsule = EchoToTeleportTo->GetCapsuleComponent())
+	{
+		EchoCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
 	if (!OwnerPawn->TeleportTo(TargetLocation, TargetRotation, false, false))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("TeleportToEcho: TeleportTo failed even with the Echo's own collision cleared (likely blocked by other geometry)."));
+
+		if (UCapsuleComponent* EchoCapsule = EchoToTeleportTo->GetCapsuleComponent())
+		{
+			EchoCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		}
 		if (FovEffectCamera.IsValid())
 		{
 			FovEffectCamera->SetFieldOfView(FovEffectBaseFOV);
@@ -338,6 +374,8 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 		QueryParams.AddIgnoredActor(ActiveEcho);
 	}
 
+	const float VerticalOffset = GetEchoCapsuleHalfHeight() + GroundPlacementOffset;
+
 	//Forward sweep along aim direction
 		FHitResult ForwardHit;
 	const bool bForwardHit = GetWorld()->SweepSingleByChannel(
@@ -356,7 +394,7 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 
 	if (ForwardHit.ImpactNormal.Z >= MinWalkableNormalZ)
 	{
-		OutLocation = ForwardHit.ImpactPoint + (ForwardHit.ImpactNormal * GroundPlacementOffset);
+		OutLocation = ForwardHit.ImpactPoint + (ForwardHit.ImpactNormal * VerticalOffset);
 		bOutValid = true;
 		return true;
 	}
@@ -373,7 +411,7 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 
 	if (bDownHit && DownHit.ImpactNormal.Z >= MinWalkableNormalZ)
 	{
-		OutLocation = DownHit.ImpactPoint + (DownHit.ImpactNormal * GroundPlacementOffset);
+		OutLocation = DownHit.ImpactPoint + (DownHit.ImpactNormal * VerticalOffset);
 		bOutValid = true;
 	}
 	else

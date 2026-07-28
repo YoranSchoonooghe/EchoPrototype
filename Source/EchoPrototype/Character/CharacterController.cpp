@@ -4,6 +4,9 @@
 #include "PlayerCharacterCameraManager.h"
 #include "PlayerCharacter.h"
 
+#include "../Echo/EchoCharacter.h"
+#include "EchoComponent.h"
+
 #include "../HUD/InteractionPromptWidget.h"
 #include "../HUD/MenuFlowSubsystem.h"
 #include "../HUD/States/MenuStateBase.h"
@@ -114,8 +117,13 @@ void ACharacterController::OnPossess(APawn* InPawn)
 
 	CachedPlayerCharacter = Cast<APlayerCharacter>(InPawn);
 
-	if (CachedPlayerCharacter)
+	if (InPawn && !InPawn->IsA<AEchoCharacter>())
 	{
+		if (APlayerCharacter* RealPlayer = Cast<APlayerCharacter>(InPawn))
+		{
+			CachedEchoComponent = RealPlayer->FindComponentByClass<UEchoComponent>();
+		}
+
 		if (USaveGameSubsystem* SaveGameSys = GetGameInstance() ? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr)
 		{
 			SaveGameSys->ApplyPendingLoadIfAny(CachedPlayerCharacter);
@@ -238,23 +246,44 @@ void ACharacterController::StopSneaking()
 
 void ACharacterController::EchoPressed()
 {
-	if (!CachedPlayerCharacter) return;
+	if (CachedPlayerCharacter && !CachedPlayerCharacter->IsA<AEchoCharacter>())
+	{
+		CachedPlayerCharacter->EchoPressed();
+		return;
+	}
 
-	CachedPlayerCharacter->EchoPressed();
+	if (CachedEchoComponent)
+	{
+		CachedEchoComponent->OnEchoPressed();
+	}
 }
 
 void ACharacterController::EchoReleased()
 {
-	if (!CachedPlayerCharacter) return;
+	if (CachedPlayerCharacter && !CachedPlayerCharacter->IsA<AEchoCharacter>())
+	{
+		CachedPlayerCharacter->EchoReleased();
+		return;
+	}
 
-	CachedPlayerCharacter->EchoReleased();
+	if (CachedEchoComponent)
+	{
+		CachedEchoComponent->OnEchoReleased();
+	}
 }
 
 void ACharacterController::SwapPressed()
 {
-	if (!CachedPlayerCharacter) return;
+	if (CachedPlayerCharacter && !CachedPlayerCharacter->IsA<AEchoCharacter>())
+	{
+		CachedPlayerCharacter->SwapPressed();
+		return;
+	}
 
-	CachedPlayerCharacter->SwapPressed();
+	if (CachedEchoComponent)
+	{
+		CachedEchoComponent->SwapPressed();
+	}
 }
 
 void ACharacterController::Attack()

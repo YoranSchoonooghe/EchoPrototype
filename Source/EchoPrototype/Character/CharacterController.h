@@ -12,6 +12,9 @@ class UInputMappingContext;
 class UInputAction;
 class APlayerCharacter;
 
+class UEchoComponent;
+class AEchoCharacter;
+
 class UInteractionComponent;
 class UInteractionPromptWidget;
 class UMenuStateBase;
@@ -130,6 +133,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<APlayerCharacter> CachedPlayerCharacter;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UEchoComponent> CachedEchoComponent;
 
 	FTimerHandle AutosaveTimerHandle;
 

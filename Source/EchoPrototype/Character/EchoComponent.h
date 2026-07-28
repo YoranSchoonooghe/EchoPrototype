@@ -151,4 +151,6 @@ private:
 
 	APawn* GetOwnerPawn() const;
 	APlayerController* GetPlayerController() const;
+
+	float GetEchoCapsuleHalfHeight() const;
 };
