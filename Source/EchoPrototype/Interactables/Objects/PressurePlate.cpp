@@ -66,6 +66,9 @@ void APressurePlate::OnPressureZoneBeginOverlap(UPrimitiveComponent* OverlappedC
 	OverlappingActors.Add(OtherActor);
 
 
+	GetWorld()->GetTimerManager().ClearTimer(CloseDelayTimerHandle);
+
+
 	if (bWasEmpty)
 	{
 		bIsTransitioning = true;
@@ -95,14 +98,24 @@ void APressurePlate::OnPressureZoneEndOverlap(UPrimitiveComponent* OverlappedCom
 	{
 		bIsTransitioning = true;
 
-		PlateMesh->SetRelativeLocation(RestingRelativeLocation);
-
-		if (LinkedDoor)
-		{
-			LinkedDoor->CloseDoor();
-		}
+		GetWorld()->GetTimerManager().SetTimer(CloseDelayTimerHandle, this, &APressurePlate::PerformDelayedClose, CloseDelay, false);
 
 		GetWorld()->GetTimerManager().SetTimer(ResetTransitionTimerHandle, this, &APressurePlate::ClearTransitionGate, 0.05f, false);
+	}
+}
+
+void APressurePlate::PerformDelayedClose()
+{
+	if (!OverlappingActors.IsEmpty())
+	{
+		return;
+	}
+
+	PlateMesh->SetRelativeLocation(RestingRelativeLocation);
+
+	if (LinkedDoor)
+	{
+		LinkedDoor->CloseDoor();
 	}
 }
 

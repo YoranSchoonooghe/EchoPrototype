@@ -57,7 +57,16 @@ protected:
 
 	FTimerHandle ResetTransitionTimerHandle;
 
+	void PerformDelayedClose();
+
 	void ClearTransitionGate();
+
+
+	UPROPERTY(EditAnywhere, Category = "Pressure Plate | Timer")
+	FTimerHandle CloseDelayTimerHandle;
+
+	UPROPERTY(EditAnywhere, Category = "Pressure Plate | Timer")
+	float CloseDelay = 5.0f;
 
 private:	
 	
