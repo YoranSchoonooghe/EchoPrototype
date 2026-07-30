@@ -78,6 +78,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Echo")
 	FOnEchoPlacedSignature OnPlaced;
 
+
+	UFUNCTION(BlueprintCallable, Category = "Echo")
+	bool IsLookingThroughEcho();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

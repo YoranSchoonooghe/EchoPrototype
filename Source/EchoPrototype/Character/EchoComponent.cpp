@@ -33,6 +33,11 @@ void UEchoComponent::GetEchoViewPoint(FVector& OutLocation, FRotator& OutRotatio
 	OutRotation = FRotator::ZeroRotator;
 }
 
+bool UEchoComponent::IsLookingThroughEcho()
+{
+	return bIsViewingThroughEcho;
+}
+
 // Called when the game starts
 void UEchoComponent::BeginPlay()
 {

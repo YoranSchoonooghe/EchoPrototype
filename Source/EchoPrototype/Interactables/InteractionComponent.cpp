@@ -49,29 +49,48 @@ void UInteractionComponent::UpdateFocus()
 	{
 		FVector CamLoc;
 		FRotator CamRot;
-		
 		PC->GetPlayerViewPoint(CamLoc, CamRot);
 
-		const bool bIsPossessingEcho = PossessedPawn->IsA<AEchoCharacter>();
+		//Use pawn viewing location (third person)
+		FVector TraceStart = PossessedPawn->GetPawnViewLocation();
+		FVector TraceEnd = TraceStart + (CamRot.Vector() * InteractionDistance);
 
-		const FVector TraceEnd = CamLoc + (CamRot.Vector() * InteractionDistance);
+		bool bIsLookingThroughEcho = PossessedPawn->IsA<AEchoCharacter>();
+		if (!bIsLookingThroughEcho)
+		{
+			if (UEchoComponent* EchoComp = PossessedPawn->FindComponentByClass<UEchoComponent>())
+			{
+				bIsLookingThroughEcho = EchoComp->IsLookingThroughEcho();
+			}
+		}
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(PossessedPawn);
 
 		FHitResult Hit;
+
 		const bool bHit = GetWorld()->SweepSingleByChannel(
-			Hit, CamLoc, TraceEnd, FQuat::Identity, ECC_Visibility,
+			Hit, TraceStart, TraceEnd, FQuat::Identity, ECC_Visibility,
 			FCollisionShape::MakeSphere(InteractionRadius), QueryParams
 		);
 
+		//DrawDebugSphere(GetWorld(), TraceEnd, InteractionRadius, 12, bHit ? FColor::Green : FColor::Red, false, 0.0f);
+		//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, bHit ? FColor::Green : FColor::Red, false, 0.0f);
+
 		AActor* HitActor = (bHit && Hit.GetActor()) ? Hit.GetActor() : nullptr;
+
+		if (HitActor)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Interaction Hit: %s (Implements Interface: %s)"),
+				*HitActor->GetName(),
+				HitActor->Implements<UInteractableInterface>() ? TEXT("YES") : TEXT("NO"));
+		}
 
 		if (HitActor && HitActor->Implements<UInteractableInterface>())
 		{
 			const bool bRequiresEcho = IInteractableInterface::Execute_RequiresEchoVision(HitActor);
 
-			CurrentFocusedActor = (bRequiresEcho && !bIsPossessingEcho) ? nullptr : HitActor;
+			CurrentFocusedActor = (bRequiresEcho && !bIsLookingThroughEcho) ? nullptr : HitActor;
 		}
 		else
 		{

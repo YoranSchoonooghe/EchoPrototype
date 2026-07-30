@@ -117,6 +117,8 @@ void ACharacterController::OnPossess(APawn* InPawn)
 
 	CachedPlayerCharacter = Cast<APlayerCharacter>(InPawn);
 
+
+	//Handle standard logic
 	if (InPawn && !InPawn->IsA<AEchoCharacter>())
 	{
 		if (APlayerCharacter* RealPlayer = Cast<APlayerCharacter>(InPawn))
@@ -135,12 +137,8 @@ void ACharacterController::OnPossess(APawn* InPawn)
 		}
 	}
 
-	if (!InPawn || !InteractionPromptWidgetClass)
-	{
-		return;
-	}
-
-	if (!InteractionPromptWidgetInstance)
+	//UI Widget
+	if (InteractionPromptWidgetClass && !InteractionPromptWidgetInstance)
 	{
 		InteractionPromptWidgetInstance = CreateWidget<UInteractionPromptWidget>(this, InteractionPromptWidgetClass);
 		if (InteractionPromptWidgetInstance)
@@ -149,9 +147,21 @@ void ACharacterController::OnPossess(APawn* InPawn)
 		}
 	}
 
-	if (UInteractionComponent* Interaction = InPawn->FindComponentByClass<UInteractionComponent>())
+	//Interaction
+	if (InteractionPromptWidgetInstance)
 	{
-		if (InteractionPromptWidgetInstance)
+		UInteractionComponent* Interaction = InPawn->FindComponentByClass<UInteractionComponent>();
+		if (!Interaction)
+		{
+			TArray<UInteractionComponent*> InteractionComps;
+			InPawn->GetComponents<UInteractionComponent>(InteractionComps, true);
+			if (InteractionComps.Num() > 0)
+			{
+				Interaction = InteractionComps[0];
+			}
+		}
+
+		if (Interaction)
 		{
 			InteractionPromptWidgetInstance->InitializeForInteractionComponent(Interaction);
 		}
