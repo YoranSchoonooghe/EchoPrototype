@@ -148,6 +148,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "EnemyAI")
 	TObjectPtr<UAIPerceptionStimuliSourceComponent> StimuliSource;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI|PostProcess")
+	TObjectPtr<UMaterialInterface> LowHealthVignetteMaterial;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> LowHealthVignetteDynamicInst;
+
+	UFUNCTION()
+	void HandleHealthChanged(float HealthPercent);
+
+	void UpdateLowHealthVignette(float HealthPercent);
+
 public:
 
 	virtual void Tick(float DeltaTime) override;

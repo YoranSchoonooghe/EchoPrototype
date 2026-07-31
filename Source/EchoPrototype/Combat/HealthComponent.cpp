@@ -41,6 +41,8 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
 
+	OnHealthChanged.Broadcast(GetHealthPercent());
+
 	if (CurrentHealth <= 0.0f)
 	{
 		bIsDead = true;

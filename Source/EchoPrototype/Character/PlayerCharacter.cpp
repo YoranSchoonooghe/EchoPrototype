@@ -145,6 +145,24 @@ void APlayerCharacter::BeginPlay()
 	if (Health)
 	{
 		Health->OnDeath.AddDynamic(this, &APlayerCharacter::HandleDeath);
+
+		Health->OnHealthChanged.AddDynamic(this, &APlayerCharacter::HandleHealthChanged);
+	}
+
+	if (LowHealthVignetteMaterial && FollowCamera)
+	{
+		LowHealthVignetteDynamicInst = UMaterialInstanceDynamic::Create(LowHealthVignetteMaterial, this);
+		if (LowHealthVignetteDynamicInst)
+		{
+			FollowCamera->PostProcessSettings.WeightedBlendables.Array.Add(
+				FWeightedBlendable(1.0f, LowHealthVignetteDynamicInst)
+			);
+		}
+	}
+
+	if (Health)
+	{
+		UpdateLowHealthVignette(Health->GetHealthPercent());
 	}
 }
 
@@ -169,6 +187,23 @@ void APlayerCharacter::HandleDeath()
 	}
 
 	ChangeState(NewObject<UPlayerState_Dead>(this));
+}
+
+void APlayerCharacter::HandleHealthChanged(float HealthPercent)
+{
+	UpdateLowHealthVignette(HealthPercent);
+}
+
+void APlayerCharacter::UpdateLowHealthVignette(float HealthPercent)
+{
+	if (!LowHealthVignetteDynamicInst)
+	{
+		return;
+	}
+
+	const float DamageIntensity = 1.0f - FMath::Clamp(HealthPercent, 0.0f, 1.0f);
+
+	LowHealthVignetteDynamicInst->SetScalarParameterValue(FName("DamageIntensity"), DamageIntensity);
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
