@@ -13,6 +13,23 @@ UHealthComponent::UHealthComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UHealthComponent::Heal(float Amount)
+{
+	if (bIsDead || Amount <= 0.0f)
+	{
+		return;
+	}
+
+	const float NewHealth = FMath::Clamp(CurrentHealth + Amount, 0.0f, MaxHealth);
+	if (FMath::IsNearlyEqual(NewHealth, CurrentHealth))
+	{
+		return;
+	}
+
+	CurrentHealth = NewHealth;
+	OnHealthChanged.Broadcast(GetHealthPercent());
+}
+
 void UHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();

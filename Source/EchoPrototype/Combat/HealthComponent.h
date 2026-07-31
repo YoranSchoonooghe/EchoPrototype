@@ -59,6 +59,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Health")
 	float GetHealthPercent() const { return MaxHealth > 0.0f ? (CurrentHealth / MaxHealth) : 0.0f; }
 
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void Heal(float Amount);
+
 protected:
 	virtual void BeginPlay() override;
 
