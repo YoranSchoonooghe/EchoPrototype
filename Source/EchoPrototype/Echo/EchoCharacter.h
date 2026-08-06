@@ -63,7 +63,10 @@ protected:
 	TObjectPtr<UMaterialInterface> PreviewMaterial;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
-	TObjectPtr<UMaterialInterface> PlacedMaterial;
+	TObjectPtr<UMaterialInterface> TeleportPlacedMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<UMaterialInterface> VisionPlacedMaterial;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> PreviewMID;
@@ -96,6 +99,8 @@ public:
 
 private:
 	EEchoVisualState VisualState = EEchoVisualState::Preview;
+
+	EEchoType ActiveEchoType = EEchoType::Teleport;
 
 	FVector PlacedOriginLocation = FVector::ZeroVector;
 };

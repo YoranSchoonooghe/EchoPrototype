@@ -14,6 +14,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EchoPrototype/Character/PlayerCharacter.h"
 #include "EngineUtils.h"
+#include "EchoVisionComponent.h"
 
 AEchoCharacter::AEchoCharacter()
 {
@@ -138,13 +139,24 @@ void AEchoCharacter::SetVisualState(EEchoVisualState NewState)
 			BodyMesh->SetVisibility(true);
 			BodyMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
-			if (PlacedMaterial)
+			UMaterialInterface* MaterialToApply = nullptr;
+
+			if (FindComponentByClass<UEchoVisionComponent>() || ActiveEchoType == EEchoType::Vision)
+			{
+				MaterialToApply = VisionPlacedMaterial;
+			}
+			else
+			{
+				MaterialToApply = TeleportPlacedMaterial;
+			}
+
+			if (MaterialToApply)
 			{
 				BodyMesh->SetOverlayMaterial(nullptr);
-				const int NumMaterials = BodyMesh->GetNumMaterials();
-				for (int i = 0; i < NumMaterials; ++i)
+				const int32 NumMaterials = BodyMesh->GetNumMaterials();
+				for (int32 i = 0; i < NumMaterials; ++i)
 				{
-					BodyMesh->SetMaterial(i, PlacedMaterial);
+					BodyMesh->SetMaterial(i, MaterialToApply);
 				}
 			}
 		}
@@ -164,6 +176,8 @@ void AEchoCharacter::SetVisualState(EEchoVisualState NewState)
 
 void AEchoCharacter::SetPreviewValidity(bool bIsValid, EEchoType EchoType)
 {
+	ActiveEchoType = EchoType;
+
 	if (PreviewMID)
 	{
 		FLinearColor SelectedColor;
@@ -174,7 +188,7 @@ void AEchoCharacter::SetPreviewValidity(bool bIsValid, EEchoType EchoType)
 		}
 		else
 		{
-			SelectedColor = (EchoType == EEchoType::Vision) ? VisionValidColor : TeleportValidColor;
+			SelectedColor = (ActiveEchoType == EEchoType::Vision) ? VisionValidColor : TeleportValidColor;
 		}
 
 		PreviewMID->SetVectorParameterValue(TEXT("TintColor"), SelectedColor);
