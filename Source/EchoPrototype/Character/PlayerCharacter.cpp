@@ -309,22 +309,20 @@ void APlayerCharacter::EchoReleased()
 	Echo->OnEchoReleased();
 }
 
-void APlayerCharacter::SwapPressed()
+void APlayerCharacter::SelectTeleportEcho()
 {
-	if (Echo)
-		Echo->SwapPressed();
+	if (Echo && Echo->GetEchoState() == EEchoState::Aiming)
+	{
+		Echo->SetSelectedEchoType(EEchoType::Teleport);
+	}
 }
 
-void APlayerCharacter::TeleportToEcho()
+void APlayerCharacter::SelectVisionEcho()
 {
-	if (!Echo) return;
-
-	if (Climbing && Climbing->IsHanging())
+	if (Echo && Echo->GetEchoState() == EEchoState::Aiming)
 	{
-		Climbing->CancelHanging();
+		Echo->SetSelectedEchoType(EEchoType::Vision);
 	}
-
-	Echo->TeleportToEcho();
 }
 
 void APlayerCharacter::AttackPressed()

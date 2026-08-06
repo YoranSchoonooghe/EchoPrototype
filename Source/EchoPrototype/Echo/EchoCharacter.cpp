@@ -13,7 +13,6 @@
 
 #include "GameFramework/SpringArmComponent.h"
 #include "EchoPrototype/Character/PlayerCharacter.h"
-#include "EchoPrototype/Character/EchoComponent.h"
 #include "EngineUtils.h"
 
 AEchoCharacter::AEchoCharacter()
@@ -163,27 +162,21 @@ void AEchoCharacter::SetVisualState(EEchoVisualState NewState)
 	}
 }
 
-void AEchoCharacter::SetPreviewValidity(bool bIsValid)
+void AEchoCharacter::SetPreviewValidity(bool bIsValid, EEchoType EchoType)
 {
 	if (PreviewMID)
 	{
-		PreviewMID->SetVectorParameterValue(TEXT("TintColor"), bIsValid ? ValidPlacementColor : InvalidPlacementColor);
-	}
-}
+		FLinearColor SelectedColor;
 
-void AEchoCharacter::SwapPressed()
-{
-	for (TActorIterator<APlayerCharacter> It(GetWorld()); It; ++It)
-	{
-		APlayerCharacter* MainPlayer = *It;
-
-		if (MainPlayer && MainPlayer != this)
+		if (!bIsValid)
 		{
-			if (UEchoComponent* EchoComp = MainPlayer->FindComponentByClass<UEchoComponent>())
-			{
-				EchoComp->SwapPressed();
-				return;
-			}
+			SelectedColor = InvalidPlacementColor;
 		}
+		else
+		{
+			SelectedColor = (EchoType == EEchoType::Vision) ? VisionValidColor : TeleportValidColor;
+		}
+
+		PreviewMID->SetVectorParameterValue(TEXT("TintColor"), SelectedColor);
 	}
 }

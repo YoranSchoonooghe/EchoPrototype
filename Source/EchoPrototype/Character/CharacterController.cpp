@@ -80,12 +80,18 @@ void ACharacterController::SetupInputComponent()
 			//Echo
 			if (EchoAction)
 			{
- 				EIC->BindAction(EchoAction, ETriggerEvent::Started, this, &ACharacterController::EchoPressed);
- 				EIC->BindAction(EchoAction, ETriggerEvent::Completed, this, &ACharacterController::EchoReleased);
+				EIC->BindAction(EchoAction, ETriggerEvent::Started, this, &ACharacterController::EchoPressed);
+				EIC->BindAction(EchoAction, ETriggerEvent::Completed, this, &ACharacterController::EchoReleased);
 			}
 
-			if (LookThroughEchoAction)
- 				EIC->BindAction(LookThroughEchoAction, ETriggerEvent::Started, this, &ACharacterController::SwapPressed);
+			if (SelectTeleportEchoAction)
+				EIC->BindAction(SelectTeleportEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectTeleportEcho);
+
+			if (SelectVisionEchoAction)
+				EIC->BindAction(SelectVisionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectVisionEcho);
+
+			if (UseEchoAbilityAction)
+				EIC->BindAction(UseEchoAbilityAction, ETriggerEvent::Started, this, &ACharacterController::UseEchoAbility);
 
 			//Combat
 			if (AttackAction)
@@ -256,12 +262,6 @@ void ACharacterController::StopSneaking()
 
 void ACharacterController::EchoPressed()
 {
-	if (CachedPlayerCharacter && !CachedPlayerCharacter->IsA<AEchoCharacter>())
-	{
-		CachedPlayerCharacter->EchoPressed();
-		return;
-	}
-
 	if (CachedEchoComponent)
 	{
 		CachedEchoComponent->OnEchoPressed();
@@ -270,29 +270,33 @@ void ACharacterController::EchoPressed()
 
 void ACharacterController::EchoReleased()
 {
-	if (CachedPlayerCharacter && !CachedPlayerCharacter->IsA<AEchoCharacter>())
-	{
-		CachedPlayerCharacter->EchoReleased();
-		return;
-	}
-
 	if (CachedEchoComponent)
 	{
 		CachedEchoComponent->OnEchoReleased();
 	}
 }
 
-void ACharacterController::SwapPressed()
+void ACharacterController::SelectTeleportEcho()
 {
-	if (CachedPlayerCharacter && !CachedPlayerCharacter->IsA<AEchoCharacter>())
+	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
 	{
-		CachedPlayerCharacter->SwapPressed();
-		return;
+		CachedEchoComponent->SetSelectedEchoType(EEchoType::Teleport);
 	}
+}
 
-	if (CachedEchoComponent)
+void ACharacterController::SelectVisionEcho()
+{
+	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
 	{
-		CachedEchoComponent->SwapPressed();
+		CachedEchoComponent->SetSelectedEchoType(EEchoType::Vision);
+	}
+}
+
+void ACharacterController::UseEchoAbility()
+{
+	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Placed)
+	{
+		CachedEchoComponent->TriggerPlacedEchoAbility();
 	}
 }
 

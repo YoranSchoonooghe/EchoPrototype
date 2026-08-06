@@ -53,11 +53,17 @@ protected:
 	TObjectPtr<UInputAction> ToggleCameraAction;
 
 	//Echo
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
 	TObjectPtr<UInputAction> EchoAction;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<UInputAction> LookThroughEchoAction;
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
+	TObjectPtr<UInputAction> UseEchoAbilityAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
+	TObjectPtr<UInputAction> SelectTeleportEchoAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
+	TObjectPtr<UInputAction> SelectVisionEchoAction;
 
 	//Combat
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
@@ -114,7 +120,9 @@ private:
 	//Echo
 	void EchoPressed();
 	void EchoReleased();
-	void SwapPressed();
+	void UseEchoAbility();
+	void SelectTeleportEcho();
+	void SelectVisionEcho();
 
 	//Combat
 	void Attack();

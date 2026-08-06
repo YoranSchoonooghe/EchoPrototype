@@ -3,12 +3,16 @@
 
 #include "EchoComponent.h"
 
-#include "../Echo/EchoActor.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
+
+//Components
+#include "../Echo/EchoTeleportComponent.h"
+#include "../Echo/EchoVisionComponent.h"
+
 
 // Sets default values for this component's properties
 UEchoComponent::UEchoComponent()
@@ -31,11 +35,6 @@ void UEchoComponent::GetEchoViewPoint(FVector& OutLocation, FRotator& OutRotatio
 
 	OutLocation = FVector::ZeroVector;
 	OutRotation = FRotator::ZeroRotator;
-}
-
-bool UEchoComponent::IsLookingThroughEcho()
-{
-	return bIsViewingThroughEcho;
 }
 
 // Called when the game starts
@@ -109,14 +108,15 @@ void UEchoComponent::OnEchoPressed()
 	case EEchoState::Idle:
 		BeginAiming();
 		break;
+
 	case EEchoState::Aiming:
 		if (bCurrentAimIsValid)
 		{
 			PlaceEcho();
 		}
 		break;
+
 	case EEchoState::Placed:
-		TeleportToEcho();
 		break;
 	}
 }
@@ -129,46 +129,48 @@ void UEchoComponent::OnEchoReleased()
 	}
 
 	const double HeldDuration = GetWorld()->GetTimeSeconds() - PressStartTime;
+
 	if (HeldDuration > TapThreshold && bCurrentAimIsValid)
 	{
 		PlaceEcho();
 	}
 }
 
-void UEchoComponent::SwapPressed()
+void UEchoComponent::SetSelectedEchoType(EEchoType NewType)
 {
-	if (EchoState != EEchoState::Placed || !ActiveEcho)
+	CurrentEchoType = NewType;
+
+	if (EchoState == EEchoState::Aiming && ActiveEcho)
 	{
-		return;
+		if (UActorComponent* OldComp = ActiveEcho->FindComponentByClass<UEchoTeleportComponent>())
+		{
+			OldComp->DestroyComponent();
+		}
+		if (UActorComponent* OldComp = ActiveEcho->FindComponentByClass<UEchoVisionComponent>())
+		{
+			OldComp->DestroyComponent();
+		}
+
+		AttachEchoAbility(ActiveEcho, CurrentEchoType);
+
+		ActiveEcho->SetPreviewValidity(bCurrentAimIsValid, CurrentEchoType);
 	}
-
-	if (bIsViewingThroughEcho)
-	{
-		ReturnViewToSelf();
-		return;
-	}
-
-	APlayerController* PC = GetPlayerController();
-	if (!PC)
-	{
-		return;
-	}
-
-	PC->SetViewTargetWithBlend(ActiveEcho, ViewBlendTime);
-	PC->Possess(ActiveEcho);
-
-	bIsViewingThroughEcho = true;
 }
-void UEchoComponent::ReturnViewToSelf()
+
+void UEchoComponent::TriggerPlacedEchoAbility()
 {
-	APlayerController* PC = GetPlayerController();
-	APawn* OwnerPawn = GetOwnerPawn();
-	if (PC && OwnerPawn)
+	if (EchoState != EEchoState::Placed || !ActiveEcho) return;
+
+
+	if (UEchoTeleportComponent* TeleportComp = ActiveEcho->FindComponentByClass<UEchoTeleportComponent>())
 	{
-		PC->SetViewTargetWithBlend(OwnerPawn, ViewBlendTime);
-		PC->Possess(OwnerPawn);
+		TeleportComp->ExecuteTeleport(GetOwnerPawn());
+		DestroyActiveEcho();
 	}
-	bIsViewingThroughEcho = false;
+	else if (UEchoVisionComponent* VisionComp = ActiveEcho->FindComponentByClass<UEchoVisionComponent>())
+	{
+		VisionComp->ToggleEchoPossession(GetOwnerPawn());
+	}
 }
 
 void UEchoComponent::AddEchoMoveInput(const FVector2D& Value)
@@ -194,50 +196,6 @@ void UEchoComponent::AddEchoLookInput(float Rate, float Yaw)
 		ActiveEcho->AddControllerYawInput(Rate);
 		ActiveEcho->AddControllerPitchInput(Yaw);
 	}
-}
-
-void UEchoComponent::TeleportToEcho()
-{
-	if (EchoState != EEchoState::Placed || !ActiveEcho)
-	{
-		return;
-	}
-
-	APawn* OwnerPawn = GetOwnerPawn();
-	if (!OwnerPawn)
-	{
-		return;
-	}
-
-	AEchoCharacter* EchoToTeleportTo = ActiveEcho;
-	const FVector TargetLocation = EchoToTeleportTo->GetActorLocation();
-	const FRotator TargetRotation = EchoToTeleportTo->GetActorRotation();
-
-	StartTeleportFovEffect();
-
-	if (UCapsuleComponent* EchoCapsule = EchoToTeleportTo->GetCapsuleComponent())
-	{
-		EchoCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-
-	if (!OwnerPawn->TeleportTo(TargetLocation, TargetRotation, false, false))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("TeleportToEcho: TeleportTo failed even with the Echo's own collision cleared (likely blocked by other geometry)."));
-
-		if (UCapsuleComponent* EchoCapsule = EchoToTeleportTo->GetCapsuleComponent())
-		{
-			EchoCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		}
-		if (FovEffectCamera.IsValid())
-		{
-			FovEffectCamera->SetFieldOfView(FovEffectBaseFOV);
-		}
-		FovEffectPhase = EEchoFOVEffect::None;
-		return;
-	}
-
-	ReturnViewToSelf();
-	DestroyActiveEcho();
 }
 
 #pragma endregion input
@@ -281,12 +239,27 @@ void UEchoComponent::UpdateTeleportFovEffect(float DeltaSeconds)
 	}
 }
 
+void UEchoComponent::AttachEchoAbility(AEchoCharacter* TargetEcho, EEchoType TypeToAttach)
+{
+	if (!TargetEcho) return;
+
+	TSubclassOf<UActorComponent> ClassToAttach = (TypeToAttach == EEchoType::Teleport)
+		? TeleportComponentClass
+		: VisionComponentClass;
+
+	if (ClassToAttach)
+	{
+		UActorComponent* NewComp = NewObject<UActorComponent>(TargetEcho, ClassToAttach);
+		if (NewComp)
+		{
+			NewComp->RegisterComponent();
+		}
+	}
+}
+
 void UEchoComponent::BeginAiming()
 {
-	if (!EchoActorClass)
-	{
-		return;
-	}
+	if (!EchoActorClass) return;
 
 	FVector SpawnLocation;
 	FRotator SpawnRotation;
@@ -302,8 +275,9 @@ void UEchoComponent::BeginAiming()
 	ActiveEcho = GetWorld()->SpawnActor<AEchoCharacter>(EchoActorClass, FTransform(BodyRotation, SpawnLocation), SpawnParams);
 	if (ActiveEcho)
 	{
+		AttachEchoAbility(ActiveEcho, CurrentEchoType);
 		ActiveEcho->SetVisualState(EEchoVisualState::Preview);
-		ActiveEcho->SetPreviewValidity(bValid);
+		ActiveEcho->SetPreviewValidity(bValid, CurrentEchoType);
 		EchoState = EEchoState::Aiming;
 	}
 }
@@ -325,7 +299,7 @@ void UEchoComponent::UpdateAimPreview(float DeltaSeconds)
 	const FVector NewLocation = FMath::VInterpTo(ActiveEcho->GetActorLocation(), TargetLocation, DeltaSeconds, PreviewInterpSpeed);
 	ActiveEcho->SetActorLocation(NewLocation);
 	ActiveEcho->SetActorRotation(FRotator(0.0f, TargetRotation.Yaw, 0.0f));
-	ActiveEcho->SetPreviewValidity(bValid);
+	ActiveEcho->SetPreviewValidity(bValid, CurrentEchoType);
 }
 
 void UEchoComponent::PlaceEcho()

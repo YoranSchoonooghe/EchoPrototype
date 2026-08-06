@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "../Echo/EchoCharacter.h"
+#include "../Echo/EchoTypes.h"
 #include "EchoComponent.generated.h"
 
 class UCameraComponent;
@@ -49,13 +50,10 @@ public:
 	void OnEchoReleased();
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
-	void SwapPressed();
+	void SetSelectedEchoType(EEchoType NewType);
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
-	void TeleportToEcho();
-
-	UFUNCTION(BlueprintCallable, Category = "Echo")
-	void ReturnViewToSelf();
+	void TriggerPlacedEchoAbility();
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void AddEchoMoveInput(const FVector2D& Value);
@@ -77,10 +75,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Echo")
 	FOnEchoPlacedSignature OnPlaced;
-
-
-	UFUNCTION(BlueprintCallable, Category = "Echo")
-	bool IsLookingThroughEcho();
 
 protected:
 	// Called when the game starts
@@ -128,7 +122,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
 	float TeleportZoomInDuration = 0.3f;
 
+
+	//types
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
+	TSubclassOf<UActorComponent> TeleportComponentClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
+	TSubclassOf<UActorComponent> VisionComponentClass;
+
 private:
+
 	UPROPERTY(Transient)
 	TObjectPtr<AEchoCharacter> ActiveEcho;
 
@@ -138,11 +141,20 @@ private:
 	bool bCurrentAimIsValid = false;
 
 
+	//FOV Effects
 	EEchoFOVEffect FovEffectPhase = EEchoFOVEffect::None;
 	float FovEffectElapsed = 0.0f;
 	float FovEffectStartFOV = 90.0f;
 	float FovEffectBaseFOV = 90.0f;
 	TWeakObjectPtr<UCameraComponent> FovEffectCamera;
+
+
+	//Types
+	EEchoType CurrentEchoType = EEchoType::Teleport;
+
+	void AttachEchoAbility(AEchoCharacter* TargetEcho, EEchoType TypeToAttach);
+
+
 
 	void BeginAiming();
 	void UpdateAimPreview(float DeltaSeconds);

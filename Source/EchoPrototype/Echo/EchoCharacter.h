@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "../Character/PlayerCharacter.h"
+#include "EchoPrototype/Character/EchoComponent.h"
+#include "../Echo/EchoTypes.h"
 #include "EchoCharacter.generated.h"
 
 class UMaterialInstanceDynamic;
 class UMaterialInterface;
 class UStaticMesh;
 class UStaticMeshComponent;
+
 
 UENUM(BlueprintType)
 enum class EEchoVisualState : uint8
@@ -38,12 +41,10 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
-	void SetPreviewValidity(bool bIsValid);
+	void SetPreviewValidity(bool bIsValid, EEchoType EchoType = EEchoType::Teleport);
 
 
-	virtual void Jump() override {}
-
-	virtual void SwapPressed() override;
+	virtual void Jump() override {};
 
 	UPROPERTY(BlueprintAssignable, Category = "Echo")
 	FOnEchoPlaced OnPlaced;
@@ -67,11 +68,15 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> PreviewMID;
 
+	//Colors
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
-	FLinearColor ValidPlacementColor = FLinearColor(0.2f, 0.6f, 1.0f, 0.5f);
+	FLinearColor TeleportValidColor = FLinearColor(0.2f, 0.6f, 1.0f, 0.5f); // Blue
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
-	FLinearColor InvalidPlacementColor = FLinearColor(1.0f, 0.2f, 0.2f, 0.5f);
+	FLinearColor VisionValidColor = FLinearColor(0.2f, 1.0f, 0.3f, 0.5f);  // Green
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	FLinearColor InvalidPlacementColor = FLinearColor(1.0f, 0.2f, 0.2f, 0.5f); // Red
 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Vision")
@@ -83,6 +88,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Movement")
 	float MaxRangeFromOrigin = 800.0f;
+
+	
 
 public:
 	virtual void Tick(float DeltaSeconds) override;

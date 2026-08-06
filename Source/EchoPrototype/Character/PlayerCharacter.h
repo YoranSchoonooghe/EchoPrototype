@@ -64,8 +64,9 @@ public:
 	//Echo
 	void EchoPressed();
 	void EchoReleased();
-	virtual void SwapPressed();
-	void TeleportToEcho();
+
+	void SelectTeleportEcho();
+	void SelectVisionEcho();
 
 	//Combat
 	void AttackPressed();

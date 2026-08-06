@@ -60,7 +60,7 @@ void UInteractionComponent::UpdateFocus()
 		{
 			if (UEchoComponent* EchoComp = PossessedPawn->FindComponentByClass<UEchoComponent>())
 			{
-				bIsLookingThroughEcho = EchoComp->IsLookingThroughEcho();
+				bIsLookingThroughEcho = EchoComp->IsViewingThroughEcho();
 			}
 		}
 
