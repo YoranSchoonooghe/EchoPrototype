@@ -130,6 +130,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
 	TSubclassOf<UActorComponent> VisionComponentClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
+	TSubclassOf<UActorComponent> CombatComponentClass;
+
 
 	//HUD
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|UI")

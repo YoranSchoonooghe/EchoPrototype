@@ -12,6 +12,7 @@
 //Components
 #include "../Echo/EchoTeleportComponent.h"
 #include "../Echo/EchoVisionComponent.h"
+#include "../Echo/EchoCombatComponent.h"
 
 #include "Blueprint/UserWidget.h"
 #include "../HUD/EchoSelectionWidget.h"
@@ -246,9 +247,22 @@ void UEchoComponent::AttachEchoAbility(AEchoCharacter* TargetEcho, EEchoType Typ
 {
 	if (!TargetEcho) return;
 
-	TSubclassOf<UActorComponent> ClassToAttach = (TypeToAttach == EEchoType::Teleport)
-		? TeleportComponentClass
-		: VisionComponentClass;
+	TSubclassOf<UActorComponent> ClassToAttach;
+
+	switch (TypeToAttach)
+	{
+	case EEchoType::Teleport:
+		ClassToAttach = TeleportComponentClass;
+		break;
+	case EEchoType::Vision:
+		ClassToAttach = VisionComponentClass;
+		break;
+	case EEchoType::Distraction:
+		break;
+	case EEchoType::Combat:
+		ClassToAttach = CombatComponentClass;
+		break;
+	}
 
 	if (ClassToAttach)
 	{
