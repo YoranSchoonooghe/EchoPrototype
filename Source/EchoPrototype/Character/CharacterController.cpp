@@ -89,6 +89,12 @@ void ACharacterController::SetupInputComponent()
 
 			if (SelectVisionEchoAction)
 				EIC->BindAction(SelectVisionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectVisionEcho);
+			
+			if (SelectCombatEchoAction)
+				EIC->BindAction(SelectVisionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectCombatEcho);
+			
+			if (SelectDistractionEchoAction)
+				EIC->BindAction(SelectVisionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectDistractionEcho);
 
 			if (UseEchoAbilityAction)
 				EIC->BindAction(UseEchoAbilityAction, ETriggerEvent::Started, this, &ACharacterController::UseEchoAbility);
@@ -289,6 +295,22 @@ void ACharacterController::SelectVisionEcho()
 	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
 	{
 		CachedEchoComponent->SetSelectedEchoType(EEchoType::Vision);
+	}
+}
+
+void ACharacterController::SelectCombatEcho()
+{
+	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
+	{
+		CachedEchoComponent->SetSelectedEchoType(EEchoType::Combat);
+	}
+}
+
+void ACharacterController::SelectDistractionEcho()
+{
+	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
+	{
+		CachedEchoComponent->SetSelectedEchoType(EEchoType::Distraction);
 	}
 }
 

@@ -10,11 +10,15 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/WidgetComponent.h"
 
 #include "GameFramework/SpringArmComponent.h"
 #include "EchoPrototype/Character/PlayerCharacter.h"
 #include "EngineUtils.h"
+
+//Types
 #include "EchoVisionComponent.h"
+#include "EchoTeleportComponent.h"
 
 AEchoCharacter::AEchoCharacter()
 {
@@ -25,6 +29,11 @@ AEchoCharacter::AEchoCharacter()
 	PreviewOrbVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PreviewOrbVisual->SetCollisionResponseToAllChannels(ECR_Ignore);
 
+
+	SelectionMenuComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("SelectionMenuComponent"));
+	SelectionMenuComponent->SetupAttachment(RootComponent);
+	SelectionMenuComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	SelectionMenuComponent->SetDrawAtDesiredSize(true);
 
 	if (CameraBoom)
 	{
@@ -145,9 +154,17 @@ void AEchoCharacter::SetVisualState(EEchoVisualState NewState)
 			{
 				MaterialToApply = VisionPlacedMaterial;
 			}
-			else
+			else if(FindComponentByClass<UEchoTeleportComponent>() || ActiveEchoType == EEchoType::Teleport)
 			{
 				MaterialToApply = TeleportPlacedMaterial;
+			}
+			else if (ActiveEchoType == EEchoType::Combat)
+			{
+				MaterialToApply = CombatPlacedMaterial;
+			}
+			else if (ActiveEchoType == EEchoType::Distraction)
+			{
+				MaterialToApply = DistractionPlacedMaterial;
 			}
 
 			if (MaterialToApply)
@@ -184,11 +201,17 @@ void AEchoCharacter::SetPreviewValidity(bool bIsValid, EEchoType EchoType)
 
 		if (!bIsValid)
 		{
-			SelectedColor = InvalidPlacementColor;
+			SelectedColor = InvalidColor;
 		}
 		else
 		{
-			SelectedColor = (ActiveEchoType == EEchoType::Vision) ? VisionValidColor : TeleportValidColor;
+			switch (EchoType)
+			{
+			case EEchoType::Vision:      SelectedColor = VisionValidColor; break;
+			case EEchoType::Teleport:    SelectedColor = TeleportValidColor; break;
+			case EEchoType::Combat:      SelectedColor = CombatValidColor; break;
+			case EEchoType::Distraction: SelectedColor = DistractionValidColor; break;
+			}
 		}
 
 		PreviewMID->SetVectorParameterValue(TEXT("TintColor"), SelectedColor);

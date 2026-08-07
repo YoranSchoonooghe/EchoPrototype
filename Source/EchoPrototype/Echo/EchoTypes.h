@@ -7,5 +7,7 @@ UENUM(BlueprintType)
 enum class EEchoType : uint8
 {
 	Teleport,
-	Vision
+	Vision,
+	Distraction,
+	Combat
 };

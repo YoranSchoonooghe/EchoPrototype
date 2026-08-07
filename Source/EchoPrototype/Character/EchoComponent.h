@@ -130,6 +130,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
 	TSubclassOf<UActorComponent> VisionComponentClass;
 
+
+	//HUD
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|UI")
+	TSubclassOf<class UUserWidget> SelectionMenuWidgetClass;
+
 private:
 
 	UPROPERTY(Transient)
@@ -154,7 +159,12 @@ private:
 
 	void AttachEchoAbility(AEchoCharacter* TargetEcho, EEchoType TypeToAttach);
 
+	//HUD
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> SelectionMenuInstance;
 
+	void ShowSelectionUI();
+	void HideSelectionUI();
 
 	void BeginAiming();
 	void UpdateAimPreview(float DeltaSeconds);

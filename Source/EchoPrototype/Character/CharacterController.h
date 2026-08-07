@@ -61,6 +61,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
 	TObjectPtr<UInputAction> SelectTeleportEchoAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
+	TObjectPtr<UInputAction> SelectCombatEchoAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
+	TObjectPtr<UInputAction> SelectDistractionEchoAction;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Echo")
 	TObjectPtr<UInputAction> SelectVisionEchoAction;
@@ -123,6 +130,8 @@ private:
 	void UseEchoAbility();
 	void SelectTeleportEcho();
 	void SelectVisionEcho();
+	void SelectCombatEcho();
+	void SelectDistractionEcho();
 
 	//Combat
 	void Attack();

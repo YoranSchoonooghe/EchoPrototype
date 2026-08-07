@@ -32,6 +32,8 @@ class ECHOPROTOTYPE_API AEchoCharacter : public APlayerCharacter
 public:
 	AEchoCharacter();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 	UFUNCTION(BlueprintPure, Category = "Echo")
 	FORCEINLINE EEchoVisualState GetVisualState() const { return VisualState; }
 
@@ -67,6 +69,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
 	TObjectPtr<UMaterialInterface> VisionPlacedMaterial;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<UMaterialInterface> CombatPlacedMaterial;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	TObjectPtr<UMaterialInterface> DistractionPlacedMaterial;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> PreviewMID;
@@ -79,8 +87,13 @@ protected:
 	FLinearColor VisionValidColor = FLinearColor(0.2f, 1.0f, 0.3f, 0.5f);  // Green
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
-	FLinearColor InvalidPlacementColor = FLinearColor(1.0f, 0.2f, 0.2f, 0.5f); // Red
-
+	FLinearColor CombatValidColor = FLinearColor(1.0f, 0.2f, 0.2f, 0.5f); // Red
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	FLinearColor DistractionValidColor = FLinearColor(0.2f, 1.0f, 0.3f, 0.5f);  // Yellow
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Visuals")
+	FLinearColor InvalidColor = FLinearColor(0.2f, 1.0f, 0.3f, 0.5f);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Vision")
 	TObjectPtr<UMaterialInterface> EchoVisionPostProcessMaterial;
@@ -92,10 +105,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Movement")
 	float MaxRangeFromOrigin = 800.0f;
 
-	
 
-public:
-	virtual void Tick(float DeltaSeconds) override;
+	//HUD
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo|UI")
+	TObjectPtr<class UWidgetComponent> SelectionMenuComponent;
 
 private:
 	EEchoVisualState VisualState = EEchoVisualState::Preview;

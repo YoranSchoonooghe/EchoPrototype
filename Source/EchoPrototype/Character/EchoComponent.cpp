@@ -13,6 +13,9 @@
 #include "../Echo/EchoTeleportComponent.h"
 #include "../Echo/EchoVisionComponent.h"
 
+#include "Blueprint/UserWidget.h"
+#include "../HUD/EchoSelectionWidget.h"
+
 
 // Sets default values for this component's properties
 UEchoComponent::UEchoComponent()
@@ -257,6 +260,33 @@ void UEchoComponent::AttachEchoAbility(AEchoCharacter* TargetEcho, EEchoType Typ
 	}
 }
 
+void UEchoComponent::ShowSelectionUI()
+{
+	if (SelectionMenuWidgetClass && !SelectionMenuInstance)
+	{
+		APlayerController* PC = Cast<APlayerController>(GetOwnerPawn()->GetController());
+		if (PC)
+		{
+			UEchoSelectionWidget* EchoWidget = CreateWidget<UEchoSelectionWidget>(PC, SelectionMenuWidgetClass);
+			if (EchoWidget)
+			{
+				EchoWidget->TargetEchoActor = ActiveEcho;
+				SelectionMenuInstance = EchoWidget;
+				SelectionMenuInstance->AddToViewport();
+			}
+		}
+	}
+}
+
+void UEchoComponent::HideSelectionUI()
+{
+	if (SelectionMenuInstance)
+	{
+		SelectionMenuInstance->RemoveFromParent();
+		SelectionMenuInstance = nullptr;
+	}
+}
+
 void UEchoComponent::BeginAiming()
 {
 	if (!EchoActorClass) return;
@@ -278,6 +308,7 @@ void UEchoComponent::BeginAiming()
 		AttachEchoAbility(ActiveEcho, CurrentEchoType);
 		ActiveEcho->SetVisualState(EEchoVisualState::Preview);
 		ActiveEcho->SetPreviewValidity(bValid, CurrentEchoType);
+		ShowSelectionUI();
 		EchoState = EEchoState::Aiming;
 	}
 }
@@ -310,6 +341,7 @@ void UEchoComponent::PlaceEcho()
 	}
 	ActiveEcho->SetVisualState(EEchoVisualState::Placed);
 	EchoState = EEchoState::Placed;
+	HideSelectionUI();
 	OnPlaced.Broadcast();
 }
 
