@@ -3,30 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InteractableActor.h"
+#include "PickupActor.h"
 #include "SkillPointPickup.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
-class ECHOPROTOTYPE_API ASkillPointPickup : public AInteractableActor
+class ECHOPROTOTYPE_API ASkillPointPickup : public APickupActor
 {
 	GENERATED_BODY()
-	
+
 public:
 	ASkillPointPickup();
 
-	virtual void Interact_Implementation(AActor* Interactor) override;
 protected:
-	virtual void BeginPlay() override;
+	virtual void OnPickedUp(AActor* Interactor) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pickup", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> PickupMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pickup", meta = (AllowPrivateAccess = "true"))
 	int32 SkillPointAmount = 1;
-
-private:
-	void CollectPickup();
 };
