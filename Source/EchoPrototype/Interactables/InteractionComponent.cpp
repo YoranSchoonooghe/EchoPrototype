@@ -36,6 +36,12 @@ APawn* UInteractionComponent::GetOwnerPawn() const
 
 void UInteractionComponent::UpdateFocus()
 {
+	if (CurrentFocusedActor.IsStale())
+	{
+		CurrentFocusedActor = nullptr;
+		OnFocusedActorChanged.Broadcast(nullptr, FText::GetEmpty());
+	}
+
 	AActor* PreviousFocusedActor = CurrentFocusedActor.Get();
 
 	APlayerController* PC = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
