@@ -4,11 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Camera/CameraShakeBase.h"
+#include "Components/PostProcessComponent.h"
+
+#include "NiagaraSystem.h"
+
 #include "EchoTeleportComponent.generated.h"
 
 class UCameraComponent;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTeleportComplete);
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
 class ECHOPROTOTYPE_API UEchoTeleportComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -18,23 +26,55 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Echo|Teleport")
+	UFUNCTION(BlueprintCallable, Category = "Teleport")
 	bool ExecuteTeleport(APawn* PlayerPawn);
 
-protected:
-	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
-	float TeleportSpikeFOV = 130.0f;
+	UPROPERTY(BlueprintAssignable, Category = "Teleport")
+	FOnTeleportComplete OnTeleportComplete;
 
-	UPROPERTY(EditAnywhere, Category = "Echo|Teleport FX")
-	float TeleportZoomInDuration = 0.3f;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Visuals")
+	float TeleportSpikeFOV = 115.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Visuals")
+	float PreTeleportDelay = 0.06f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Visuals")
+	float TeleportRecoveryDuration = 1.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Visuals")
+	TSubclassOf<UCameraShakeBase> ArrivalCameraShakeClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Visuals")
+	float MaxChromaticAberration = 5.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Visuals")
+	float MaxMotionBlur = 1.0f;
+
+
+	//VFX
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Juice")
+	UNiagaraSystem* DepartureFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Juice")
+	UNiagaraSystem* ArrivalFX;
 
 private:
-	void StartTeleportFovEffect(APawn* PlayerPawn);
-	void UpdateTeleportFovEffect(float DeltaSeconds);
+	void PerformActualTeleport();
+	void StartTeleportEffects(APawn* PlayerPawn);
+	void UpdateTeleportEffects(float DeltaSeconds);
+	void ResetPostProcessing();
 
-	bool bIsZooming = false;
-	float FovEffectElapsed = 0.0f;
-	float FovEffectStartFOV = 90.0f;
-	float FovEffectBaseFOV = 90.0f;
+	void SetPlayerVisible(APawn* PlayerPawn, bool bVisible);
+
+	TWeakObjectPtr<APawn> CachedPlayerPawn;
 	TWeakObjectPtr<UCameraComponent> FovEffectCamera;
+	TWeakObjectPtr<UPostProcessComponent> DynamicPostProcessComp;
+
+	float FovEffectBaseFOV = 90.0f;
+	float FovEffectStartFOV = 115.0f;
+	float EffectElapsed = 0.0f;
+	bool bIsRecovering = false;
+
+	FTimerHandle TeleportTimerHandle;
 };

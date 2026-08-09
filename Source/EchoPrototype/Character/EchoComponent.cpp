@@ -168,13 +168,18 @@ void UEchoComponent::TriggerPlacedEchoAbility()
 
 	if (UEchoTeleportComponent* TeleportComp = ActiveEcho->FindComponentByClass<UEchoTeleportComponent>())
 	{
+		TeleportComp->OnTeleportComplete.AddDynamic(this, &UEchoComponent::HandleTeleportComplete);
 		TeleportComp->ExecuteTeleport(GetOwnerPawn());
-		DestroyActiveEcho();
 	}
 	else if (UEchoVisionComponent* VisionComp = ActiveEcho->FindComponentByClass<UEchoVisionComponent>())
 	{
 		VisionComp->ToggleEchoPossession(GetOwnerPawn());
 	}
+}
+
+void UEchoComponent::HandleTeleportComplete()
+{
+	DestroyActiveEcho();
 }
 
 void UEchoComponent::AddEchoMoveInput(const FVector2D& Value)

@@ -9,7 +9,7 @@
 class APawn;
 class APlayerController;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
 class ECHOPROTOTYPE_API UEchoVisionComponent : public UActorComponent
 {
 	GENERATED_BODY()
