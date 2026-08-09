@@ -19,6 +19,8 @@ struct FLedgeTraceResult
 	AActor* HitActor = nullptr;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnClimbEvent);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ECHOPROTOTYPE_API UClimbingComponent : public UActorComponent
 {
@@ -44,6 +46,27 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Climbing")
 	FORCEINLINE bool HasLegsContact() const { return bHasLegsContact; }
 
+	UPROPERTY(BlueprintAssignable, Category = "Climbing|Events")
+	FOnClimbEvent OnLedgeGrabbed;
+
+	UPROPERTY(BlueprintAssignable, Category = "Climbing|Events")
+	FOnClimbEvent OnLedgeReleased;
+
+	UPROPERTY(BlueprintAssignable, Category = "Climbing|Events")
+	FOnClimbEvent OnJumpedOffLedge;
+
+	UPROPERTY(BlueprintAssignable, Category = "Climbing|Events")
+	FOnClimbEvent OnShimmyStepped;
+
+	UPROPERTY(BlueprintAssignable, Category = "Climbing|Events")
+	FOnClimbEvent OnJumpedToLedge;
+
+	UPROPERTY(BlueprintAssignable, Category = "Climbing|Events")
+	FOnClimbEvent OnClimbUpStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Climbing|Events")
+	FOnClimbEvent OnClimbUpFinished;
+
 	UFUNCTION(BlueprintPure, Category = "Climbing")
 	AActor* GetGrabbedLedgeActor() const { return bIsHanging ? CachedLedgeActor.Get() : nullptr; }
 
@@ -63,7 +86,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Climbing|Grab")
 	float JumpOffSideVelocity = 400.0f;
 
-	// Away-from-wall velocity when jumping off while holding back
+	// Away from wall velocity when jumping off while holding back
 	UPROPERTY(EditAnywhere, Category = "Climbing|Grab")
 	float JumpOffBackVelocity = 400.0f;
 
@@ -152,7 +175,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
 	float MaxVerticalReach = 280.0f;
 
-	// How far a lateral jump can reach across a gap
 	UPROPERTY(EditAnywhere, Category = "Climbing|Movement")
 	float MaxLateralJumpDistance = 220.0f;
 

@@ -330,6 +330,7 @@ void UClimbingComponent::TryStartHang(bool bPrintFailures)
 		Movement->SetPlaneConstraintNormal(LedgeResult.WallNormal);
 
 		bIsHanging = true;
+		OnLedgeGrabbed.Broadcast();
 	}
 }
 
@@ -511,6 +512,7 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 	{
 		const float BlendDuration = PlayMoveMontage(MontageToPlay);
 		ApplyHangTransform(LedgeResult, BlendDuration, true);
+		OnShimmyStepped.Broadcast();
 		return;
 	}
 
@@ -536,6 +538,7 @@ void UClimbingComponent::TryShimmyStep(const FVector& Direction, float StepDista
 
 				const float BlendDuration = PlayMoveMontage(MontageToPlay);
 				ApplyHangTransform(CornerResult, BlendDuration, true);
+				OnShimmyStepped.Broadcast();
 				return;
 			}
 		}
@@ -589,6 +592,7 @@ void UClimbingComponent::TryJumpToLedge(const FVector& Direction, const FVector2
 	}
 
 	ApplyHangTransform(LedgeResult, BlendDuration, bVertical);
+	OnJumpedToLedge.Broadcast();
 }
 
 void UClimbingComponent::RestoreMoveCollision()
@@ -655,6 +659,7 @@ bool UClimbingComponent::TryClimbUp()
 
 	bIsClimbingUp = true;
 	PendingClimbUpStandLocation = StandLocation;
+	OnClimbUpStarted.Broadcast();
 
 	if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
 	{
@@ -728,6 +733,8 @@ void UClimbingComponent::FinishClimbUp()
 			AnimInstance->SetRootMotionMode(static_cast<ERootMotionMode::Type>(SavedRootMotionMode));
 		}
 	}
+
+	OnClimbUpFinished.Broadcast();
 
 	bIsHanging = false;
 	bIsClimbingUp = false;
@@ -823,6 +830,7 @@ void UClimbingComponent::JumpFromLedge()
 		}
 
 		Character->LaunchCharacter(LaunchVelocity, true, true);
+		OnJumpedOffLedge.Broadcast();
 	}
 }
 
@@ -872,4 +880,5 @@ void UClimbingComponent::StopHanging()
 	bJumpModifierHeld = false;
 	bIsBlending = false;
 	LastDetachTime = GetWorld()->GetTimeSeconds();
+	OnLedgeReleased.Broadcast();
 }
