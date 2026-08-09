@@ -13,6 +13,7 @@ void USaveGameSubsystem::SaveGame(APlayerCharacter* Character, const FString& Sl
 
 	if (UEchoSaveGame* SaveGameObject = Character->CaptureSaveGame())
 	{
+		SaveGameObject->CollectedPickups = CollectedPickupIDs.Array();
 		UGameplayStatics::SaveGameToSlot(SaveGameObject, SlotName, 0);
 	}
 }
@@ -25,6 +26,7 @@ void USaveGameSubsystem::LoadGame(const FString& SlotName)
 		return;
 	}
 
+	CollectedPickupIDs = TSet<FName>(Loaded->CollectedPickups);
 	PendingLoad = Loaded;
 
 	UWorld* World = GetGameInstance() ? GetGameInstance()->GetWorld() : nullptr;
@@ -66,4 +68,14 @@ void USaveGameSubsystem::ApplyPendingLoadIfAny(APlayerCharacter* Character)
 
 	Character->ApplySaveGame(PendingLoad);
 	PendingLoad = nullptr;
+}
+
+bool USaveGameSubsystem::IsPickupCollected(FName PickupID) const
+{
+	return CollectedPickupIDs.Contains(PickupID);
+}
+
+void USaveGameSubsystem::MarkPickupCollected(FName PickupID)
+{
+	CollectedPickupIDs.Add(PickupID);
 }

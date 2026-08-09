@@ -27,7 +27,16 @@ public:
 
 	void ApplyPendingLoadIfAny(APlayerCharacter* Character);
 
+	UFUNCTION(BlueprintPure, Category = "Save")
+	bool IsPickupCollected(FName PickupID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	void MarkPickupCollected(FName PickupID);
+
 private:
 	UPROPERTY()
 	TObjectPtr<UEchoSaveGame> PendingLoad;
+
+	UPROPERTY()
+	TSet<FName> CollectedPickupIDs;
 };

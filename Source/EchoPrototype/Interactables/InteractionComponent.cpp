@@ -124,4 +124,10 @@ void UInteractionComponent::OnInteractPressed()
 	AActor* Interactor = (PC && PC->GetPawn()) ? static_cast<AActor*>(PC->GetPawn()) : GetOwner();
 
 	IInteractableInterface::Execute_Interact(Focused, Interactor);
+
+	if (!IsValid(Focused))
+	{
+		CurrentFocusedActor = nullptr;
+		OnFocusedActorChanged.Broadcast(nullptr, FText::GetEmpty());
+	}
 }

@@ -19,6 +19,8 @@ public:
 
 	virtual void Interact_Implementation(AActor* Interactor) override;
 protected:
+	virtual void BeginPlay() override;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pickup", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> PickupMesh;
 

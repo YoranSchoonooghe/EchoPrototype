@@ -26,4 +26,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Save")
 	FRotator PlayerRotation = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Save")
+	TArray<FName> CollectedPickups;
 };
