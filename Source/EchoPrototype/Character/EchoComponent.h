@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "GameplayTagContainer.h"
 #include "../Echo/EchoCharacter.h"
 #include "../Echo/EchoTypes.h"
 #include "EchoComponent.generated.h"
@@ -30,6 +31,18 @@ enum class EEchoFOVEffect : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEchoPlacedSignature);
 
+USTRUCT(BlueprintType)
+struct FEchoAbilityUnlock
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Echo")
+	bool bRequiresUnlock = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Echo", meta = (EditCondition = "bRequiresUnlock"))
+	FGameplayTag RequiredTag;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ECHOPROTOTYPE_API UEchoComponent : public UActorComponent
 {
@@ -51,6 +64,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void SetSelectedEchoType(EEchoType NewType);
+
+	UFUNCTION(BlueprintPure, Category = "Echo")
+	bool IsEchoTypeUnlocked(EEchoType Type) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void TriggerPlacedEchoAbility();
@@ -135,6 +151,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
 	TSubclassOf<UActorComponent> CombatComponentClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
+	FEchoAbilityUnlock VisionUnlock;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
+	FEchoAbilityUnlock CombatUnlock;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
+	FEchoAbilityUnlock DistractionUnlock;
 
 
 	//HUD

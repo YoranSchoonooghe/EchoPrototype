@@ -16,6 +16,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "../HUD/EchoSelectionWidget.h"
+#include "../SkillTree/SkillTreeComponent.h"
 
 
 // Sets default values for this component's properties
@@ -142,6 +143,11 @@ void UEchoComponent::OnEchoReleased()
 
 void UEchoComponent::SetSelectedEchoType(EEchoType NewType)
 {
+	if (!IsEchoTypeUnlocked(NewType))
+	{
+		return;
+	}
+
 	CurrentEchoType = NewType;
 
 	if (EchoState == EEchoState::Aiming && ActiveEcho)
@@ -159,6 +165,37 @@ void UEchoComponent::SetSelectedEchoType(EEchoType NewType)
 
 		ActiveEcho->SetPreviewValidity(bCurrentAimIsValid, CurrentEchoType);
 	}
+}
+
+bool UEchoComponent::IsEchoTypeUnlocked(EEchoType Type) const
+{
+	if (Type == EEchoType::Teleport)
+	{
+		return true;
+	}
+
+	const FEchoAbilityUnlock* Unlock = nullptr;
+	switch (Type)
+	{
+	case EEchoType::Vision: Unlock = &VisionUnlock; break;
+	case EEchoType::Combat: Unlock = &CombatUnlock; break;
+	case EEchoType::Distraction: Unlock = &DistractionUnlock; break;
+	default: return true;
+	}
+
+	if (!Unlock->bRequiresUnlock)
+	{
+		return true;
+	}
+
+	if (!Unlock->RequiredTag.IsValid())
+	{
+		return false;
+	}
+
+	APlayerCharacter* PlayerChar = Cast<APlayerCharacter>(GetOwner());
+	USkillTreeComponent* SkillTree = PlayerChar ? PlayerChar->GetSkillTreeComponent() : nullptr;
+	return SkillTree && SkillTree->HasUnlockedTag(Unlock->RequiredTag);
 }
 
 void UEchoComponent::TriggerPlacedEchoAbility()
