@@ -153,6 +153,9 @@ protected:
 	TSubclassOf<UActorComponent> CombatComponentClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
+	TSubclassOf<UActorComponent> DistractionComponentClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
 	FEchoAbilityUnlock VisionUnlock;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")

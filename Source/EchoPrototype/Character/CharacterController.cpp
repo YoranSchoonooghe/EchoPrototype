@@ -91,10 +91,10 @@ void ACharacterController::SetupInputComponent()
 				EIC->BindAction(SelectVisionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectVisionEcho);
 			
 			if (SelectCombatEchoAction)
-				EIC->BindAction(SelectVisionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectCombatEcho);
-			
+				EIC->BindAction(SelectCombatEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectCombatEcho);
+
 			if (SelectDistractionEchoAction)
-				EIC->BindAction(SelectVisionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectDistractionEcho);
+				EIC->BindAction(SelectDistractionEchoAction, ETriggerEvent::Started, this, &ACharacterController::SelectDistractionEcho);
 
 			if (UseEchoAbilityAction)
 				EIC->BindAction(UseEchoAbilityAction, ETriggerEvent::Started, this, &ACharacterController::UseEchoAbility);

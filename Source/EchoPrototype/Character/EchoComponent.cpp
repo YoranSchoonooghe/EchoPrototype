@@ -13,6 +13,7 @@
 #include "../Echo/EchoTeleportComponent.h"
 #include "../Echo/EchoVisionComponent.h"
 #include "../Echo/EchoCombatComponent.h"
+#include "../Echo/EchoDistractionComponent.h"
 
 #include "Blueprint/UserWidget.h"
 #include "../HUD/EchoSelectionWidget.h"
@@ -160,6 +161,10 @@ void UEchoComponent::SetSelectedEchoType(EEchoType NewType)
 		{
 			OldComp->DestroyComponent();
 		}
+		if (UActorComponent* OldComp = ActiveEcho->FindComponentByClass<UEchoDistractionComponent>())
+		{
+			OldComp->DestroyComponent();
+		}
 
 		AttachEchoAbility(ActiveEcho, CurrentEchoType);
 
@@ -300,6 +305,7 @@ void UEchoComponent::AttachEchoAbility(AEchoCharacter* TargetEcho, EEchoType Typ
 		ClassToAttach = VisionComponentClass;
 		break;
 	case EEchoType::Distraction:
+		ClassToAttach = DistractionComponentClass;
 		break;
 	case EEchoType::Combat:
 		ClassToAttach = CombatComponentClass;
