@@ -37,6 +37,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Reachability", meta = (EditCondition = "bIgnoreUnreachableTargets"))
 	float ReachabilityCheckInterval = 1.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Echo Attack")
+	float EchoAttackRange = 150.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Echo Attack")
+	float EchoAttackCooldown = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Echo Attack")
+	float EchoAttackCheckInterval = 0.25f;
+
 	UFUNCTION()
 	void HandlePerception(AActor* Actor, FAIStimulus Stimulus);
 	UFUNCTION()
@@ -59,8 +68,17 @@ private:
 	void StopReachabilityMonitor();
 	void CheckTargetReachability();
 
+	void HandleDetectableEchoSpotted(AEchoCharacter* Echo);
+
+	void StartEchoAttackMonitor(AEchoCharacter* Echo);
+	void StopEchoAttackMonitor();
+	void CheckEchoAttackRange();
+	void AttackTargetEcho();
+
 	AEchoCharacter* _targetEcho;
 	TArray<AActor*> _spottedEchoes;
 
 	FTimerHandle ReachabilityCheckTimerHandle;
+	FTimerHandle EchoAttackCheckTimerHandle;
+	float LastEchoAttackTime = -1000.0f;
 };

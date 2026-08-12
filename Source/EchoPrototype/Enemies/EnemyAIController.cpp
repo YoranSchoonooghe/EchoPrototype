@@ -11,6 +11,7 @@
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 #include "TimerManager.h"
+#include "EchoPrototype/Combat/CombatComponent.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -92,10 +93,22 @@ void AEnemyAIController::UpdateTargetEcho()
 		return;
 	}
 
-	auto* pBlackboardComponent = GetBlackboardComponent();
-	if (!pBlackboardComponent) return;
+	HandleDetectableEchoSpotted(_targetEcho);
+}
 
-	pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), _targetEcho->GetActorLocation());
+void AEnemyAIController::HandleDetectableEchoSpotted(AEchoCharacter* Echo)
+{
+	if (!Echo)
+	{
+		return;
+	}
+
+	if (auto* pBlackboardComponent = GetBlackboardComponent())
+	{
+		pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), Echo->GetActorLocation());
+	}
+
+	StartEchoAttackMonitor(Echo);
 }
 
 bool AEnemyAIController::IsEchoDetectable(AEchoCharacter* Echo) const
@@ -188,6 +201,63 @@ void AEnemyAIController::CheckTargetReachability()
 	}
 }
 
+void AEnemyAIController::StartEchoAttackMonitor(AEchoCharacter* Echo)
+{
+	_targetEcho = Echo;
+	GetWorld()->GetTimerManager().SetTimer(EchoAttackCheckTimerHandle, this, &AEnemyAIController::CheckEchoAttackRange, EchoAttackCheckInterval, true);
+}
+
+void AEnemyAIController::StopEchoAttackMonitor()
+{
+	GetWorld()->GetTimerManager().ClearTimer(EchoAttackCheckTimerHandle);
+}
+
+void AEnemyAIController::CheckEchoAttackRange()
+{
+	if (!IsValid(_targetEcho))
+	{
+		StopEchoAttackMonitor();
+		return;
+	}
+
+	APawn* pSelf = GetPawn();
+	if (!pSelf)
+	{
+		StopEchoAttackMonitor();
+		return;
+	}
+
+	const float DistSq = FVector::DistSquared(pSelf->GetActorLocation(), _targetEcho->GetActorLocation());
+	if (DistSq <= FMath::Square(EchoAttackRange))
+	{
+		AttackTargetEcho();
+	}
+}
+
+void AEnemyAIController::AttackTargetEcho()
+{
+	if (!IsValid(_targetEcho))
+	{
+		return;
+	}
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastEchoAttackTime < EchoAttackCooldown)
+	{
+		return;
+	}
+
+	auto* pEnemy = Cast<AEnemyCharacter>(GetCharacter());
+	UCombatComponent* pCombat = pEnemy ? pEnemy->GetCombatComponent() : nullptr;
+	if (!pCombat)
+	{
+		return;
+	}
+
+	LastEchoAttackTime = Now;
+	pCombat->OnAttackReleased();
+}
+
 void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimulus)
 {
 	auto const TargetPlayerKeyName = TEXT("TargetPlayer");
@@ -201,10 +271,7 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 		{
 			if (IsEchoDetectable(pEcho))
 			{
-				auto* pBlackboardComponent = GetBlackboardComponent();
-				if (!pBlackboardComponent) return;
-
-				pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
+				HandleDetectableEchoSpotted(pEcho);
 			}
 		}
 		else

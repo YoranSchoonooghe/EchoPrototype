@@ -367,6 +367,7 @@ void UEchoComponent::BeginAiming()
 	ActiveEcho = GetWorld()->SpawnActor<AEchoCharacter>(EchoActorClass, FTransform(BodyRotation, SpawnLocation), SpawnParams);
 	if (ActiveEcho)
 	{
+		ActiveEcho->OnRemoved.AddDynamic(this, &UEchoComponent::HandleActiveEchoRemoved);
 		AttachEchoAbility(ActiveEcho, CurrentEchoType);
 		ActiveEcho->SetVisualState(EEchoVisualState::Preview);
 		ActiveEcho->SetPreviewValidity(bValid, CurrentEchoType);
@@ -414,6 +415,16 @@ void UEchoComponent::DestroyActiveEcho()
 		ActiveEcho->Destroy();
 		ActiveEcho = nullptr;
 	}
+	EchoState = EEchoState::Idle;
+	bIsViewingThroughEcho = false;
+	bCurrentAimIsValid = false;
+}
+
+void UEchoComponent::HandleActiveEchoRemoved()
+{
+
+	HideSelectionUI();
+	ActiveEcho = nullptr;
 	EchoState = EEchoState::Idle;
 	bIsViewingThroughEcho = false;
 	bCurrentAimIsValid = false;

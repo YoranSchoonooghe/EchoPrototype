@@ -23,6 +23,7 @@ enum class EEchoVisualState : uint8
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEchoPlaced);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEchoRemoved);
 
 UCLASS()
 class ECHOPROTOTYPE_API AEchoCharacter : public APlayerCharacter
@@ -51,8 +52,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Echo")
 	FOnEchoPlaced OnPlaced;
 
+	UPROPERTY(BlueprintAssignable, Category = "Echo")
+	FOnEchoRemoved OnRemoved;
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void Destroyed() override;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Echo", meta = (AllowPrivateAccess = "true"))

@@ -99,6 +99,9 @@ protected:
 	UFUNCTION()
 	void HandleTeleportComplete();
 
+	UFUNCTION()
+	void HandleActiveEchoRemoved();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Echo")
 	TSubclassOf<AEchoCharacter> EchoActorClass;
 

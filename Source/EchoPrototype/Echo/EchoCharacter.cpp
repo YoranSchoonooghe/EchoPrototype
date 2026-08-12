@@ -80,6 +80,12 @@ void AEchoCharacter::BeginPlay()
 	SetVisualState(EEchoVisualState::Preview);
 }
 
+void AEchoCharacter::Destroyed()
+{
+	OnRemoved.Broadcast();
+	Super::Destroyed();
+}
+
 void AEchoCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
