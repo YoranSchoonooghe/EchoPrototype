@@ -75,7 +75,7 @@ void UEchoTeleportComponent::PerformActualTeleport()
 	{
 		ResetPostProcessing();
 		bIsRecovering = false;
-		OnTeleportComplete.Broadcast();
+		OnTeleportComplete.Broadcast(Cast<AEchoCharacter>(GetOwner()));
 		return;
 	}
 
@@ -147,7 +147,7 @@ void UEchoTeleportComponent::UpdateTeleportEffects(float DeltaSeconds)
 		ResetPostProcessing();
 		bIsRecovering = false;
 		FovEffectCamera.Reset();
-		OnTeleportComplete.Broadcast();
+		OnTeleportComplete.Broadcast(Cast<AEchoCharacter>(GetOwner()));
 		return;
 	}
 
@@ -170,7 +170,7 @@ void UEchoTeleportComponent::UpdateTeleportEffects(float DeltaSeconds)
 		ResetPostProcessing();
 		bIsRecovering = false;
 		FovEffectCamera.Reset();
-		OnTeleportComplete.Broadcast();
+		OnTeleportComplete.Broadcast(Cast<AEchoCharacter>(GetOwner()));
 	}
 }
 

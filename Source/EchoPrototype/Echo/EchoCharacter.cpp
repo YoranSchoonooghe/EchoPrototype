@@ -203,7 +203,7 @@ void AEchoCharacter::SetPreviewValidity(bool bIsValid, EEchoType EchoType)
 
 	if (PreviewMID)
 	{
-		FLinearColor SelectedColor;
+		FLinearColor SelectedColor = TeleportValidColor;;
 
 		if (!bIsValid)
 		{

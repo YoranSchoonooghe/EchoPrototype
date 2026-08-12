@@ -97,7 +97,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	void HandleTeleportComplete();
+	void HandleTeleportComplete(AEchoCharacter* CompletedEcho);
 
 	UFUNCTION()
 	void HandleActiveEchoRemoved();
@@ -167,10 +167,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|Types")
 	FEchoAbilityUnlock DistractionUnlock;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Echo|Limits")
+	TMap<EEchoType, int32> EchoTypeLimits = {
+		{ EEchoType::Teleport, 1 },
+		{ EEchoType::Vision, 1 },
+		{ EEchoType::Combat, 2 },
+		{ EEchoType::Distraction, 2 }
+	};
+
 
 	//HUD
 	UPROPERTY(EditDefaultsOnly, Category = "Echo|UI")
 	TSubclassOf<class UUserWidget> SelectionMenuWidgetClass;
+
+	int32 GetMaxAllowedForType(EEchoType Type) const;
+
+	void DestroyEchoInstance(AEchoCharacter* EchoToDestroy);
 
 private:
 
@@ -195,6 +207,12 @@ private:
 	EEchoType CurrentEchoType = EEchoType::Teleport;
 
 	void AttachEchoAbility(AEchoCharacter* TargetEcho, EEchoType TypeToAttach);
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<AEchoCharacter>> ActiveEchoes;
+
+	UPROPERTY(Transient)
+	TObjectPtr<AEchoCharacter> PreviewEcho;
 
 	//HUD
 	UPROPERTY(Transient)

@@ -55,6 +55,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Echo")
 	FOnEchoRemoved OnRemoved;
 
+	UFUNCTION(BlueprintPure, Category = "Echo")
+	FORCEINLINE EEchoType GetActiveEchoType() const { return ActiveEchoType; }
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;

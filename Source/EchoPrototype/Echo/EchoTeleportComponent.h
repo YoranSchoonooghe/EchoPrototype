@@ -8,13 +8,15 @@
 #include "Camera/CameraShakeBase.h"
 #include "Components/PostProcessComponent.h"
 
+#include "EchoCharacter.h"
+
 #include "NiagaraSystem.h"
 
 #include "EchoTeleportComponent.generated.h"
 
 class UCameraComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTeleportComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeleportComplete, class AEchoCharacter*, Echo);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
 class ECHOPROTOTYPE_API UEchoTeleportComponent : public UEchoComponentBase

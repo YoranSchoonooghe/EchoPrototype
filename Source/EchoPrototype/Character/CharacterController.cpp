@@ -316,7 +316,7 @@ void ACharacterController::SelectDistractionEcho()
 
 void ACharacterController::UseEchoAbility()
 {
-	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Placed)
+	if (CachedEchoComponent)
 	{
 		CachedEchoComponent->TriggerPlacedEchoAbility();
 	}

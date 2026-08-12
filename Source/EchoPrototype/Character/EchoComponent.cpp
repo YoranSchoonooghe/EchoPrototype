@@ -205,23 +205,59 @@ bool UEchoComponent::IsEchoTypeUnlocked(EEchoType Type) const
 
 void UEchoComponent::TriggerPlacedEchoAbility()
 {
-	if (EchoState != EEchoState::Placed || !ActiveEcho) return;
+	AEchoCharacter* TargetEcho = nullptr;
 
+	for (AEchoCharacter* Echo : ActiveEchoes)
+	{
+		if (Echo && Echo->GetActiveEchoType() == CurrentEchoType)
+		{
+			TargetEcho = Echo;
+			break;
+		}
+	}
 
-	if (UEchoTeleportComponent* TeleportComp = ActiveEcho->FindComponentByClass<UEchoTeleportComponent>())
+	if (!TargetEcho)
+	{
+		for (AEchoCharacter* Echo : ActiveEchoes)
+		{
+			if (Echo && Echo->FindComponentByClass<UEchoTeleportComponent>())
+			{
+				TargetEcho = Echo;
+				break;
+			}
+		}
+	}
+
+	if (!TargetEcho) return;
+
+	if (UEchoTeleportComponent* TeleportComp = TargetEcho->FindComponentByClass<UEchoTeleportComponent>())
 	{
 		TeleportComp->OnTeleportComplete.AddDynamic(this, &UEchoComponent::HandleTeleportComplete);
 		TeleportComp->ExecuteTeleport(GetOwnerPawn());
 	}
-	else if (UEchoVisionComponent* VisionComp = ActiveEcho->FindComponentByClass<UEchoVisionComponent>())
+	else if (UEchoVisionComponent* VisionComp = TargetEcho->FindComponentByClass<UEchoVisionComponent>())
 	{
 		VisionComp->ToggleEchoPossession(GetOwnerPawn());
 	}
 }
 
-void UEchoComponent::HandleTeleportComplete()
+void UEchoComponent::HandleTeleportComplete(AEchoCharacter* CompletedEcho)
 {
-	DestroyActiveEcho();
+	if (CompletedEcho)
+	{
+		DestroyEchoInstance(CompletedEcho);
+	}
+	else
+	{
+		for (int32 i = ActiveEchoes.Num() - 1; i >= 0; --i)
+		{
+			if (ActiveEchoes[i] && ActiveEchoes[i]->GetActiveEchoType() == EEchoType::Teleport)
+			{
+				DestroyEchoInstance(ActiveEchoes[i]);
+				break;
+			}
+		}
+	}
 }
 
 void UEchoComponent::AddEchoMoveInput(const FVector2D& Value)
@@ -364,13 +400,12 @@ void UEchoComponent::BeginAiming()
 	SpawnParams.Owner = GetOwner();
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	ActiveEcho = GetWorld()->SpawnActor<AEchoCharacter>(EchoActorClass, FTransform(BodyRotation, SpawnLocation), SpawnParams);
-	if (ActiveEcho)
+	PreviewEcho = GetWorld()->SpawnActor<AEchoCharacter>(EchoActorClass, FTransform(BodyRotation, SpawnLocation), SpawnParams);
+	if (PreviewEcho)
 	{
-		ActiveEcho->OnRemoved.AddDynamic(this, &UEchoComponent::HandleActiveEchoRemoved);
-		AttachEchoAbility(ActiveEcho, CurrentEchoType);
-		ActiveEcho->SetVisualState(EEchoVisualState::Preview);
-		ActiveEcho->SetPreviewValidity(bValid, CurrentEchoType);
+		AttachEchoAbility(PreviewEcho, CurrentEchoType);
+		PreviewEcho->SetVisualState(EEchoVisualState::Preview);
+		PreviewEcho->SetPreviewValidity(bValid, CurrentEchoType);
 		ShowSelectionUI();
 		EchoState = EEchoState::Aiming;
 	}
@@ -378,7 +413,7 @@ void UEchoComponent::BeginAiming()
 
 void UEchoComponent::UpdateAimPreview(float DeltaSeconds)
 {
-	if (!ActiveEcho)
+	if (!PreviewEcho)
 	{
 		EchoState = EEchoState::Idle;
 		return;
@@ -390,34 +425,50 @@ void UEchoComponent::UpdateAimPreview(float DeltaSeconds)
 	TraceForEchoLocation(TargetLocation, TargetRotation, bValid);
 	bCurrentAimIsValid = bValid;
 
-	const FVector NewLocation = FMath::VInterpTo(ActiveEcho->GetActorLocation(), TargetLocation, DeltaSeconds, PreviewInterpSpeed);
-	ActiveEcho->SetActorLocation(NewLocation);
-	ActiveEcho->SetActorRotation(FRotator(0.0f, TargetRotation.Yaw, 0.0f));
-	ActiveEcho->SetPreviewValidity(bValid, CurrentEchoType);
+	const FVector NewLocation = FMath::VInterpTo(PreviewEcho->GetActorLocation(), TargetLocation, DeltaSeconds, PreviewInterpSpeed);
+	PreviewEcho->SetActorLocation(NewLocation);
+	PreviewEcho->SetActorRotation(FRotator(0.0f, TargetRotation.Yaw, 0.0f));
+	PreviewEcho->SetPreviewValidity(bValid, CurrentEchoType);
 }
 
 void UEchoComponent::PlaceEcho()
 {
-	if (!ActiveEcho)
+	if (!PreviewEcho) return;
+
+	TArray<AEchoCharacter*> SameTypeEchoes;
+	for (AEchoCharacter* Echo : ActiveEchoes)
 	{
-		return;
+		if (Echo && Echo->GetActiveEchoType() == CurrentEchoType)
+		{
+			SameTypeEchoes.Add(Echo);
+		}
 	}
-	ActiveEcho->SetVisualState(EEchoVisualState::Placed);
-	EchoState = EEchoState::Placed;
+
+	//Despawn the oldest, if limit reached
+	const int32 MaxAllowedForCurrentType = GetMaxAllowedForType(CurrentEchoType);
+	while (SameTypeEchoes.Num() >= MaxAllowedForCurrentType && SameTypeEchoes.Num() > 0)
+	{
+		AEchoCharacter* OldestSameType = SameTypeEchoes[0];
+		SameTypeEchoes.RemoveAt(0);
+		DestroyEchoInstance(OldestSameType);
+	}
+
+	//Global 2 limit
+	const int32 MaxTotalEchoes = 2;
+	while (ActiveEchoes.Num() >= MaxTotalEchoes && ActiveEchoes.Num() > 0)
+	{
+		AEchoCharacter* OldestGlobalEcho = ActiveEchoes[0];
+		DestroyEchoInstance(OldestGlobalEcho);
+	}
+
+	PreviewEcho->SetVisualState(EEchoVisualState::Placed);
+	ActiveEchoes.Add(PreviewEcho);
+
+	PreviewEcho = nullptr;
+	EchoState = EEchoState::Idle;
+
 	HideSelectionUI();
 	OnPlaced.Broadcast();
-}
-
-void UEchoComponent::DestroyActiveEcho()
-{
-	if (ActiveEcho)
-	{
-		ActiveEcho->Destroy();
-		ActiveEcho = nullptr;
-	}
-	EchoState = EEchoState::Idle;
-	bIsViewingThroughEcho = false;
-	bCurrentAimIsValid = false;
 }
 
 void UEchoComponent::HandleActiveEchoRemoved()
@@ -505,4 +556,44 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 	}
 
 	return true;
+}
+
+int32 UEchoComponent::GetMaxAllowedForType(EEchoType Type) const
+{
+	if (const int32* FoundLimit = EchoTypeLimits.Find(Type))
+	{
+		return *FoundLimit;
+	}
+	return 1;
+}
+
+void UEchoComponent::DestroyEchoInstance(AEchoCharacter* EchoToDestroy)
+{
+	if (!EchoToDestroy) return;
+
+	ActiveEchoes.Remove(EchoToDestroy);
+	if (PreviewEcho == EchoToDestroy)
+	{
+		PreviewEcho = nullptr;
+	}
+
+	EchoToDestroy->Destroy();
+}
+
+void UEchoComponent::DestroyActiveEcho()
+{
+	//Destroys all echoes
+	for (AEchoCharacter* Echo : ActiveEchoes)
+	{
+		if (Echo)
+		{
+			Echo->Destroy();
+		}
+	}
+	ActiveEchoes.Empty();
+	PreviewEcho = nullptr;
+
+	EchoState = EEchoState::Idle;
+	bIsViewingThroughEcho = false;
+	bCurrentAimIsValid = false;
 }
