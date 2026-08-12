@@ -24,6 +24,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BehaviorTree")
 	TObjectPtr<UBehaviorTree> BTEnemy;
 
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Reachability")
+	bool bIgnoreUnreachableTargets = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Reachability", meta = (EditCondition = "bIgnoreUnreachableTargets"))
+	float MaxReachableHeightAboveSelf = 300.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Reachability", meta = (EditCondition = "bIgnoreUnreachableTargets"))
+	bool bRequireNavPath = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Reachability", meta = (EditCondition = "bIgnoreUnreachableTargets"))
+	float ReachabilityCheckInterval = 1.0f;
+
 	UFUNCTION()
 	void HandlePerception(AActor* Actor, FAIStimulus Stimulus);
 	UFUNCTION()
@@ -38,6 +51,16 @@ private:
 	void HandleSightPerception(AActor* Actor, FAIStimulus Stimulus);
 	void HandleSoundPerception(AActor* Actor, FAIStimulus Stimulus);
 
+	bool IsEchoDetectable(AEchoCharacter* Echo) const;
+
+	bool IsLocationReachable(const FVector& Location) const;
+
+	void StartReachabilityMonitor();
+	void StopReachabilityMonitor();
+	void CheckTargetReachability();
+
 	AEchoCharacter* _targetEcho;
 	TArray<AActor*> _spottedEchoes;
+
+	FTimerHandle ReachabilityCheckTimerHandle;
 };

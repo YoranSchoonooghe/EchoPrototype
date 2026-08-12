@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "EchoComponentBase.h"
 #include "EchoVisionComponent.generated.h"
 
 class APawn;
 class APlayerController;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
-class ECHOPROTOTYPE_API UEchoVisionComponent : public UActorComponent
+class ECHOPROTOTYPE_API UEchoVisionComponent : public UEchoComponentBase
 {
 	GENERATED_BODY()
 

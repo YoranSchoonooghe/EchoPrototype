@@ -6,8 +6,11 @@
 #include "Perception/AISense_Hearing.h"
 #include "EchoPrototype/Character/PlayerCharacter.h"
 #include "EchoPrototype/Combat/HealthComponent.h"
+#include "../Echo/EchoComponentInterface.h"
 #include "EchoPrototype/Echo/EchoCharacter.h"
 #include "NavigationSystem.h"
+#include "NavigationPath.h"
+#include "TimerManager.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -50,9 +53,12 @@ void AEnemyAIController::SetTargetActor(AActor* Aggressor)
 	auto* pAggressorCharacter = Cast<APlayerCharacter>(Aggressor);
 	if (!pAggressorCharacter) return;
 
+	if (!IsLocationReachable(pAggressorCharacter->GetActorLocation())) return;
+
 	if (!pBlackboardComponent->GetValueAsObject(TargetPlayerKeyName))
 	{
 		pBlackboardComponent->SetValueAsObject(TargetPlayerKeyName, pAggressorCharacter);
+		StartReachabilityMonitor();
 	}
 }
 
@@ -81,10 +87,105 @@ void AEnemyAIController::InitBBKeys()
 
 void AEnemyAIController::UpdateTargetEcho()
 {
+	if (!_targetEcho || !IsEchoDetectable(_targetEcho))
+	{
+		return;
+	}
+
 	auto* pBlackboardComponent = GetBlackboardComponent();
 	if (!pBlackboardComponent) return;
 
 	pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), _targetEcho->GetActorLocation());
+}
+
+bool AEnemyAIController::IsEchoDetectable(AEchoCharacter* Echo) const
+{
+	if (!Echo)
+	{
+		return false;
+	}
+
+	TArray<UActorComponent*> EchoComponents = Echo->GetComponentsByInterface(UEchoComponentInterface::StaticClass());
+	for (UActorComponent* Component : EchoComponents)
+	{
+		if (IEchoComponentInterface::Execute_GetDetectability(Component))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool AEnemyAIController::IsLocationReachable(const FVector& Location) const
+{
+	if (!bIgnoreUnreachableTargets)
+	{
+		return true;
+	}
+
+	APawn* pSelf = GetPawn();
+	if (!pSelf)
+	{
+		return true;
+	}
+
+	if (Location.Z - pSelf->GetActorLocation().Z > MaxReachableHeightAboveSelf)
+	{
+		return false;
+	}
+
+	if (bRequireNavPath)
+	{
+		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(GetWorld(), pSelf->GetActorLocation(), Location, pSelf);
+		if (!NavPath || !NavPath->IsValid() || NavPath->IsPartial())
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void AEnemyAIController::StartReachabilityMonitor()
+{
+	if (!bIgnoreUnreachableTargets)
+	{
+		return;
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(ReachabilityCheckTimerHandle, this, &AEnemyAIController::CheckTargetReachability, ReachabilityCheckInterval, true);
+}
+
+void AEnemyAIController::StopReachabilityMonitor()
+{
+	GetWorld()->GetTimerManager().ClearTimer(ReachabilityCheckTimerHandle);
+}
+
+void AEnemyAIController::CheckTargetReachability()
+{
+	auto const TargetPlayerKeyName = TEXT("TargetPlayer");
+
+	auto* pBlackboardComponent = GetBlackboardComponent();
+	if (!pBlackboardComponent)
+	{
+		StopReachabilityMonitor();
+		return;
+	}
+
+	auto* pPlayer = Cast<APlayerCharacter>(pBlackboardComponent->GetValueAsObject(TargetPlayerKeyName));
+	if (!pPlayer)
+	{
+		StopReachabilityMonitor();
+		return;
+	}
+
+	if (!IsLocationReachable(pPlayer->GetActorLocation()))
+	{
+		pBlackboardComponent->ClearValue(TargetPlayerKeyName);
+		pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
+		StopReachabilityMonitor();
+	}
 }
 
 void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimulus)
@@ -98,10 +199,13 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 
 		if (pEcho->GetVisualState() == EEchoVisualState::Placed)
 		{
-			auto* pBlackboardComponent = GetBlackboardComponent();
-			if (!pBlackboardComponent) return;
+			if (IsEchoDetectable(pEcho))
+			{
+				auto* pBlackboardComponent = GetBlackboardComponent();
+				if (!pBlackboardComponent) return;
 
-			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
+				pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pEcho->GetActorLocation());
+			}
 		}
 		else
 		{
@@ -124,7 +228,10 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 
 		if (Stimulus.WasSuccessfullySensed())
 		{
+			if (!IsLocationReachable(pPlayer->GetActorLocation())) return;
+
 			pBlackboardComponent->SetValueAsObject(TargetPlayerKeyName, pPlayer);
+			StartReachabilityMonitor();
 
 			UAISense_Hearing::ReportNoiseEvent(
 				GetWorld(),
@@ -139,6 +246,7 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 		{
 			pBlackboardComponent->ClearValue(TargetPlayerKeyName);
 			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
+			StopReachabilityMonitor();
 		}
 
 		return;

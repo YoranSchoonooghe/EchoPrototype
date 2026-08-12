@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "EchoComponentBase.h"
 #include "EchoDistractionComponent.generated.h"
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
-class ECHOPROTOTYPE_API UEchoDistractionComponent : public UActorComponent
+class ECHOPROTOTYPE_API UEchoDistractionComponent : public UEchoComponentBase
 {
 	GENERATED_BODY()
 

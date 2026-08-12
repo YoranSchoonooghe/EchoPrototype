@@ -1,12 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "EchoComponentBase.h"
 #include "EchoCombatComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class ECHOPROTOTYPE_API UEchoCombatComponent : public UActorComponent
+class ECHOPROTOTYPE_API UEchoCombatComponent : public UEchoComponentBase
 {
 	GENERATED_BODY()
 

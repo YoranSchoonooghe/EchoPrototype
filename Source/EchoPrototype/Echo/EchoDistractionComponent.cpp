@@ -6,6 +6,8 @@
 UEchoDistractionComponent::UEchoDistractionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	bIsDetectable = true;
 }
 
 void UEchoDistractionComponent::BeginPlay()

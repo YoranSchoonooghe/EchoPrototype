@@ -6,6 +6,7 @@ UEchoCombatComponent::UEchoCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 
+	bIsDetectable = true;
 }
 
 

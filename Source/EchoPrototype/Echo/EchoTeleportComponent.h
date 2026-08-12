@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "EchoComponentBase.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraShakeBase.h"
 #include "Components/PostProcessComponent.h"
@@ -17,7 +17,7 @@ class UCameraComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTeleportComplete);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
-class ECHOPROTOTYPE_API UEchoTeleportComponent : public UActorComponent
+class ECHOPROTOTYPE_API UEchoTeleportComponent : public UEchoComponentBase
 {
 	GENERATED_BODY()
 
