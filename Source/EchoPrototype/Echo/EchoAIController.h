@@ -5,6 +5,8 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "EchoAIController.generated.h"
 
+class AEchoCharacter;
+
 UCLASS()
 class ECHOPROTOTYPE_API AEchoAIController : public AAIController
 {
@@ -15,6 +17,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	UFUNCTION()
 	void HandlePerception(AActor* Actor, FAIStimulus Stimulus);
@@ -24,5 +27,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BehaviorTree")
 	TObjectPtr<UBehaviorTree> BTEcho;
+
+private:
+	UFUNCTION()
+	void InitializeBehaviorTree();
+
+	AEchoCharacter* _controlledCharacter{ nullptr };
 
 };

@@ -38,7 +38,6 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Echo")
 	FORCEINLINE EEchoVisualState GetVisualState() const { return VisualState; }
 
-
 	UFUNCTION(BlueprintCallable, Category = "Echo")
 	void SetVisualState(EEchoVisualState NewState);
 

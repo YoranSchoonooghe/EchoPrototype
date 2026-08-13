@@ -9,15 +9,10 @@ EBTNodeResult::Type UBTT_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& OwnerC
     if (!pAIController)
         return EBTNodeResult::Failed;
 
-    auto* pCharacter = Cast<AEnemyCharacter>(pAIController->GetCharacter());
-    if (!pCharacter)
+    auto pCombatComponent = pAIController->GetCharacter()->FindComponentByClass<UCombatComponent>();
+    if (!pCombatComponent)
         return EBTNodeResult::Failed;
 
-    if (UCombatComponent* pCombatComponent = pCharacter->GetCombatComponent())
-    {
-        pCombatComponent->OnAttackReleased();
-        return EBTNodeResult::Succeeded;
-    }
-
-    return EBTNodeResult::Failed;
+    pCombatComponent->OnAttackReleased();
+    return EBTNodeResult::Succeeded;
 }

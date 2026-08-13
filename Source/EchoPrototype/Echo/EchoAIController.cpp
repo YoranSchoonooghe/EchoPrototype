@@ -3,6 +3,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "EchoPrototype/Enemies/EnemyCharacter.h"
 #include "EchoCombatComponent.h"
+#include "EchoCharacter.h"
 
 AEchoAIController::AEchoAIController()
 {
@@ -15,9 +16,16 @@ void AEchoAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//RunBehaviorTree(BTEcho);
+}
 
-	//AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &AEchoAIController::HandlePerception);
+void AEchoAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	_controlledCharacter = Cast<AEchoCharacter>(InPawn);
+	if (!_controlledCharacter) return;
+
+	_controlledCharacter->OnPlaced.AddDynamic(this, &AEchoAIController::InitializeBehaviorTree);
 }
 
 void AEchoAIController::HandlePerception(AActor* Actor, FAIStimulus Stimulus)
@@ -29,4 +37,13 @@ void AEchoAIController::HandlePerception(AActor* Actor, FAIStimulus Stimulus)
 	if (!pEnemy) return;
 
 	pBlackboardComponent->SetValueAsObject(TEXT("TargetEnemy"), pEnemy);
+}
+
+void AEchoAIController::InitializeBehaviorTree()
+{
+	if (_controlledCharacter->GetActiveEchoType() != EEchoType::Combat) return;
+	
+	RunBehaviorTree(BTEcho);
+
+	AIPerception->OnTargetPerceptionUpdated.AddDynamic(this, &AEchoAIController::HandlePerception);
 }

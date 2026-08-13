@@ -5,7 +5,7 @@
 #include "EchoCombatComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
 class ECHOPROTOTYPE_API UEchoCombatComponent : public UEchoComponentBase
 {
 	GENERATED_BODY()
