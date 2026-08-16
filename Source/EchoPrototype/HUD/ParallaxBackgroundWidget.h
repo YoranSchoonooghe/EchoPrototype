@@ -33,6 +33,11 @@ public:
 
 	void SetGamepadStickInput(const FVector2D& StickValue);
 
+	void SetFocusedElementOffset(const FVector2D& NormalizedPosition);
+	void ClearFocusedElementOffset();
+
+	void SetMouseInputSuppressed(bool bSuppressed);
+
 protected:
 	virtual void NativePreConstruct() override;
 	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -61,6 +66,11 @@ private:
 	FVector2D MouseTargetOffset = FVector2D::ZeroVector;
 	FVector2D StickTargetOffset = FVector2D::ZeroVector;
 	bool bStickActive = false;
+
+	FVector2D FocusTargetOffset = FVector2D::ZeroVector;
+	bool bHasFocusTarget = false;
+
+	bool bMouseInputSuppressed = false;
 
 	FVector2D CurrentOffset = FVector2D::ZeroVector;
 };

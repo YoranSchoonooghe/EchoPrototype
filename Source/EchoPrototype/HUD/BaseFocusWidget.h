@@ -18,6 +18,8 @@ protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	virtual FReply NativeOnAnalogValueChanged(const FGeometry& InGeometry, const FAnalogInputEvent& InAnalogEvent) override;
+	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Focus", meta = (BindWidgetOptional))
 	TObjectPtr<UButton> FirstFocusedElement;
@@ -27,8 +29,18 @@ private:
 
 	void ApplyInitialFocus();
 
+	UParallaxBackgroundWidget* GetParallaxWidget();
+
+	void UpdateParallaxFocusTarget(const FGeometry& MyGeometry, UButton* FocusedButton);
+
+	void SetGamepadActive(bool bActive);
+
 	TWeakObjectPtr<UButton> LastFocusedButton;
 	TWeakObjectPtr<UParallaxBackgroundWidget> CachedParallaxWidget;
 	FVector2D CachedStickInput = FVector2D::ZeroVector;
 	FTimerHandle InitialFocusTimerHandle;
+
+	bool bGamepadActive = false;
+	FVector2D LastMouseScreenPosition = FVector2D::ZeroVector;
+	bool bHasLastMouseScreenPosition = false;
 };

@@ -50,6 +50,11 @@ void UParallaxBackgroundWidget::BuildLayers()
 
 FReply UParallaxBackgroundWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	if (bMouseInputSuppressed)
+	{
+		return FReply::Unhandled();
+	}
+
 	const FVector2D LocalMouse = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 	const FVector2D LocalSize = InGeometry.GetLocalSize();
 
@@ -60,6 +65,8 @@ FReply UParallaxBackgroundWidget::NativeOnMouseMove(const FGeometry& InGeometry,
 			FMath::Clamp((LocalMouse.Y / LocalSize.Y) * 2.f - 1.f, -1.f, 1.f));
 
 		MouseTargetOffset = Normalized * MaxOffsetPixels;
+
+		bHasFocusTarget = false;
 	}
 
 	return FReply::Unhandled();
@@ -75,11 +82,40 @@ void UParallaxBackgroundWidget::SetGamepadStickInput(const FVector2D& StickValue
 	}
 }
 
+void UParallaxBackgroundWidget::SetFocusedElementOffset(const FVector2D& NormalizedPosition)
+{
+	FocusTargetOffset = NormalizedPosition * MaxOffsetPixels;
+	bHasFocusTarget = true;
+}
+
+void UParallaxBackgroundWidget::ClearFocusedElementOffset()
+{
+	bHasFocusTarget = false;
+}
+
+void UParallaxBackgroundWidget::SetMouseInputSuppressed(bool bSuppressed)
+{
+	bMouseInputSuppressed = bSuppressed;
+}
+
 void UParallaxBackgroundWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	const FVector2D TargetOffset = bStickActive ? StickTargetOffset : MouseTargetOffset;
+	FVector2D TargetOffset;
+	if (bStickActive)
+	{
+		TargetOffset = StickTargetOffset;
+	}
+	else if (bHasFocusTarget)
+	{
+		TargetOffset = FocusTargetOffset;
+	}
+	else
+	{
+		TargetOffset = MouseTargetOffset;
+	}
+
 	CurrentOffset = FMath::Vector2DInterpTo(CurrentOffset, TargetOffset, InDeltaTime, InterpSpeed);
 
 	for (int32 Index = 0; Index < LayerImages.Num() && Index < Layers.Num(); ++Index)

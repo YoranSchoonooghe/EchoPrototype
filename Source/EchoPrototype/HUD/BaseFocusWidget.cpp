@@ -97,13 +97,17 @@ void UBaseFocusWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 		});
 	}
 
-	if (FocusedButton)
+	if (!FocusedButton)
 	{
-		LastFocusedButton = FocusedButton;
-		return;
+		FocusedButton = LastFocusedButton.IsValid() ? LastFocusedButton.Get() : FirstFocusedElement.Get();
+		FocusButton(FocusedButton);
 	}
 
-	FocusButton(LastFocusedButton.IsValid() ? LastFocusedButton.Get() : FirstFocusedElement.Get());
+	if (FocusedButton != LastFocusedButton.Get())
+	{
+		LastFocusedButton = FocusedButton;
+		UpdateParallaxFocusTarget(MyGeometry, FocusedButton);
+	}
 }
 
 FReply UBaseFocusWidget::NativeOnAnalogValueChanged(const FGeometry& InGeometry, const FAnalogInputEvent& InAnalogEvent)
@@ -111,6 +115,11 @@ FReply UBaseFocusWidget::NativeOnAnalogValueChanged(const FGeometry& InGeometry,
 	const FReply Reply = Super::NativeOnAnalogValueChanged(InGeometry, InAnalogEvent);
 
 	const FKey Key = InAnalogEvent.GetKey();
+
+	if (Key.IsGamepadKey() && FMath::Abs(InAnalogEvent.GetAnalogValue()) > 0.1f)
+	{
+		SetGamepadActive(true);
+	}
 
 	if (Key == EKeys::Gamepad_RightX)
 	{
@@ -125,6 +134,52 @@ FReply UBaseFocusWidget::NativeOnAnalogValueChanged(const FGeometry& InGeometry,
 		return Reply;
 	}
 
+	if (UParallaxBackgroundWidget* Parallax = GetParallaxWidget())
+	{
+		Parallax->SetGamepadStickInput(CachedStickInput);
+	}
+
+	return Reply;
+}
+
+FReply UBaseFocusWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	const FVector2D ScreenPos = InMouseEvent.GetScreenSpacePosition();
+
+	const bool bRealMovement = !bHasLastMouseScreenPosition
+		|| FVector2D::DistSquared(ScreenPos, LastMouseScreenPosition) > 4.f; // ~2px
+
+	LastMouseScreenPosition = ScreenPos;
+	bHasLastMouseScreenPosition = true;
+
+	if (bRealMovement)
+	{
+		SetGamepadActive(false);
+	}
+
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
+FReply UBaseFocusWidget::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
+{
+	if (InKeyEvent.GetKey().IsGamepadKey())
+	{
+		SetGamepadActive(true);
+	}
+
+	return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+}
+
+void UBaseFocusWidget::FocusButton(UButton* Button) const
+{
+	if (Button)
+	{
+		Button->SetUserFocus(GetOwningPlayer());
+	}
+}
+
+UParallaxBackgroundWidget* UBaseFocusWidget::GetParallaxWidget()
+{
 	if (!CachedParallaxWidget.IsValid() && WidgetTree)
 	{
 		WidgetTree->ForEachWidget([this](UWidget* Widget)
@@ -139,18 +194,56 @@ FReply UBaseFocusWidget::NativeOnAnalogValueChanged(const FGeometry& InGeometry,
 		});
 	}
 
-	if (UParallaxBackgroundWidget* Parallax = CachedParallaxWidget.Get())
-	{
-		Parallax->SetGamepadStickInput(CachedStickInput);
-	}
-
-	return Reply;
+	return CachedParallaxWidget.Get();
 }
 
-void UBaseFocusWidget::FocusButton(UButton* Button) const
+void UBaseFocusWidget::UpdateParallaxFocusTarget(const FGeometry& MyGeometry, UButton* FocusedButton)
 {
-	if (Button)
+	UParallaxBackgroundWidget* Parallax = GetParallaxWidget();
+	if (!Parallax)
 	{
-		Button->SetUserFocus(GetOwningPlayer());
+		return;
+	}
+
+	if (!FocusedButton)
+	{
+		Parallax->ClearFocusedElementOffset();
+		return;
+	}
+
+	const FGeometry& ButtonGeometry = FocusedButton->GetCachedGeometry();
+	const FVector2D ButtonAbsoluteCenter = ButtonGeometry.GetAbsolutePosition() + ButtonGeometry.GetAbsoluteSize() * 0.5f;
+	const FVector2D LocalCenter = MyGeometry.AbsoluteToLocal(ButtonAbsoluteCenter);
+	const FVector2D LocalSize = MyGeometry.GetLocalSize();
+
+	if (LocalSize.X <= 0.f || LocalSize.Y <= 0.f)
+	{
+		return;
+	}
+
+	const FVector2D Normalized(
+		FMath::Clamp((LocalCenter.X / LocalSize.X) * 2.f - 1.f, -1.f, 1.f),
+		FMath::Clamp((LocalCenter.Y / LocalSize.Y) * 2.f - 1.f, -1.f, 1.f));
+
+	Parallax->SetFocusedElementOffset(Normalized);
+}
+
+void UBaseFocusWidget::SetGamepadActive(bool bActive)
+{
+	if (bGamepadActive == bActive)
+	{
+		return;
+	}
+
+	bGamepadActive = bActive;
+
+	if (APlayerController* PC = GetOwningPlayer())
+	{
+		PC->SetShowMouseCursor(!bGamepadActive);
+	}
+
+	if (UParallaxBackgroundWidget* Parallax = GetParallaxWidget())
+	{
+		Parallax->SetMouseInputSuppressed(bGamepadActive);
 	}
 }
