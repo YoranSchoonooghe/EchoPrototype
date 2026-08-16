@@ -3,6 +3,7 @@
 #include "EchoPrototype/Combat/CombatComponent.h"
 #include "Components/WidgetComponent.h"
 #include "BPWidgets/AlertWidget.h"
+#include "BPWidgets/DetectionMeterWidget.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -10,8 +11,10 @@ AEnemyCharacter::AEnemyCharacter()
 
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	AlertWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
+	AlertWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("AlertWidgetComponent"));
 	AlertWidgetComp->SetupAttachment(GetMesh());
+	DetectionWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("DetectionWidgetComponent"));
+	DetectionWidgetComp->SetupAttachment(GetMesh());
 
 	StealthKillPromptWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("StealthKillPromptWidgetComponent"));
 	StealthKillPromptWidgetComp->SetupAttachment(GetMesh());
@@ -22,6 +25,11 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (auto* DetectionWidget = Cast<UDetectionMeterWidget>(DetectionWidgetComp->GetUserWidgetObject()))
+	{
+		DetectionWidget->SetEnemy(this);
+		DetectionWidget->SetHidden(true);
+	}
 }
 
 void AEnemyCharacter::Tick(float DeltaTime)
@@ -40,9 +48,15 @@ void AEnemyCharacter::ChangeAlertState(EAlertState state)
 {
 	AlertState = state;
 
-	if (UAlertWidget* Widget = Cast<UAlertWidget>(AlertWidgetComp->GetUserWidgetObject()))
+	if (UAlertWidget* AlertWidget = Cast<UAlertWidget>(AlertWidgetComp->GetUserWidgetObject()))
 	{
-		Widget->UpdateAlertIcon(state);
+		AlertWidget->UpdateAlertIcon(state);
+
+		if (auto* DetectionWidget = Cast<UDetectionMeterWidget>(DetectionWidgetComp->GetUserWidgetObject()))
+		{
+			if (state != EAlertState::Neutral)
+				DetectionWidget->SetHidden(true);
+		}
 	}
 }
 

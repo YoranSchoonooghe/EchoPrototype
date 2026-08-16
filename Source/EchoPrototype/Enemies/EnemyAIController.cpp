@@ -15,7 +15,7 @@
 
 AEnemyAIController::AEnemyAIController()
 {
-	//PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
 	AIPerception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception"));
 }
@@ -34,6 +34,20 @@ void AEnemyAIController::BeginPlay()
 	{
 		pHealth->OnDamage.AddDynamic(this, &AEnemyAIController::SetTargetActor);
 	}
+}
+
+void AEnemyAIController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	UpdateDetection(DeltaTime);
+}
+
+void AEnemyAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	_controlledEnemy = Cast<AEnemyCharacter>(InPawn);
 }
 
 void AEnemyAIController::HandlePerception(AActor* Actor, FAIStimulus Stimulus)
@@ -79,7 +93,7 @@ void AEnemyAIController::InitBBKeys()
 		return;
 	}
 
-	auto patrolPoints = pEnemy->PatrolPoints;
+	auto& patrolPoints = pEnemy->PatrolPoints;
 	if (patrolPoints.IsEmpty()) return;
 
 	pBlackboardComponent->SetValueAsObject(TEXT("PatrolPointIndex"), 0);
@@ -297,23 +311,21 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 		{
 			if (!IsLocationReachable(pPlayer->GetActorLocation())) return;
 
-			pBlackboardComponent->SetValueAsObject(TargetPlayerKeyName, pPlayer);
-			StartReachabilityMonitor();
-
-			UAISense_Hearing::ReportNoiseEvent(
-				GetWorld(),
-				GetPawn()->GetActorLocation(),
-				1.0f,
-				this,
-				0.0f,
-				TEXT("Spotted")
-			);
+			_targetPlayer = pPlayer;
+			_bIsPlayerInSight = true;
 		}
 		else
 		{
-			pBlackboardComponent->ClearValue(TargetPlayerKeyName);
-			pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
-			StopReachabilityMonitor();
+			_bIsPlayerInSight = false;
+
+			if (!_controlledEnemy) return;
+			if (_controlledEnemy->GetAlertState() == EAlertState::Alert)
+			{
+				pBlackboardComponent->ClearValue(TargetPlayerKeyName);
+				pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
+				StopReachabilityMonitor();
+			}
+
 		}
 
 		return;
@@ -333,4 +345,56 @@ void AEnemyAIController::HandleSoundPerception(AActor* Actor, FAIStimulus Stimul
 	{
 		pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), projectedLocation);
 	}
+}
+
+void AEnemyAIController::UpdateDetection(float DeltaTime)
+{
+	if (!_controlledEnemy) return;
+	if (_controlledEnemy->GetAlertState() == EAlertState::Alert) return;
+
+	if (_bIsPlayerInSight)
+	{
+		if (_detectionValue >= DetectionThreshold) return;
+
+		_detectionValue += DetectionRate * DeltaTime;
+
+		if (_detectionValue >= DetectionThreshold)
+		{
+			SpotPlayer();
+		}
+	}
+	else
+	{
+		if (_detectionValue <= 0.0f) return;
+
+		_detectionValue -= DecayRate * DeltaTime;
+
+		if (_detectionValue <= 0.0f && _targetPlayer)
+		{
+			_targetPlayer = nullptr;
+		}
+	}
+
+	_detectionValue = FMath::Clamp(_detectionValue, 0.0f, DetectionThreshold);
+	OnDetectionValueChanged.Broadcast(_detectionValue);
+}
+
+void AEnemyAIController::SpotPlayer()
+{
+	if (!_targetPlayer) return;
+
+	auto* pBlackboardComponent = GetBlackboardComponent();
+	if (!pBlackboardComponent) return;
+
+	pBlackboardComponent->SetValueAsObject(TEXT("TargetPlayer"), _targetPlayer);
+	StartReachabilityMonitor();
+
+	UAISense_Hearing::ReportNoiseEvent(
+		GetWorld(),
+		GetPawn()->GetActorLocation(),
+		1.0f,
+		this,
+		0.0f,
+		TEXT("Spotted")
+	);
 }

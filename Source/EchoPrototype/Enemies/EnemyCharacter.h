@@ -34,6 +34,8 @@ protected:
 	TObjectPtr<UCombatComponent> Combat;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> AlertWidgetComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> DetectionWidgetComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> StealthKillPromptWidgetComp;

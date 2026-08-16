@@ -6,6 +6,8 @@
 #include "EnemyAIController.generated.h"
 
 class AEchoCharacter;
+class APlayerCharacter;
+class AEnemyCharacter;
 
 UCLASS()
 class ECHOPROTOTYPE_API AEnemyAIController : public AAIController
@@ -15,8 +17,17 @@ class ECHOPROTOTYPE_API AEnemyAIController : public AAIController
 public:
 	AEnemyAIController();
 
+	UFUNCTION(BlueprintCallable, Category = "Perception|Detection")
+	float GetDetectionValue() const { return _detectionValue; }
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDetectionValueChangedSignature, float, DetectionValue);
+	UPROPERTY(BlueprintAssignable, Category = "Perception|Detection")
+	FOnDetectionValueChangedSignature OnDetectionValueChanged;
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	TObjectPtr<UAIPerceptionComponent> AIPerception;
@@ -46,6 +57,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Echo Attack")
 	float EchoAttackCheckInterval = 0.25f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Detection")
+	float DetectionThreshold{ 1.0f };
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Detection")
+	float DetectionRate{ 1.0f };
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Detection")
+	float DecayRate{ 0.7f };
+
 	UFUNCTION()
 	void HandlePerception(AActor* Actor, FAIStimulus Stimulus);
 	UFUNCTION()
@@ -59,6 +77,9 @@ private:
 
 	void HandleSightPerception(AActor* Actor, FAIStimulus Stimulus);
 	void HandleSoundPerception(AActor* Actor, FAIStimulus Stimulus);
+
+	void UpdateDetection(float DeltaTime);
+	void SpotPlayer();
 
 	bool IsEchoDetectable(AEchoCharacter* Echo) const;
 
@@ -77,6 +98,11 @@ private:
 
 	AEchoCharacter* _targetEcho;
 	TArray<AActor*> _spottedEchoes;
+
+	AEnemyCharacter* _controlledEnemy;
+	bool _bIsPlayerInSight{ false };
+	APlayerCharacter* _targetPlayer{ nullptr };
+	float _detectionValue{ 0.0f };
 
 	FTimerHandle ReachabilityCheckTimerHandle;
 	FTimerHandle EchoAttackCheckTimerHandle;
