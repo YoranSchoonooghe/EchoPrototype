@@ -3,6 +3,18 @@
 #include "Rendering/DrawElements.h"
 #include "Widgets/SLeafWidget.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogSkillTreeConnectors, Log, All);
+
+struct FSkillTreeConnectorRenderData
+{
+	TWeakObjectPtr<UWidget> StartWidget;
+	TWeakObjectPtr<UWidget> EndWidget;
+	FVector2D StartPosition = FVector2D::ZeroVector;
+	FVector2D EndPosition = FVector2D::ZeroVector;
+	FLinearColor Color = FLinearColor::Gray;
+	float Thickness = 3.0f;
+};
+
 class SSkillTreeConnectors : public SLeafWidget
 {
 public:
@@ -13,7 +25,22 @@ public:
 
 	void SetConnectors(const TArray<FSkillTreeConnector>& InConnectors)
 	{
-		Connectors = InConnectors;
+		Connectors.Reset(InConnectors.Num());
+
+		for (const FSkillTreeConnector& Connector : InConnectors)
+		{
+			FSkillTreeConnectorRenderData& RenderData = Connectors.AddDefaulted_GetRef();
+			RenderData.StartWidget = Connector.StartWidget;
+			RenderData.EndWidget = Connector.EndWidget;
+			RenderData.StartPosition = Connector.StartPosition;
+			RenderData.EndPosition = Connector.EndPosition;
+			RenderData.Color = Connector.Color;
+			RenderData.Thickness = Connector.Thickness;
+		}
+
+		UE_LOG(LogSkillTreeConnectors, Log, TEXT("SSkillTreeConnectors::SetConnectors: %d render entries built (from %d incoming)"), Connectors.Num(), InConnectors.Num());
+
+		bHasLoggedThisPaint = false;
 		Invalidate(EInvalidateWidgetReason::Paint);
 	}
 
@@ -22,9 +49,18 @@ public:
 	{
 		const FPaintGeometry PaintGeometry = AllottedGeometry.ToPaintGeometry();
 
-		for (const FSkillTreeConnector& Connector : Connectors)
+		for (const FSkillTreeConnectorRenderData& Connector : Connectors)
 		{
-			const TArray<FVector2D> Points = { Connector.Start, Connector.End };
+			const FVector2D Start = GetPointLocal(Connector.StartWidget, Connector.StartPosition, AllottedGeometry);
+			const FVector2D End = GetPointLocal(Connector.EndWidget, Connector.EndPosition, AllottedGeometry);
+
+			if (!bHasLoggedThisPaint)
+			{
+				UE_LOG(LogSkillTreeConnectors, Log, TEXT("SSkillTreeConnectors::OnPaint: connector Start=%s End=%s Color=%s Thickness=%.1f"),
+					*Start.ToString(), *End.ToString(), *Connector.Color.ToString(), Connector.Thickness);
+			}
+
+			const TArray<FVector2D> Points = { Start, End };
 
 			FSlateDrawElement::MakeLines(
 				OutDrawElements,
@@ -38,6 +74,13 @@ public:
 			);
 		}
 
+		if (!bHasLoggedThisPaint)
+		{
+			bHasLoggedThisPaint = true;
+			UE_LOG(LogSkillTreeConnectors, Log, TEXT("SSkillTreeConnectors::OnPaint: %d connectors drawn, AllottedGeometry size=%s"),
+				Connectors.Num(), *AllottedGeometry.GetLocalSize().ToString());
+		}
+
 		return LayerId;
 	}
 
@@ -47,7 +90,23 @@ public:
 	}
 
 private:
-	TArray<FSkillTreeConnector> Connectors;
+	static FVector2D GetPointLocal(const TWeakObjectPtr<UWidget>& WeakWidget, const FVector2D& FallbackPosition, const FGeometry& AllottedGeometry)
+	{
+		if (UWidget* Widget = WeakWidget.Get())
+		{
+			const FGeometry& WidgetGeometry = Widget->GetCachedGeometry();
+			if (!WidgetGeometry.GetAbsoluteSize().IsNearlyZero())
+			{
+				const FVector2D AbsoluteCenter = WidgetGeometry.GetAbsolutePosition() + WidgetGeometry.GetAbsoluteSize() * 0.5f;
+				return FVector2D(AllottedGeometry.AbsoluteToLocal(AbsoluteCenter));
+			}
+		}
+
+		return FallbackPosition;
+	}
+
+	TArray<FSkillTreeConnectorRenderData> Connectors;
+	mutable bool bHasLoggedThisPaint = false;
 };
 
 TSharedRef<SWidget> USkillTreeConnectorWidget::RebuildWidget()
@@ -64,6 +123,9 @@ void USkillTreeConnectorWidget::ReleaseSlateResources(bool bReleaseChildren)
 
 void USkillTreeConnectorWidget::SetConnectors(const TArray<FSkillTreeConnector>& InConnectors)
 {
+	UE_LOG(LogSkillTreeConnectors, Log, TEXT("%s::SetConnectors: %d connectors, MySlateWidget valid=%s"),
+		*GetName(), InConnectors.Num(), MySlateWidget.IsValid() ? TEXT("true") : TEXT("false"));
+
 	if (MySlateWidget.IsValid())
 	{
 		MySlateWidget->SetConnectors(InConnectors);

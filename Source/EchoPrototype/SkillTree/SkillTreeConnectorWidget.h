@@ -12,10 +12,16 @@ struct FSkillTreeConnector
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill Tree")
-	FVector2D Start = FVector2D::ZeroVector;
+	TObjectPtr<UWidget> StartWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill Tree")
-	FVector2D End = FVector2D::ZeroVector;
+	TObjectPtr<UWidget> EndWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill Tree")
+	FVector2D StartPosition = FVector2D::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill Tree")
+	FVector2D EndPosition = FVector2D::ZeroVector;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skill Tree")
 	FLinearColor Color = FLinearColor::Gray;
