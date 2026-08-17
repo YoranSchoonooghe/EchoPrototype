@@ -35,7 +35,6 @@ void UBaseFocusWidget::NativeConstruct()
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 
 		PC->SetInputMode(InputMode);
-		PC->SetShowMouseCursor(true);
 	}
 
 	if (UWorld* World = GetWorld())
@@ -49,12 +48,6 @@ void UBaseFocusWidget::NativeDestruct()
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(InitialFocusTimerHandle);
-	}
-
-	if (APlayerController* PC = GetOwningPlayer())
-	{
-		PC->SetInputMode(FInputModeGameOnly());
-		PC->SetShowMouseCursor(false);
 	}
 
 	Super::NativeDestruct();
