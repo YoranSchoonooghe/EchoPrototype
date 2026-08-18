@@ -18,6 +18,7 @@ class AEchoCharacter;
 class UInteractionComponent;
 class UInteractionPromptWidget;
 class UMenuStateBase;
+class UUserWidget;
 
 UCLASS()
 class ECHOPROTOTYPE_API ACharacterController : public APlayerController
@@ -93,6 +94,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction UI")
 	TSubclassOf<UInteractionPromptWidget> InteractionPromptWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Toast UI")
+	TSubclassOf<UUserWidget> ToastWidgetClass;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Menu")
 	TSubclassOf<UMenuStateBase> DefaultRootMenuState;
 
@@ -158,4 +162,7 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInteractionPromptWidget> InteractionPromptWidgetInstance;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> ToastWidgetInstance;
 };

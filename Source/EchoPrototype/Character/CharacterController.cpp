@@ -159,6 +159,16 @@ void ACharacterController::OnPossess(APawn* InPawn)
 		}
 	}
 
+	//Toast UI
+	if (ToastWidgetClass && !ToastWidgetInstance)
+	{
+		ToastWidgetInstance = CreateWidget<UUserWidget>(this, ToastWidgetClass);
+		if (ToastWidgetInstance)
+		{
+			ToastWidgetInstance->AddToViewport();
+		}
+	}
+
 	//Interaction
 	if (InteractionPromptWidgetInstance)
 	{

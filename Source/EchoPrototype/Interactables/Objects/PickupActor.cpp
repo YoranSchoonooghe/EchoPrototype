@@ -16,6 +16,7 @@ void APickupActor::BeginPlay()
 
 void APickupActor::Interact_Implementation(AActor* Interactor)
 {
+	Super::Interact_Implementation(Interactor);
 	OnPickedUp(Interactor);
 	MarkCollected();
 	Destroy();

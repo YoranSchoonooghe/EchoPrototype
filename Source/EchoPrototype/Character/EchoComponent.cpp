@@ -2,6 +2,7 @@
 
 
 #include "EchoComponent.h"
+#include "../CollisionChannels.h"
 
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
@@ -514,7 +515,7 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 	//Forward sweep along aim direction
 		FHitResult ForwardHit;
 	const bool bForwardHit = GetWorld()->SweepSingleByChannel(
-		ForwardHit, CamLoc, TraceEnd, FQuat::Identity, ECC_Visibility,
+		ForwardHit, CamLoc, TraceEnd, FQuat::Identity, ECC_EchoPlacement,
 		FCollisionShape::MakeSphere(EchoTraceRadius), QueryParams
 	);
 
@@ -540,7 +541,7 @@ bool UEchoComponent::TraceForEchoLocation(FVector& OutLocation, FRotator& OutRot
 
 	FHitResult DownHit;
 	const bool bDownHit = GetWorld()->SweepSingleByChannel(
-		DownHit, DownTraceStart, DownTraceEnd, FQuat::Identity, ECC_Visibility,
+		DownHit, DownTraceStart, DownTraceEnd, FQuat::Identity, ECC_EchoPlacement,
 		FCollisionShape::MakeSphere(EchoTraceRadius), QueryParams
 	);
 
