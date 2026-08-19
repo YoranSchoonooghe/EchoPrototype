@@ -16,6 +16,15 @@ class UPlayerStateBase;
 class UAIPerceptionStimuliSourceComponent;
 class USkillTreeComponent;
 class UEchoSaveGame;
+class UDodgeComponent;
+class ULockOnComponent;
+
+enum class EBufferedPlayerAction : uint8
+{
+	None,
+	Attack,
+	Dodge
+};
 
 //Camere perspective states
 UENUM(BlueprintType)
@@ -77,6 +86,25 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	bool IsAttacking() const;
 
+	//Dodge
+	void DodgePressed();
+
+	FORCEINLINE UDodgeComponent* GetDodgeComponent() const { return Dodge; }
+	FORCEINLINE FVector2D GetLastMovementInput() const { return LastMovementInput; }
+
+	// Input buffer: remembers a press that couldn't act immediately (e.g. dodge pressed mid-
+	// attack) so the relevant state can fire it the instant the blocking action ends, instead of
+	// dropping it. ConsumeBuffered*IfFresh() clears the buffer regardless of the result.
+	void BufferAttack();
+	void BufferDodge();
+	bool ConsumeBufferedAttackIfFresh();
+	bool ConsumeBufferedDodgeIfFresh();
+
+	//Lock On
+	void ToggleLockOn();
+
+	FORCEINLINE ULockOnComponent* GetLockOnComponent() const { return LockOn; }
+
 	//Stealth Kill
 	void StealthKillPressed();
 
@@ -122,6 +150,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStealthKillComponent> StealthKill;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UDodgeComponent> Dodge;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<ULockOnComponent> LockOn;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UClimbingComponent> Climbing;
 
@@ -159,6 +193,14 @@ protected:
 	void HandleHealthChanged(float HealthPercent);
 
 	void UpdateLowHealthVignette(float HealthPercent);
+
+	FVector2D LastMovementInput = FVector2D::ZeroVector;
+
+	UPROPERTY(EditDefaultsOnly, Category = Combat)
+	float InputBufferWindow = 0.3f;
+
+	EBufferedPlayerAction PendingBufferedAction = EBufferedPlayerAction::None;
+	float BufferedActionTimestamp = -1000.0f;
 
 public:
 

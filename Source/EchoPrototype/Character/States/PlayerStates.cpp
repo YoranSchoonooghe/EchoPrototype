@@ -2,6 +2,7 @@
 #include "../PlayerCharacter.h"
 #include "../../Combat/CombatComponent.h"
 #include "../../Combat/StealthKillComponent.h"
+#include "../../Combat/DodgeComponent.h"
 #include "../../Movement/ClimbingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -89,6 +90,21 @@ UPlayerStateBase* UPlayerState_IdleWalk::OnClimbPressed(APlayerCharacter* Charac
 	return nullptr;
 }
 
+UPlayerStateBase* UPlayerState_IdleWalk::OnDodgePressed(APlayerCharacter* Character)
+{
+	if (UDodgeComponent* Dodge = Character->GetDodgeComponent())
+	{
+		Dodge->TryDodge(Character->GetLastMovementInput());
+
+		if (Dodge->IsDodging())
+		{
+			return NewObject<UPlayerState_Dodging>(Character);
+		}
+	}
+
+	return nullptr;
+}
+
 // SPRINT STATE
 void UPlayerState_Sprint::EnterState(APlayerCharacter* Character)
 {
@@ -161,6 +177,21 @@ UPlayerStateBase* UPlayerState_Sprint::OnClimbPressed(APlayerCharacter* Characte
 	return nullptr;
 }
 
+UPlayerStateBase* UPlayerState_Sprint::OnDodgePressed(APlayerCharacter* Character)
+{
+	if (UDodgeComponent* Dodge = Character->GetDodgeComponent())
+	{
+		Dodge->TryDodge(Character->GetLastMovementInput());
+
+		if (Dodge->IsDodging())
+		{
+			return NewObject<UPlayerState_Dodging>(Character);
+		}
+	}
+
+	return nullptr;
+}
+
 // SNEAK STATE
 void UPlayerState_Sneak::EnterState(APlayerCharacter* Character)
 {
@@ -196,6 +227,20 @@ UPlayerStateBase* UPlayerState_Attacking::UpdateState(APlayerCharacter* Characte
 	UCombatComponent* Combat = Character->GetCombatComponent();
 	if (!Combat || !Combat->IsAttacking())
 	{
+		// A dodge pressed mid-attack is buffered (see OnDodgePressed below) rather than dropped -
+		// fire it now that the attack has actually finished.
+		if (Character->ConsumeBufferedDodgeIfFresh())
+		{
+			if (UDodgeComponent* Dodge = Character->GetDodgeComponent())
+			{
+				Dodge->TryDodge(Character->GetLastMovementInput());
+				if (Dodge->IsDodging())
+				{
+					return NewObject<UPlayerState_Dodging>(Character);
+				}
+			}
+		}
+
 		return NewObject<UPlayerState_IdleWalk>(Character);
 	}
 
@@ -219,6 +264,49 @@ UPlayerStateBase* UPlayerState_Attacking::OnAttackReleased(APlayerCharacter* Cha
 		Combat->OnAttackReleased();
 	}
 
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Attacking::OnDodgePressed(APlayerCharacter* Character)
+{
+	// Can't cancel straight into a dodge mid-swing - buffer it so it fires the instant the attack
+	// (or combo) actually ends, instead of the press being dropped on the floor.
+	Character->BufferDodge();
+	return nullptr;
+}
+
+// DODGING STATE
+UPlayerStateBase* UPlayerState_Dodging::UpdateState(APlayerCharacter* Character, float DeltaTime)
+{
+	UDodgeComponent* Dodge = Character->GetDodgeComponent();
+	if (!Dodge || !Dodge->IsDodging())
+	{
+		// A buffered attack (see OnAttackPressed below) fires the instant the roll finishes.
+		if (Character->ConsumeBufferedAttackIfFresh())
+		{
+			if (UCombatComponent* Combat = Character->GetCombatComponent())
+			{
+				Combat->OnAttackHoldStarted();
+				Combat->OnAttackReleased();
+
+				if (Combat->IsAttacking())
+				{
+					return NewObject<UPlayerState_Attacking>(Character);
+				}
+			}
+		}
+
+		return NewObject<UPlayerState_IdleWalk>(Character);
+	}
+
+	return nullptr;
+}
+
+UPlayerStateBase* UPlayerState_Dodging::OnAttackPressed(APlayerCharacter* Character)
+{
+	// Can't attack out of a roll early - buffer it so it fires the instant the roll ends, instead
+	// of the press being dropped on the floor.
+	Character->BufferAttack();
 	return nullptr;
 }
 

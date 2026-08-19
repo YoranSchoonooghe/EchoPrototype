@@ -83,6 +83,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Death")
 	TArray<TObjectPtr<UAnimSequence>> RightDeathAnims;
 
+	UPROPERTY(EditAnywhere, Category = "Hit Reaction")
+	FName HitReactSlotName = "FullBody";
+
+	UPROPERTY(EditAnywhere, Category = "Hit Reaction")
+	TArray<TObjectPtr<UAnimSequence>> FrontHitAnims;
+
+	UPROPERTY(EditAnywhere, Category = "Hit Reaction")
+	TArray<TObjectPtr<UAnimSequence>> BackHitAnims;
+
+	UPROPERTY(EditAnywhere, Category = "Hit Reaction")
+	TArray<TObjectPtr<UAnimSequence>> LeftHitAnims;
+
+	UPROPERTY(EditAnywhere, Category = "Hit Reaction")
+	TArray<TObjectPtr<UAnimSequence>> RightHitAnims;
+
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
@@ -90,6 +105,8 @@ private:
 	void Die(AActor* DamageCauser);
 	EHitDirection ComputeHitDirection(AActor* DamageCauser) const;
 	void PlayDeathAnimation(EHitDirection Direction);
+	void PlayHitReactAnimation(EHitDirection Direction);
+	bool IsInvulnerable() const;
 
 	float CurrentHealth = 0.0f;
 	bool bIsDead = false;

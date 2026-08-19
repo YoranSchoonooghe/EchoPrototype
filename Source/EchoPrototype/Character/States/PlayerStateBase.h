@@ -29,5 +29,7 @@ public:
 
 	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) { return nullptr; }
 
+	virtual UPlayerStateBase* OnDodgePressed(APlayerCharacter* Character) { return nullptr; }
+
 	virtual bool CanMove() const { return true; }
 };

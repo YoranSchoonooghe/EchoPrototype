@@ -7,6 +7,7 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimMontage.h"
+#include "DodgeComponent.h"
 
 UHealthComponent::UHealthComponent()
 {
@@ -51,7 +52,7 @@ void UHealthComponent::AddMaxHealthBonus(float Delta)
 
 void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage <= 0.0f || bIsDead)
+	if (Damage <= 0.0f || bIsDead || IsInvulnerable())
 	{
 		return;
 	}
@@ -67,8 +68,20 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 	}
 	else
 	{
+		PlayHitReactAnimation(ComputeHitDirection(DamageCauser));
 		OnDamage.Broadcast(DamageCauser);
 	}
+}
+
+bool UHealthComponent::IsInvulnerable() const
+{
+	AActor* Owner = GetOwner();
+	if (UDodgeComponent* Dodge = Owner ? Owner->FindComponentByClass<UDodgeComponent>() : nullptr)
+	{
+		return Dodge->IsInvulnerable();
+	}
+
+	return false;
 }
 
 void UHealthComponent::Kill(AActor* Instigator)
@@ -109,19 +122,21 @@ EHitDirection UHealthComponent::ComputeHitDirection(AActor* DamageCauser) const
 	return RightDot >= 0.0f ? EHitDirection::Right : EHitDirection::Left;
 }
 
-void UHealthComponent::PlayDeathAnimation(EHitDirection Direction)
+static UAnimSequence* PickAnimFromDirectionalPool(EHitDirection Direction,
+	const TArray<TObjectPtr<UAnimSequence>>& FrontPool, const TArray<TObjectPtr<UAnimSequence>>& BackPool,
+	const TArray<TObjectPtr<UAnimSequence>>& LeftPool, const TArray<TObjectPtr<UAnimSequence>>& RightPool)
 {
-	const TArray<TObjectPtr<UAnimSequence>>* Pool = &FrontDeathAnims;
+	const TArray<TObjectPtr<UAnimSequence>>* Pool = &FrontPool;
 	switch (Direction)
 	{
 	case EHitDirection::Back:
-		Pool = &BackDeathAnims;
+		Pool = &BackPool;
 		break;
 	case EHitDirection::Left:
-		Pool = &LeftDeathAnims;
+		Pool = &LeftPool;
 		break;
 	case EHitDirection::Right:
-		Pool = &RightDeathAnims;
+		Pool = &RightPool;
 		break;
 	default:
 		break;
@@ -129,15 +144,20 @@ void UHealthComponent::PlayDeathAnimation(EHitDirection Direction)
 
 	if (Pool->Num() == 0)
 	{
-		Pool = &FrontDeathAnims;
+		Pool = &FrontPool;
 	}
 
 	if (Pool->Num() == 0)
 	{
-		return;
+		return nullptr;
 	}
 
-	UAnimSequence* SelectedAnim = (*Pool)[FMath::RandRange(0, Pool->Num() - 1)];
+	return (*Pool)[FMath::RandRange(0, Pool->Num() - 1)];
+}
+
+void UHealthComponent::PlayDeathAnimation(EHitDirection Direction)
+{
+	UAnimSequence* SelectedAnim = PickAnimFromDirectionalPool(Direction, FrontDeathAnims, BackDeathAnims, LeftDeathAnims, RightDeathAnims);
 
 	ACharacter* Character = Cast<ACharacter>(GetOwner());
 	UAnimInstance* AnimInstance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
@@ -153,6 +173,18 @@ void UHealthComponent::PlayDeathAnimation(EHitDirection Direction)
 		{
 			Owner->SetLifeSpan(SelectedAnim->GetPlayLength());
 		}
+	}
+}
+
+void UHealthComponent::PlayHitReactAnimation(EHitDirection Direction)
+{
+	UAnimSequence* SelectedAnim = PickAnimFromDirectionalPool(Direction, FrontHitAnims, BackHitAnims, LeftHitAnims, RightHitAnims);
+
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
+	UAnimInstance* AnimInstance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
+	if (SelectedAnim && AnimInstance)
+	{
+		AnimInstance->PlaySlotAnimationAsDynamicMontage(SelectedAnim, HitReactSlotName, 0.1f, 0.1f, 1.0f, 1);
 	}
 }
 

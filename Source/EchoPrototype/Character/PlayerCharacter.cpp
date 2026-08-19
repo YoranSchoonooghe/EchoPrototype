@@ -6,6 +6,8 @@
 #include "../Combat/CombatComponent.h"
 #include "../Combat/HealthComponent.h"
 #include "../Combat/StealthKillComponent.h"
+#include "../Combat/DodgeComponent.h"
+#include "../Combat/LockOnComponent.h"
 #include "../Movement/ClimbingComponent.h"
 #include "../SkillTree/SkillTreeComponent.h"
 #include "../SkillTree/SkillTreeNodeData.h"
@@ -43,6 +45,8 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	StealthKill = CreateDefaultSubobject<UStealthKillComponent>(TEXT("StealthKillComponent"));
+	Dodge = CreateDefaultSubobject<UDodgeComponent>(TEXT("DodgeComponent"));
+	LockOn = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
 	Climbing = CreateDefaultSubobject<UClimbingComponent>(TEXT("ClimbingComponent"));
 	Interaction = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	SkillTree = CreateDefaultSubobject<USkillTreeComponent>(TEXT("SkillTreeComponent"));
@@ -61,6 +65,8 @@ APlayerCharacter::APlayerCharacter()
 
 void APlayerCharacter::Move(const FVector2D& Value)
 {
+	LastMovementInput = Value;
+
 	if (Climbing && Climbing->IsHanging())
 	{
 		Climbing->HandleShimmyInput(Value);
@@ -333,6 +339,55 @@ void APlayerCharacter::AttackPressed()
 void APlayerCharacter::AttackReleased()
 {
 	if (CurrentState) ChangeState(CurrentState->OnAttackReleased(this));
+}
+
+void APlayerCharacter::DodgePressed()
+{
+	if (CurrentState) ChangeState(CurrentState->OnDodgePressed(this));
+}
+
+void APlayerCharacter::BufferAttack()
+{
+	PendingBufferedAction = EBufferedPlayerAction::Attack;
+	BufferedActionTimestamp = GetWorld()->GetTimeSeconds();
+}
+
+void APlayerCharacter::BufferDodge()
+{
+	PendingBufferedAction = EBufferedPlayerAction::Dodge;
+	BufferedActionTimestamp = GetWorld()->GetTimeSeconds();
+}
+
+bool APlayerCharacter::ConsumeBufferedAttackIfFresh()
+{
+	if (PendingBufferedAction != EBufferedPlayerAction::Attack)
+	{
+		return false;
+	}
+
+	const bool bFresh = (GetWorld()->GetTimeSeconds() - BufferedActionTimestamp) <= InputBufferWindow;
+	PendingBufferedAction = EBufferedPlayerAction::None;
+	return bFresh;
+}
+
+bool APlayerCharacter::ConsumeBufferedDodgeIfFresh()
+{
+	if (PendingBufferedAction != EBufferedPlayerAction::Dodge)
+	{
+		return false;
+	}
+
+	const bool bFresh = (GetWorld()->GetTimeSeconds() - BufferedActionTimestamp) <= InputBufferWindow;
+	PendingBufferedAction = EBufferedPlayerAction::None;
+	return bFresh;
+}
+
+void APlayerCharacter::ToggleLockOn()
+{
+	if (LockOn)
+	{
+		LockOn->ToggleLockOn();
+	}
 }
 
 void APlayerCharacter::StealthKillPressed()

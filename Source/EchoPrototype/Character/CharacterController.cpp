@@ -112,6 +112,12 @@ void ACharacterController::SetupInputComponent()
 			if (ClimbAction)
 				EIC->BindAction(ClimbAction, ETriggerEvent::Started, this, &ACharacterController::Climb);
 
+			if (DodgeAction)
+				EIC->BindAction(DodgeAction, ETriggerEvent::Started, this, &ACharacterController::Dodge);
+
+			if (LockOnAction)
+				EIC->BindAction(LockOnAction, ETriggerEvent::Started, this, &ACharacterController::ToggleLockOn);
+
 			//Interact
 			if (InteractAction)
 				EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &ACharacterController::Interact);
@@ -358,6 +364,20 @@ void ACharacterController::Climb()
 	if (!CachedPlayerCharacter) return;
 
 	CachedPlayerCharacter->ClimbPressed();
+}
+
+void ACharacterController::Dodge()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->DodgePressed();
+}
+
+void ACharacterController::ToggleLockOn()
+{
+	if (!CachedPlayerCharacter) return;
+
+	CachedPlayerCharacter->ToggleLockOn();
 }
 
 void ACharacterController::Interact()

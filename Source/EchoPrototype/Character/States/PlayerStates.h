@@ -22,6 +22,7 @@ public:
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnStealthKillPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnDodgePressed(APlayerCharacter* Character) override;
 };
 
 // SPRINT STATE
@@ -40,6 +41,7 @@ public:
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnClimbPressed(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnDodgePressed(APlayerCharacter* Character) override;
 };
 
 // SNEAK STATE
@@ -67,6 +69,21 @@ public:
 
 	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
 	virtual UPlayerStateBase* OnAttackReleased(APlayerCharacter* Character) override;
+	virtual UPlayerStateBase* OnDodgePressed(APlayerCharacter* Character) override;
+};
+
+// DODGING STATE
+UCLASS()
+class ECHOPROTOTYPE_API UPlayerState_Dodging : public UPlayerStateBase
+{
+	GENERATED_BODY()
+
+public:
+	virtual UPlayerStateBase* UpdateState(APlayerCharacter* Character, float DeltaTime) override;
+
+	virtual UPlayerStateBase* OnAttackPressed(APlayerCharacter* Character) override;
+
+	virtual bool CanMove() const override { return false; }
 };
 
 UCLASS()

@@ -83,6 +83,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
 	TObjectPtr<UInputAction> ClimbAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> DodgeAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> LockOnAction;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Interaction")
 	TObjectPtr<UInputAction> InteractAction;
 
@@ -142,6 +148,8 @@ private:
 	void AttackReleased();
 	void StealthKill();
 	void Climb();
+	void Dodge();
+	void ToggleLockOn();
 
 	//Interact
 	void Interact();
