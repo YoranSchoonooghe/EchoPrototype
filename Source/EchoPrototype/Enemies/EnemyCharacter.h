@@ -8,6 +8,7 @@
 class UHealthComponent;
 class UCombatComponent;
 class UWidgetComponent;
+class APatrolRoute;
 
 UENUM(BlueprintType)
 enum class EAlertState : uint8
@@ -60,7 +61,7 @@ public:
 	void ShowStealthKillPrompt(bool bShow);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
-	TArray<APatrolPoint*> PatrolPoints;
+	TObjectPtr<APatrolRoute> PatrolRoute{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
 	bool bIsGuarding{ false };
 };

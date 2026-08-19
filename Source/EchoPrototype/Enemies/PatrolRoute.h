@@ -6,6 +6,15 @@
 
 class USplineComponent;
 class UEchoVisibilityComponent;
+class APatrolPoint;
+
+UENUM(BlueprintType)
+enum class EPatrolMode : uint8
+{
+	Single,
+	Loop,
+	Reverse
+};
 
 UCLASS()
 class ECHOPROTOTYPE_API APatrolRoute : public AActor
@@ -23,7 +32,26 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	TObjectPtr<UEchoVisibilityComponent> EchoVisibility;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	TArray<APatrolPoint*> PatrolPoints;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	EPatrolMode PatrolMode{ EPatrolMode::Loop };
+
 public:	
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Patrol")
+	TArray<APatrolPoint*> GetPatrolPoints() const { return PatrolPoints; }
+	UFUNCTION(BlueprintCallable, Category = "Patrol")
+	int GetNextPatrolPointIndex(int currentPointIndex);
+	UFUNCTION(BlueprintCallable, Category = "Patrol")
+	APatrolPoint* GetPatrolPointAtIndex(int index) const;
+
+private:
+	int GetNextPatrolPointIndexSingle(int currentPointIndex);
+	int GetNextPatrolPointIndexLoop(int currentPointIndex);
+	int GetNextPatrolPointIndexReverse(int currentPointIndex);
+
+	bool _bIsReversed{ false };
 
 };

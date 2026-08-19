@@ -12,6 +12,7 @@
 #include "NavigationPath.h"
 #include "TimerManager.h"
 #include "EchoPrototype/Combat/CombatComponent.h"
+#include "PatrolRoute.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -93,11 +94,13 @@ void AEnemyAIController::InitBBKeys()
 		return;
 	}
 
-	auto& patrolPoints = pEnemy->PatrolPoints;
-	if (patrolPoints.IsEmpty()) return;
+	auto& patrolRoute = pEnemy->PatrolRoute;
+	if (!patrolRoute) return;
+	auto firstPatrolPoint = patrolRoute->GetPatrolPointAtIndex(0);
+	if (!firstPatrolPoint) return;
 
 	pBlackboardComponent->SetValueAsObject(TEXT("PatrolPointIndex"), 0);
-	pBlackboardComponent->SetValueAsObject(TEXT("PatrolPoint"), patrolPoints[0]);
+	pBlackboardComponent->SetValueAsObject(TEXT("PatrolPoint"), firstPatrolPoint);
 }
 
 void AEnemyAIController::UpdateTargetEcho()
