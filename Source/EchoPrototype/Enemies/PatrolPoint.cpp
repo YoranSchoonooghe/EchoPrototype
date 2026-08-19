@@ -2,7 +2,7 @@
 
 APatrolPoint::APatrolPoint()
 {
-	//PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	auto* pRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = pRoot;
@@ -19,10 +19,4 @@ void APatrolPoint::BeginPlay()
 	Super::BeginPlay();
 	
 }
-
-//void APatrolPoint::Tick(float DeltaTime)
-//{
-//	Super::Tick(DeltaTime);
-//
-//}
 

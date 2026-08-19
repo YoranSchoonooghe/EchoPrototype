@@ -18,7 +18,4 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> PreviewMesh;
 
-public:	
-	//virtual void Tick(float DeltaTime) override;
-
 };
