@@ -7,6 +7,8 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimMontage.h"
+#include "Camera/CameraShakeBase.h"
+#include "GameFramework/PlayerController.h"
 #include "DodgeComponent.h"
 
 UHealthComponent::UHealthComponent()
@@ -69,7 +71,23 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 	else
 	{
 		PlayHitReactAnimation(ComputeHitDirection(DamageCauser));
+		PlayCameraShakeOnOwner(DamageCameraShakeClass);
 		OnDamage.Broadcast(DamageCauser);
+	}
+}
+
+void UHealthComponent::PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const
+{
+	if (!ShakeClass)
+	{
+		return;
+	}
+
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
+	APlayerController* PC = Character ? Cast<APlayerController>(Character->GetController()) : nullptr;
+	if (PC)
+	{
+		PC->ClientStartCameraShake(ShakeClass);
 	}
 }
 
@@ -191,6 +209,7 @@ void UHealthComponent::PlayHitReactAnimation(EHitDirection Direction)
 void UHealthComponent::Die(AActor* DamageCauser)
 {
 	PlayDeathAnimation(ComputeHitDirection(DamageCauser));
+	PlayCameraShakeOnOwner(DeathCameraShakeClass);
 
 	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
 	{

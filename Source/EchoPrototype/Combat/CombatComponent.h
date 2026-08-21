@@ -9,6 +9,7 @@
 class UAnimMontage;
 class ACharacter;
 class UDamageType;
+class UCameraShakeBase;
 
 USTRUCT(BlueprintType)
 struct FMacheteComboAttack
@@ -72,6 +73,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float AttackDamageMultiplier = 1.0f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
+	TSubclassOf<UCameraShakeBase> HitLandedCameraShakeClass;
+
 private:
 	void TryAttack();
 	void StartCombo();
@@ -84,6 +88,7 @@ private:
 
 	void HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void OnChargeThresholdReached();
+	void PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const;
 
 	ACharacter* GetOwnerCharacter() const;
 

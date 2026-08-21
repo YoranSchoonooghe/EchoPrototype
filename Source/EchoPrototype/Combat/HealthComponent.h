@@ -9,6 +9,7 @@
 class UDamageType;
 class UAnimSequence;
 class AController;
+class UCameraShakeBase;
 
 UENUM(BlueprintType)
 enum class EHitDirection : uint8
@@ -98,6 +99,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Hit Reaction")
 	TArray<TObjectPtr<UAnimSequence>> RightHitAnims;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
+	TSubclassOf<UCameraShakeBase> DamageCameraShakeClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
+	TSubclassOf<UCameraShakeBase> DeathCameraShakeClass;
+
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
@@ -107,6 +114,7 @@ private:
 	void PlayDeathAnimation(EHitDirection Direction);
 	void PlayHitReactAnimation(EHitDirection Direction);
 	bool IsInvulnerable() const;
+	void PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const;
 
 	float CurrentHealth = 0.0f;
 	bool bIsDead = false;

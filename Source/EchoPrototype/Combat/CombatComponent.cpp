@@ -6,6 +6,8 @@
 #include "Animation/AnimInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
+#include "GameFramework/PlayerController.h"
+#include "Camera/CameraShakeBase.h"
 #include "TimerManager.h"
 
 UCombatComponent::UCombatComponent()
@@ -243,6 +245,8 @@ void UCombatComponent::UpdateWeaponTrace()
 		QueryParams
 	);
 
+	bool bHitSomethingThisUpdate = false;
+
 	for (const FHitResult& Hit : Hits)
 	{
 		AActor* HitActor = Hit.GetActor();
@@ -253,9 +257,30 @@ void UCombatComponent::UpdateWeaponTrace()
 
 		ActorsHitThisSwing.Add(HitActor);
 		UGameplayStatics::ApplyDamage(HitActor, TraceDamage, Character->GetInstigatorController(), Character, DamageTypeClass);
+		bHitSomethingThisUpdate = true;
+	}
+
+	if (bHitSomethingThisUpdate)
+	{
+		PlayCameraShakeOnOwner(HitLandedCameraShakeClass);
 	}
 
 	PreviousTraceLocation = CurrentLocation;
+}
+
+void UCombatComponent::PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const
+{
+	if (!ShakeClass)
+	{
+		return;
+	}
+
+	ACharacter* Character = GetOwnerCharacter();
+	APlayerController* PC = Character ? Cast<APlayerController>(Character->GetController()) : nullptr;
+	if (PC)
+	{
+		PC->ClientStartCameraShake(ShakeClass);
+	}
 }
 
 void UCombatComponent::EndWeaponTrace()
