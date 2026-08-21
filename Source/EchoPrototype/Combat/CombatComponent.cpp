@@ -8,6 +8,7 @@
 #include "GameFramework/DamageType.h"
 #include "GameFramework/PlayerController.h"
 #include "Camera/CameraShakeBase.h"
+#include "GameFramework/ForceFeedbackEffect.h"
 #include "TimerManager.h"
 
 UCombatComponent::UCombatComponent()
@@ -263,6 +264,7 @@ void UCombatComponent::UpdateWeaponTrace()
 	if (bHitSomethingThisUpdate)
 	{
 		PlayCameraShakeOnOwner(HitLandedCameraShakeClass);
+		PlayRumbleOnOwner(HitLandedRumbleEffect);
 	}
 
 	PreviousTraceLocation = CurrentLocation;
@@ -280,6 +282,21 @@ void UCombatComponent::PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> Shak
 	if (PC)
 	{
 		PC->ClientStartCameraShake(ShakeClass);
+	}
+}
+
+void UCombatComponent::PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) const
+{
+	if (!RumbleEffect)
+	{
+		return;
+	}
+
+	ACharacter* Character = GetOwnerCharacter();
+	APlayerController* PC = Character ? Cast<APlayerController>(Character->GetController()) : nullptr;
+	if (PC)
+	{
+		PC->ClientPlayForceFeedback(RumbleEffect, FForceFeedbackParameters());
 	}
 }
 

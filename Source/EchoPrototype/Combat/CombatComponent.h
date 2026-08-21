@@ -10,6 +10,7 @@ class UAnimMontage;
 class ACharacter;
 class UDamageType;
 class UCameraShakeBase;
+class UForceFeedbackEffect;
 
 USTRUCT(BlueprintType)
 struct FMacheteComboAttack
@@ -76,6 +77,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
 	TSubclassOf<UCameraShakeBase> HitLandedCameraShakeClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Controller Rumble")
+	TObjectPtr<UForceFeedbackEffect> HitLandedRumbleEffect;
+
 private:
 	void TryAttack();
 	void StartCombo();
@@ -89,6 +93,7 @@ private:
 	void HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	void OnChargeThresholdReached();
 	void PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const;
+	void PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) const;
 
 	ACharacter* GetOwnerCharacter() const;
 
