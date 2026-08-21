@@ -10,6 +10,7 @@ class UDamageType;
 class UAnimSequence;
 class AController;
 class UCameraShakeBase;
+class UForceFeedbackEffect;
 
 UENUM(BlueprintType)
 enum class EHitDirection : uint8
@@ -105,6 +106,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera Shake")
 	TSubclassOf<UCameraShakeBase> DeathCameraShakeClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Controller Rumble")
+	TObjectPtr<UForceFeedbackEffect> DamageRumbleEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Controller Rumble")
+	TObjectPtr<UForceFeedbackEffect> DeathRumbleEffect;
+
 private:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
@@ -115,6 +122,7 @@ private:
 	void PlayHitReactAnimation(EHitDirection Direction);
 	bool IsInvulnerable() const;
 	void PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const;
+	void PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) const;
 
 	float CurrentHealth = 0.0f;
 	bool bIsDead = false;

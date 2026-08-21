@@ -8,6 +8,7 @@
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimMontage.h"
 #include "Camera/CameraShakeBase.h"
+#include "GameFramework/ForceFeedbackEffect.h"
 #include "GameFramework/PlayerController.h"
 #include "DodgeComponent.h"
 
@@ -72,6 +73,7 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 	{
 		PlayHitReactAnimation(ComputeHitDirection(DamageCauser));
 		PlayCameraShakeOnOwner(DamageCameraShakeClass);
+		PlayRumbleOnOwner(DamageRumbleEffect);
 		OnDamage.Broadcast(DamageCauser);
 	}
 }
@@ -88,6 +90,21 @@ void UHealthComponent::PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> Shak
 	if (PC)
 	{
 		PC->ClientStartCameraShake(ShakeClass);
+	}
+}
+
+void UHealthComponent::PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) const
+{
+	if (!RumbleEffect)
+	{
+		return;
+	}
+
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
+	APlayerController* PC = Character ? Cast<APlayerController>(Character->GetController()) : nullptr;
+	if (PC)
+	{
+		PC->ClientPlayForceFeedback(RumbleEffect, FForceFeedbackParameters());
 	}
 }
 
@@ -210,6 +227,7 @@ void UHealthComponent::Die(AActor* DamageCauser)
 {
 	PlayDeathAnimation(ComputeHitDirection(DamageCauser));
 	PlayCameraShakeOnOwner(DeathCameraShakeClass);
+	PlayRumbleOnOwner(DeathRumbleEffect);
 
 	if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
 	{
