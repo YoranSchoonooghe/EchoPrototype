@@ -68,6 +68,8 @@ void ALever::Interact_Implementation(AActor* Interactor)
 		{
 			LinkedDoor->ToggleDoor();
 		}
+
+		OnLeverPulled.Broadcast();
 	}
 	else
 	{

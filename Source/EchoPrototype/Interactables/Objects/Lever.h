@@ -10,12 +10,14 @@
 class UStaticMeshComponent;
 class ADoor;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeverPulled);
+
 UCLASS()
 class ECHOPROTOTYPE_API ALever : public AActor, public IInteractableInterface
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ALever();
 
@@ -23,6 +25,9 @@ public:
 	virtual FText GetInteractionPrompt_Implementation() const override;
 
 	virtual bool RequiresEchoVision_Implementation() override { return bRequiresEcho; }
+
+	UPROPERTY(BlueprintAssignable, Category = "Lever")
+	FOnLeverPulled OnLeverPulled;
 
 protected:
 
