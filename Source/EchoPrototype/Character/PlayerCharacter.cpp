@@ -9,6 +9,7 @@
 #include "../Combat/StealthKillComponent.h"
 #include "../Combat/DodgeComponent.h"
 #include "../Combat/LockOnComponent.h"
+#include "../Combat/WeaponData.h"
 #include "../Movement/ClimbingComponent.h"
 #include "../SkillTree/SkillTreeComponent.h"
 #include "../SkillTree/SkillTreeNodeData.h"
@@ -255,6 +256,7 @@ UEchoSaveGame* APlayerCharacter::CaptureSaveGame() const
 	SaveGameObject->LevelName = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
 	SaveGameObject->PlayerLocation = GetActorLocation();
 	SaveGameObject->PlayerRotation = GetActorRotation();
+	SaveGameObject->EquippedWeapon = EquippedWeaponData;
 
 	return SaveGameObject;
 }
@@ -282,6 +284,11 @@ void APlayerCharacter::ApplySaveGame(UEchoSaveGame* SaveGameObject)
 		}
 
 		SkillTree->LoadUnlockedNodes(SaveGameObject->SkillPoints, ResolvedNodes);
+	}
+
+	if (UWeaponData* Weapon = SaveGameObject->EquippedWeapon.LoadSynchronous())
+	{
+		EquipWeapon(Weapon);
 	}
 }
 
@@ -416,17 +423,18 @@ bool APlayerCharacter::IsAttacking() const
 	return Combat && Combat->IsAttacking();
 }
 
-void APlayerCharacter::EquipWeapon()
+void APlayerCharacter::EquipWeapon(UWeaponData* WeaponData)
 {
-	if (bWeaponEquipped)
+	if (!WeaponData)
 	{
 		return;
 	}
 
-	bWeaponEquipped = true;
+	EquippedWeaponData = WeaponData;
 
 	if (WeaponMesh)
 	{
+		WeaponMesh->SetStaticMesh(WeaponData->Mesh);
 		WeaponMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
 		WeaponMesh->SetVisibility(true);
 	}

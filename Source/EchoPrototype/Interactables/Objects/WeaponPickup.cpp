@@ -4,6 +4,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "../../Character/PlayerCharacter.h"
+#include "../../Combat/WeaponData.h"
 
 AWeaponPickup::AWeaponPickup()
 {
@@ -15,6 +16,6 @@ void AWeaponPickup::OnPickedUp(AActor* Interactor)
 {
 	if (APlayerCharacter* Character = Cast<APlayerCharacter>(Interactor))
 	{
-		Character->EquipWeapon();
+		Character->EquipWeapon(WeaponData);
 	}
 }

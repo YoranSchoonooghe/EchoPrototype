@@ -5,6 +5,7 @@
 #include "EchoSaveGame.generated.h"
 
 class USkillTreeNodeData;
+class UWeaponData;
 
 UCLASS()
 class ECHOPROTOTYPE_API UEchoSaveGame : public USaveGame
@@ -29,4 +30,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Save")
 	TArray<FName> CollectedPickups;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Save")
+	TSoftObjectPtr<UWeaponData> EquippedWeapon;
 };

@@ -19,6 +19,7 @@ class USkillTreeComponent;
 class UEchoSaveGame;
 class UDodgeComponent;
 class ULockOnComponent;
+class UWeaponData;
 
 enum class EBufferedPlayerAction : uint8
 {
@@ -88,10 +89,13 @@ public:
 	bool IsAttacking() const;
 
 	//Weapon
-	void EquipWeapon();
+	void EquipWeapon(UWeaponData* WeaponData);
 
 	UFUNCTION(BlueprintPure, Category = "Combat")
-	FORCEINLINE bool IsWeaponEquipped() const { return bWeaponEquipped; }
+	FORCEINLINE bool IsWeaponEquipped() const { return EquippedWeaponData != nullptr; }
+
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	FORCEINLINE UWeaponData* GetEquippedWeaponData() const { return EquippedWeaponData; }
 
 	//Dodge
 	void DodgePressed();
@@ -163,7 +167,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	FName WeaponSocketName = "WeaponSocket_R";
 
-	bool bWeaponEquipped = false;
+	UPROPERTY(BlueprintReadOnly, Category = Combat)
+	TObjectPtr<UWeaponData> EquippedWeaponData;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UDodgeComponent> Dodge;

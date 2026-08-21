@@ -7,6 +7,7 @@
 #include "WeaponPickup.generated.h"
 
 class UStaticMeshComponent;
+class UWeaponData;
 
 UCLASS()
 class ECHOPROTOTYPE_API AWeaponPickup : public APickupActor
@@ -21,4 +22,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pickup", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> PickupMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Pickup")
+	TObjectPtr<UWeaponData> WeaponData;
 };
