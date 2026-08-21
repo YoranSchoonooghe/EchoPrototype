@@ -7,6 +7,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class UStaticMeshComponent;
 class UEchoComponent;
 class UCombatComponent;
 class UHealthComponent;
@@ -86,6 +87,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	bool IsAttacking() const;
 
+	//Weapon
+	void EquipWeapon();
+
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	FORCEINLINE bool IsWeaponEquipped() const { return bWeaponEquipped; }
+
 	//Dodge
 	void DodgePressed();
 
@@ -149,6 +156,14 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStealthKillComponent> StealthKill;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> WeaponMesh;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	FName WeaponSocketName = "WeaponSocket_R";
+
+	bool bWeaponEquipped = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UDodgeComponent> Dodge;

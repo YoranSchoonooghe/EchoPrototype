@@ -1,6 +1,7 @@
 #include "PlayerCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EchoComponent.h"
 #include "../Combat/CombatComponent.h"
@@ -45,6 +46,11 @@ APlayerCharacter::APlayerCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Health = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComponent"));
 	StealthKill = CreateDefaultSubobject<UStealthKillComponent>(TEXT("StealthKillComponent"));
+
+	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+	WeaponMesh->SetupAttachment(GetMesh(), WeaponSocketName);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetVisibility(false);
 	Dodge = CreateDefaultSubobject<UDodgeComponent>(TEXT("DodgeComponent"));
 	LockOn = CreateDefaultSubobject<ULockOnComponent>(TEXT("LockOnComponent"));
 	Climbing = CreateDefaultSubobject<UClimbingComponent>(TEXT("ClimbingComponent"));
@@ -408,6 +414,27 @@ void APlayerCharacter::ClimbPressed()
 bool APlayerCharacter::IsAttacking() const
 {
 	return Combat && Combat->IsAttacking();
+}
+
+void APlayerCharacter::EquipWeapon()
+{
+	if (bWeaponEquipped)
+	{
+		return;
+	}
+
+	bWeaponEquipped = true;
+
+	if (WeaponMesh)
+	{
+		WeaponMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+		WeaponMesh->SetVisibility(true);
+	}
+
+	if (Combat)
+	{
+		Combat->SetWeaponEquipped(true);
+	}
 }
 
 void APlayerCharacter::CycleCameraPerspective()

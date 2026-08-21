@@ -53,17 +53,32 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void AddAttackDamageMultiplierBonus(float Delta);
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetWeaponEquipped(bool bEquipped);
+
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	FORCEINLINE bool IsWeaponEquipped() const { return bWeaponEquipped; }
+
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|Unarmed")
 	TArray<FMacheteComboAttack> ComboAttacks;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|Unarmed")
 	FMacheteComboAttack ChargeAttack;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
+	UPROPERTY(EditAnywhere, Category = "Combat|Unarmed")
 	TObjectPtr<UAnimMontage> ChargeStartMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Combat|Weapon")
+	TArray<FMacheteComboAttack> WeaponComboAttacks;
+
+	UPROPERTY(EditAnywhere, Category = "Combat|Weapon")
+	FMacheteComboAttack WeaponChargeAttack;
+
+	UPROPERTY(EditAnywhere, Category = "Combat|Weapon")
+	TObjectPtr<UAnimMontage> WeaponChargeStartMontage;
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float ChargeThreshold = 0.5f;
@@ -95,7 +110,13 @@ private:
 	void PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const;
 	void PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) const;
 
+	const TArray<FMacheteComboAttack>& GetActiveComboAttacks() const;
+	const FMacheteComboAttack& GetActiveChargeAttack() const;
+	UAnimMontage* GetActiveChargeStartMontage() const;
+
 	ACharacter* GetOwnerCharacter() const;
+
+	bool bWeaponEquipped = false;
 
 	int32 CurrentComboIndex = INDEX_NONE;
 	bool bComboWindowOpen = false;

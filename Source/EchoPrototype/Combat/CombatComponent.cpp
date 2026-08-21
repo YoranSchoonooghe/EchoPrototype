@@ -31,6 +31,26 @@ void UCombatComponent::AddAttackDamageMultiplierBonus(float Delta)
 	AttackDamageMultiplier += Delta;
 }
 
+void UCombatComponent::SetWeaponEquipped(bool bEquipped)
+{
+	bWeaponEquipped = bEquipped;
+}
+
+const TArray<FMacheteComboAttack>& UCombatComponent::GetActiveComboAttacks() const
+{
+	return bWeaponEquipped ? WeaponComboAttacks : ComboAttacks;
+}
+
+const FMacheteComboAttack& UCombatComponent::GetActiveChargeAttack() const
+{
+	return bWeaponEquipped ? WeaponChargeAttack : ChargeAttack;
+}
+
+UAnimMontage* UCombatComponent::GetActiveChargeStartMontage() const
+{
+	return bWeaponEquipped ? WeaponChargeStartMontage : ChargeStartMontage;
+}
+
 void UCombatComponent::OnAttackHoldStarted()
 {
 	bChargeReady = false;
@@ -44,7 +64,8 @@ void UCombatComponent::OnAttackHoldStarted()
 
 void UCombatComponent::PlayChargeStartAnimation()
 {
-	if (!ChargeStartMontage)
+	UAnimMontage* Montage = GetActiveChargeStartMontage();
+	if (!Montage)
 	{
 		return;
 	}
@@ -61,11 +82,11 @@ void UCombatComponent::PlayChargeStartAnimation()
 	bComboWindowOpen = false;
 	bNextAttackQueued = false;
 
-	AnimInstance->Montage_Play(ChargeStartMontage);
+	AnimInstance->Montage_Play(Montage);
 
 	FOnMontageEnded EndDelegate;
 	EndDelegate.BindUObject(this, &UCombatComponent::HandleMontageEnded);
-	AnimInstance->Montage_SetEndDelegate(EndDelegate, ChargeStartMontage);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, Montage);
 }
 
 void UCombatComponent::OnChargeThresholdReached()
@@ -106,7 +127,7 @@ void UCombatComponent::TryAttack()
 
 void UCombatComponent::StartCombo()
 {
-	if (ComboAttacks.Num() == 0)
+	if (GetActiveComboAttacks().Num() == 0)
 	{
 		return;
 	}
@@ -118,7 +139,7 @@ void UCombatComponent::StartCombo()
 void UCombatComponent::AdvanceCombo()
 {
 	const int32 NextIndex = CurrentComboIndex + 1;
-	if (!ComboAttacks.IsValidIndex(NextIndex))
+	if (!GetActiveComboAttacks().IsValidIndex(NextIndex))
 	{
 		EndAttack();
 		return;
@@ -130,19 +151,21 @@ void UCombatComponent::AdvanceCombo()
 
 void UCombatComponent::PlayComboAttack(int32 Index)
 {
-	if (!ComboAttacks.IsValidIndex(Index))
+	const TArray<FMacheteComboAttack>& Attacks = GetActiveComboAttacks();
+	if (!Attacks.IsValidIndex(Index))
 	{
 		EndAttack();
 		return;
 	}
 
-	PlayAttackMontage(ComboAttacks[Index].Montage, ComboAttacks[Index].DamageAmount);
+	PlayAttackMontage(Attacks[Index].Montage, Attacks[Index].DamageAmount);
 }
 
 void UCombatComponent::PlayChargedAttack()
 {
+	const FMacheteComboAttack& Charge = GetActiveChargeAttack();
 	CurrentComboIndex = INDEX_NONE;
-	PlayAttackMontage(ChargeAttack.Montage, ChargeAttack.DamageAmount);
+	PlayAttackMontage(Charge.Montage, Charge.DamageAmount);
 }
 
 void UCombatComponent::PlayAttackMontage(UAnimMontage* Montage, float Damage)
