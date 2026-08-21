@@ -98,6 +98,11 @@ void APlayerCharacter::Move(const FVector2D& Value)
 
 void APlayerCharacter::Jump()
 {
+	if (Echo && Echo->GetEchoState() == EEchoState::Aiming)
+	{
+		return;
+	}
+
 	if (Climbing && Climbing->IsHanging())
 	{
 		Climbing->JumpFromLedge();

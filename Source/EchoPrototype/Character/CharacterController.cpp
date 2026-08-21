@@ -300,7 +300,7 @@ void ACharacterController::EchoReleased()
 
 void ACharacterController::SelectTeleportEcho()
 {
-	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
+	if (CachedEchoComponent)
 	{
 		CachedEchoComponent->SetSelectedEchoType(EEchoType::Teleport);
 	}
@@ -308,7 +308,7 @@ void ACharacterController::SelectTeleportEcho()
 
 void ACharacterController::SelectVisionEcho()
 {
-	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
+	if (CachedEchoComponent)
 	{
 		CachedEchoComponent->SetSelectedEchoType(EEchoType::Vision);
 	}
@@ -316,7 +316,7 @@ void ACharacterController::SelectVisionEcho()
 
 void ACharacterController::SelectCombatEcho()
 {
-	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
+	if (CachedEchoComponent)
 	{
 		CachedEchoComponent->SetSelectedEchoType(EEchoType::Combat);
 	}
@@ -324,7 +324,7 @@ void ACharacterController::SelectCombatEcho()
 
 void ACharacterController::SelectDistractionEcho()
 {
-	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() == EEchoState::Aiming)
+	if (CachedEchoComponent)
 	{
 		CachedEchoComponent->SetSelectedEchoType(EEchoType::Distraction);
 	}
@@ -332,7 +332,7 @@ void ACharacterController::SelectDistractionEcho()
 
 void ACharacterController::UseEchoAbility()
 {
-	if (CachedEchoComponent)
+	if (CachedEchoComponent && CachedEchoComponent->GetEchoState() != EEchoState::Aiming)
 	{
 		CachedEchoComponent->TriggerPlacedEchoAbility();
 	}

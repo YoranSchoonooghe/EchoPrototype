@@ -152,24 +152,27 @@ void UEchoComponent::SetSelectedEchoType(EEchoType NewType)
 
 	CurrentEchoType = NewType;
 
-	if (EchoState == EEchoState::Aiming && ActiveEcho)
+	if (EchoState == EEchoState::Aiming && PreviewEcho)
 	{
-		if (UActorComponent* OldComp = ActiveEcho->FindComponentByClass<UEchoTeleportComponent>())
+		if (UActorComponent* OldComp = PreviewEcho->FindComponentByClass<UEchoTeleportComponent>())
 		{
 			OldComp->DestroyComponent();
 		}
-		if (UActorComponent* OldComp = ActiveEcho->FindComponentByClass<UEchoVisionComponent>())
+		if (UActorComponent* OldComp = PreviewEcho->FindComponentByClass<UEchoVisionComponent>())
 		{
 			OldComp->DestroyComponent();
 		}
-		if (UActorComponent* OldComp = ActiveEcho->FindComponentByClass<UEchoDistractionComponent>())
+		if (UActorComponent* OldComp = PreviewEcho->FindComponentByClass<UEchoDistractionComponent>())
+		{
+			OldComp->DestroyComponent();
+		}
+		if (UActorComponent* OldComp = PreviewEcho->FindComponentByClass<UEchoCombatComponent>())
 		{
 			OldComp->DestroyComponent();
 		}
 
-		AttachEchoAbility(ActiveEcho, CurrentEchoType);
-
-		ActiveEcho->SetPreviewValidity(bCurrentAimIsValid, CurrentEchoType);
+		AttachEchoAbility(PreviewEcho, CurrentEchoType);
+		PreviewEcho->SetPreviewValidity(bCurrentAimIsValid, CurrentEchoType);
 	}
 }
 
@@ -206,44 +209,40 @@ bool UEchoComponent::IsEchoTypeUnlocked(EEchoType Type) const
 
 void UEchoComponent::TriggerPlacedEchoAbility()
 {
-	AEchoCharacter* TargetEcho = nullptr;
-
-	for (AEchoCharacter* Echo : ActiveEchoes)
+	if (bIsExecutingAbility || ActiveEchoes.Num() == 0)
 	{
-		if (Echo && Echo->GetActiveEchoType() == CurrentEchoType)
-		{
-			TargetEcho = Echo;
-			break;
-		}
+		return;
 	}
 
-	if (!TargetEcho)
-	{
-		for (AEchoCharacter* Echo : ActiveEchoes)
-		{
-			if (Echo && Echo->FindComponentByClass<UEchoTeleportComponent>())
-			{
-				TargetEcho = Echo;
-				break;
-			}
-		}
-	}
+	AEchoCharacter* TargetEcho = ActiveEchoes[0];
 
 	if (!TargetEcho) return;
 
-	if (UEchoTeleportComponent* TeleportComp = TargetEcho->FindComponentByClass<UEchoTeleportComponent>())
+	if (TargetEcho->GetActiveEchoType() == EEchoType::Teleport)
 	{
-		TeleportComp->OnTeleportComplete.AddDynamic(this, &UEchoComponent::HandleTeleportComplete);
-		TeleportComp->ExecuteTeleport(GetOwnerPawn());
+		if (UEchoTeleportComponent* TeleportComp = TargetEcho->FindComponentByClass<UEchoTeleportComponent>())
+		{
+			bIsExecutingAbility = true;
+			TargetEcho->SetActorHiddenInGame(true);
+			TargetEcho->SetActorEnableCollision(false);
+
+			TeleportComp->OnTeleportComplete.AddUniqueDynamic(this, &UEchoComponent::HandleTeleportComplete);
+			TeleportComp->ExecuteTeleport(GetOwnerPawn());
+		}
 	}
-	else if (UEchoVisionComponent* VisionComp = TargetEcho->FindComponentByClass<UEchoVisionComponent>())
+	else if (TargetEcho->GetActiveEchoType() == EEchoType::Vision)
 	{
-		VisionComp->ToggleEchoPossession(GetOwnerPawn());
+		if (UEchoVisionComponent* VisionComp = TargetEcho->FindComponentByClass<UEchoVisionComponent>())
+		{
+			VisionComp->ToggleEchoPossession(GetOwnerPawn());
+		}
 	}
 }
 
 void UEchoComponent::HandleTeleportComplete(AEchoCharacter* CompletedEcho)
 {
+	bIsExecutingAbility = false;
+
 	if (CompletedEcho)
 	{
 		DestroyEchoInstance(CompletedEcho);
@@ -436,30 +435,9 @@ void UEchoComponent::PlaceEcho()
 {
 	if (!PreviewEcho) return;
 
-	TArray<AEchoCharacter*> SameTypeEchoes;
-	for (AEchoCharacter* Echo : ActiveEchoes)
+	for (int32 i = ActiveEchoes.Num() - 1; i >= 0; --i)
 	{
-		if (Echo && Echo->GetActiveEchoType() == CurrentEchoType)
-		{
-			SameTypeEchoes.Add(Echo);
-		}
-	}
-
-	//Despawn the oldest, if limit reached
-	const int32 MaxAllowedForCurrentType = GetMaxAllowedForType(CurrentEchoType);
-	while (SameTypeEchoes.Num() >= MaxAllowedForCurrentType && SameTypeEchoes.Num() > 0)
-	{
-		AEchoCharacter* OldestSameType = SameTypeEchoes[0];
-		SameTypeEchoes.RemoveAt(0);
-		DestroyEchoInstance(OldestSameType);
-	}
-
-	//Global 2 limit
-	const int32 MaxTotalEchoes = 2;
-	while (ActiveEchoes.Num() >= MaxTotalEchoes && ActiveEchoes.Num() > 0)
-	{
-		AEchoCharacter* OldestGlobalEcho = ActiveEchoes[0];
-		DestroyEchoInstance(OldestGlobalEcho);
+		DestroyEchoInstance(ActiveEchoes[i]);
 	}
 
 	PreviewEcho->SetVisualState(EEchoVisualState::Placed);
@@ -579,6 +557,8 @@ void UEchoComponent::DestroyEchoInstance(AEchoCharacter* EchoToDestroy)
 	}
 
 	EchoToDestroy->Destroy();
+
+	bIsExecutingAbility = false;
 }
 
 void UEchoComponent::DestroyActiveEcho()

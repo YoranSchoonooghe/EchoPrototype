@@ -186,6 +186,8 @@ protected:
 
 private:
 
+	bool bIsExecutingAbility = false;
+
 	UPROPERTY(Transient)
 	TObjectPtr<AEchoCharacter> ActiveEcho;
 
