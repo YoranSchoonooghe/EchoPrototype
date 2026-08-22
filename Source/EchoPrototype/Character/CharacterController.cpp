@@ -149,7 +149,7 @@ void ACharacterController::OnPossess(APawn* InPawn)
 			SaveGameSys->ApplyPendingLoadIfAny(CachedPlayerCharacter);
 		}
 
-		if (AutosaveInterval > 0.0f)
+		if (bAutosaveEnabled && AutosaveInterval > 0.0f)
 		{
 			GetWorld()->GetTimerManager().SetTimer(AutosaveTimerHandle, this, &ACharacterController::PerformAutosave, AutosaveInterval, true);
 		}
@@ -203,6 +203,23 @@ void ACharacterController::OnUnPossess()
 	GetWorldTimerManager().ClearTimer(AutosaveTimerHandle);
 
 	CachedPlayerCharacter = nullptr;
+}
+
+void ACharacterController::SetAutosaveEnabled(bool bEnabled)
+{
+	bAutosaveEnabled = bEnabled;
+
+	if (bAutosaveEnabled)
+	{
+		if (AutosaveInterval > 0.0f && !GetWorldTimerManager().IsTimerActive(AutosaveTimerHandle))
+		{
+			GetWorldTimerManager().SetTimer(AutosaveTimerHandle, this, &ACharacterController::PerformAutosave, AutosaveInterval, true);
+		}
+	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(AutosaveTimerHandle);
+	}
 }
 
 void ACharacterController::PerformAutosave()

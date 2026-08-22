@@ -27,6 +27,10 @@ class ECHOPROTOTYPE_API ACharacterController : public APlayerController
 
 public:
 	ACharacterController();
+
+	UFUNCTION(BlueprintCallable, Category = "Save")
+	void SetAutosaveEnabled(bool bEnabled);
+
 protected:
 	UPROPERTY(EditAnywhere, Category = "Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
@@ -105,6 +109,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Menu")
 	TSubclassOf<UMenuStateBase> DefaultRootMenuState;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Save")
+	bool bAutosaveEnabled = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Save")
 	float AutosaveInterval = 120.0f;

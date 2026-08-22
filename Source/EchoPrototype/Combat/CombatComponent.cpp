@@ -27,6 +27,13 @@ ACharacter* UCombatComponent::GetOwnerCharacter() const
 	return Cast<ACharacter>(GetOwner());
 }
 
+bool UCombatComponent::IsOwnerDead() const
+{
+	ACharacter* Character = GetOwnerCharacter();
+	UHealthComponent* OwnerHealth = Character ? Character->FindComponentByClass<UHealthComponent>() : nullptr;
+	return OwnerHealth && OwnerHealth->IsDead();
+}
+
 void UCombatComponent::AddAttackDamageMultiplierBonus(float Delta)
 {
 	AttackDamageMultiplier += Delta;
@@ -65,6 +72,11 @@ void UCombatComponent::OnAttackHoldStarted()
 
 void UCombatComponent::PlayChargeStartAnimation()
 {
+	if (IsOwnerDead())
+	{
+		return;
+	}
+
 	UAnimMontage* Montage = GetActiveChargeStartMontage();
 	if (!Montage)
 	{
@@ -172,6 +184,12 @@ void UCombatComponent::PlayChargedAttack()
 
 void UCombatComponent::PlayAttackMontage(UAnimMontage* Montage, float Damage, float StunDuration)
 {
+	if (IsOwnerDead())
+	{
+		EndAttack();
+		return;
+	}
+
 	ACharacter* Character = GetOwnerCharacter();
 	UAnimInstance* AnimInstance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
 	if (!Montage || !AnimInstance)

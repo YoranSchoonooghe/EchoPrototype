@@ -123,6 +123,7 @@ private:
 	UAnimMontage* GetActiveChargeStartMontage() const;
 
 	ACharacter* GetOwnerCharacter() const;
+	bool IsOwnerDead() const;
 
 	bool bWeaponEquipped = false;
 
