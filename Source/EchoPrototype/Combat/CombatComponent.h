@@ -22,7 +22,12 @@ struct FMacheteComboAttack
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
 	float DamageAmount = 15.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
+	float StunDuration = 0.0f;
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnWeaponHit, AActor*, HitActor, FVector, HitLocation, FVector, HitNormal);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ECHOPROTOTYPE_API UCombatComponent : public UActorComponent
@@ -31,6 +36,9 @@ class ECHOPROTOTYPE_API UCombatComponent : public UActorComponent
 
 public:
 	UCombatComponent();
+
+	UPROPERTY(BlueprintAssignable, Category = "Combat")
+	FOnWeaponHit OnWeaponHit;
 
 	void OnAttackHoldStarted();
 	void OnAttackReleased();
@@ -102,7 +110,7 @@ private:
 	void PlayChargedAttack();
 	void PlayChargeStartAnimation();
 	void PlayComboAttack(int32 Index);
-	void PlayAttackMontage(UAnimMontage* Montage, float Damage);
+	void PlayAttackMontage(UAnimMontage* Montage, float Damage, float StunDuration);
 	void EndAttack();
 
 	void HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -118,11 +126,14 @@ private:
 
 	bool bWeaponEquipped = false;
 
+	TObjectPtr<UAnimMontage> ActiveAttackMontage;
+
 	int32 CurrentComboIndex = INDEX_NONE;
 	bool bComboWindowOpen = false;
 	bool bNextAttackQueued = false;
 	bool bIsAttacking = false;
 	float CurrentAttackDamage = 0.0f;
+	float CurrentAttackStunDuration = 0.0f;
 
 	bool bChargeReady = false;
 	FTimerHandle ChargeTimerHandle;
@@ -131,6 +142,7 @@ private:
 	FName TraceSocketName;
 	float TraceRadius = 40.0f;
 	float TraceDamage = 0.0f;
+	float TraceStunDuration = 0.0f;
 	bool bTracing = false;
 	FVector PreviousTraceLocation = FVector::ZeroVector;
 	TSet<AActor*> ActorsHitThisSwing;

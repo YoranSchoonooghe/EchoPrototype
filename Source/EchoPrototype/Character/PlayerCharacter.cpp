@@ -82,6 +82,7 @@ void APlayerCharacter::Move(const FVector2D& Value)
 
 	if (CurrentState && !CurrentState->CanMove()) return;
 
+	if (Health && Health->IsStunned()) return;
 
 	if (Echo && Echo->IsViewingThroughEcho())
 	{

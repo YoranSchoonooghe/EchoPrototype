@@ -23,6 +23,7 @@ enum class EHitDirection : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageSignature, AActor*, Aggressor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStunStateChanged, bool, bIsStunned);
 
 //Bloodspatter effect
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float, HealthPercent);
@@ -63,6 +64,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void Heal(float Amount);
+
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void ApplyStun(float Duration);
+
+	UFUNCTION(BlueprintPure, Category = "Health")
+	FORCEINLINE bool IsStunned() const { return bIsStunned; }
+
+	UPROPERTY(BlueprintAssignable, Category = "Health")
+	FOnStunStateChanged OnStunStateChanged;
 
 protected:
 	virtual void BeginPlay() override;
@@ -123,7 +133,10 @@ private:
 	bool IsInvulnerable() const;
 	void PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const;
 	void PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) const;
+	void ClearStun();
 
 	float CurrentHealth = 0.0f;
 	bool bIsDead = false;
+	bool bIsStunned = false;
+	FTimerHandle StunTimerHandle;
 };

@@ -10,6 +10,7 @@
 #include "Camera/CameraShakeBase.h"
 #include "GameFramework/ForceFeedbackEffect.h"
 #include "TimerManager.h"
+#include "HealthComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -81,6 +82,7 @@ void UCombatComponent::PlayChargeStartAnimation()
 	CurrentComboIndex = INDEX_NONE;
 	bComboWindowOpen = false;
 	bNextAttackQueued = false;
+	ActiveAttackMontage = Montage;
 
 	AnimInstance->Montage_Play(Montage);
 
@@ -158,17 +160,17 @@ void UCombatComponent::PlayComboAttack(int32 Index)
 		return;
 	}
 
-	PlayAttackMontage(Attacks[Index].Montage, Attacks[Index].DamageAmount);
+	PlayAttackMontage(Attacks[Index].Montage, Attacks[Index].DamageAmount, Attacks[Index].StunDuration);
 }
 
 void UCombatComponent::PlayChargedAttack()
 {
 	const FMacheteComboAttack& Charge = GetActiveChargeAttack();
 	CurrentComboIndex = INDEX_NONE;
-	PlayAttackMontage(Charge.Montage, Charge.DamageAmount);
+	PlayAttackMontage(Charge.Montage, Charge.DamageAmount, Charge.StunDuration);
 }
 
-void UCombatComponent::PlayAttackMontage(UAnimMontage* Montage, float Damage)
+void UCombatComponent::PlayAttackMontage(UAnimMontage* Montage, float Damage, float StunDuration)
 {
 	ACharacter* Character = GetOwnerCharacter();
 	UAnimInstance* AnimInstance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
@@ -182,6 +184,9 @@ void UCombatComponent::PlayAttackMontage(UAnimMontage* Montage, float Damage)
 	bComboWindowOpen = false;
 	bNextAttackQueued = false;
 	CurrentAttackDamage = Damage;
+	CurrentAttackStunDuration = StunDuration;
+
+	ActiveAttackMontage = Montage;
 
 	AnimInstance->Montage_Play(Montage);
 
@@ -192,7 +197,7 @@ void UCombatComponent::PlayAttackMontage(UAnimMontage* Montage, float Damage)
 
 void UCombatComponent::HandleMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (bInterrupted)
+	if (Montage != ActiveAttackMontage)
 	{
 		return;
 	}
@@ -202,6 +207,7 @@ void UCombatComponent::HandleMontageEnded(UAnimMontage* Montage, bool bInterrupt
 
 void UCombatComponent::EndAttack()
 {
+	ActiveAttackMontage = nullptr;
 	CurrentComboIndex = INDEX_NONE;
 	bComboWindowOpen = false;
 	bNextAttackQueued = false;
@@ -234,6 +240,7 @@ void UCombatComponent::BeginWeaponTrace(FName SocketName, float Radius, float Da
 	TraceSocketName = SocketName;
 	TraceRadius = Radius;
 	TraceDamage = (DamageOverride >= 0.0f ? DamageOverride : CurrentAttackDamage) * AttackDamageMultiplier;
+	TraceStunDuration = CurrentAttackStunDuration;
 
 	ActorsHitThisSwing.Reset();
 	PreviousTraceLocation = Character->GetMesh()->GetSocketLocation(TraceSocketName);
@@ -281,6 +288,16 @@ void UCombatComponent::UpdateWeaponTrace()
 
 		ActorsHitThisSwing.Add(HitActor);
 		UGameplayStatics::ApplyDamage(HitActor, TraceDamage, Character->GetInstigatorController(), Character, DamageTypeClass);
+		OnWeaponHit.Broadcast(HitActor, Hit.ImpactPoint, Hit.ImpactNormal);
+
+		if (TraceStunDuration > 0.0f)
+		{
+			if (UHealthComponent* HitHealth = HitActor->FindComponentByClass<UHealthComponent>())
+			{
+				HitHealth->ApplyStun(TraceStunDuration);
+			}
+		}
+
 		bHitSomethingThisUpdate = true;
 	}
 

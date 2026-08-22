@@ -57,6 +57,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Echo Attack")
 	float EchoAttackCheckInterval = 0.25f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Memory")
+	float ForgetTargetDelay = 5.0f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Detection")
 	float DetectionThreshold{ 1.0f };
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Perception|Detection")
@@ -68,6 +71,8 @@ protected:
 	void HandlePerception(AActor* Actor, FAIStimulus Stimulus);
 	UFUNCTION()
 	void SetTargetActor(AActor* Aggressor);
+	UFUNCTION()
+	void HandleStunStateChanged(bool bIsStunned);
 
 private:
 	void InitBBKeys();
@@ -89,6 +94,8 @@ private:
 	void StopReachabilityMonitor();
 	void CheckTargetReachability();
 
+	void ForgetTarget();
+
 	void HandleDetectableEchoSpotted(AEchoCharacter* Echo);
 
 	void StartEchoAttackMonitor(AEchoCharacter* Echo);
@@ -105,6 +112,7 @@ private:
 	float _detectionValue{ 0.0f };
 
 	FTimerHandle ReachabilityCheckTimerHandle;
+	FTimerHandle ForgetTargetTimerHandle;
 	FTimerHandle EchoAttackCheckTimerHandle;
 	float LastEchoAttackTime = -1000.0f;
 };

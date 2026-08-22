@@ -10,6 +10,7 @@
 #include "Camera/CameraShakeBase.h"
 #include "GameFramework/ForceFeedbackEffect.h"
 #include "GameFramework/PlayerController.h"
+#include "TimerManager.h"
 #include "DodgeComponent.h"
 
 UHealthComponent::UHealthComponent()
@@ -106,6 +107,25 @@ void UHealthComponent::PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) con
 	{
 		PC->ClientPlayForceFeedback(RumbleEffect, FForceFeedbackParameters());
 	}
+}
+
+void UHealthComponent::ApplyStun(float Duration)
+{
+	if (Duration <= 0.0f || bIsDead)
+	{
+		return;
+	}
+
+	bIsStunned = true;
+	OnStunStateChanged.Broadcast(true);
+
+	GetWorld()->GetTimerManager().SetTimer(StunTimerHandle, this, &UHealthComponent::ClearStun, Duration, false);
+}
+
+void UHealthComponent::ClearStun()
+{
+	bIsStunned = false;
+	OnStunStateChanged.Broadcast(false);
 }
 
 bool UHealthComponent::IsInvulnerable() const

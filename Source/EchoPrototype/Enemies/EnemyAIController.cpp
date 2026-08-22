@@ -1,6 +1,7 @@
 #include "EnemyAIController.h"
 #include "EnemyCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "BrainComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
@@ -34,6 +35,26 @@ void AEnemyAIController::BeginPlay()
 	if (pHealth)
 	{
 		pHealth->OnDamage.AddDynamic(this, &AEnemyAIController::SetTargetActor);
+		pHealth->OnStunStateChanged.AddDynamic(this, &AEnemyAIController::HandleStunStateChanged);
+	}
+}
+
+void AEnemyAIController::HandleStunStateChanged(bool bIsStunned)
+{
+	UBrainComponent* Brain = GetBrainComponent();
+
+	if (bIsStunned)
+	{
+		StopMovement();
+
+		if (Brain)
+		{
+			Brain->PauseLogic(TEXT("Stunned"));
+		}
+	}
+	else if (Brain)
+	{
+		Brain->ResumeLogic(TEXT("Stunned"));
 	}
 }
 
@@ -218,6 +239,17 @@ void AEnemyAIController::CheckTargetReachability()
 	}
 }
 
+void AEnemyAIController::ForgetTarget()
+{
+	auto const TargetPlayerKeyName = TEXT("TargetPlayer");
+
+	auto* pBlackboardComponent = GetBlackboardComponent();
+	if (!pBlackboardComponent) return;
+
+	pBlackboardComponent->ClearValue(TargetPlayerKeyName);
+	StopReachabilityMonitor();
+}
+
 void AEnemyAIController::StartEchoAttackMonitor(AEchoCharacter* Echo)
 {
 	_targetEcho = Echo;
@@ -316,6 +348,8 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 
 			_targetPlayer = pPlayer;
 			_bIsPlayerInSight = true;
+
+			GetWorld()->GetTimerManager().ClearTimer(ForgetTargetTimerHandle);
 		}
 		else
 		{
@@ -324,9 +358,8 @@ void AEnemyAIController::HandleSightPerception(AActor* Actor, FAIStimulus Stimul
 			if (!_controlledEnemy) return;
 			if (_controlledEnemy->GetAlertState() == EAlertState::Alert)
 			{
-				pBlackboardComponent->ClearValue(TargetPlayerKeyName);
 				pBlackboardComponent->SetValueAsVector(TEXT("SusLocation"), pPlayer->GetActorLocation());
-				StopReachabilityMonitor();
+				GetWorld()->GetTimerManager().SetTimer(ForgetTargetTimerHandle, this, &AEnemyAIController::ForgetTarget, ForgetTargetDelay, false);
 			}
 
 		}
