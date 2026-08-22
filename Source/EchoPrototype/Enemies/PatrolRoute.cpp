@@ -1,6 +1,7 @@
 #include "PatrolRoute.h"
 #include "Components/SplineComponent.h"
 #include "EchoPrototype/Echo/EchoVisibilityComponent.h"
+#include "PatrolPoint.h"
 
 APatrolRoute::APatrolRoute()
 {
@@ -55,6 +56,34 @@ APatrolPoint* APatrolRoute::GetPatrolPointAtIndex(int index) const
 	return PatrolPoints[index];
 }
 
+void APatrolRoute::RebuildPatrolSpline()
+{
+	if (!PatrolSpline) return;
+
+	PatrolSpline->ClearSplinePoints(false);
+
+	for (APatrolPoint* PatrolPoint : PatrolPoints)
+	{
+		if (!IsValid(PatrolPoint)) continue;
+
+		int32 const pointIndex = PatrolSpline->GetNumberOfSplinePoints();
+
+		PatrolSpline->AddSplinePoint(
+			PatrolPoint->GetActorLocation(),
+			ESplineCoordinateSpace::World,
+			false
+		);
+
+		PatrolSpline->SetSplinePointType(
+			pointIndex,
+			ESplinePointType::Linear,
+			false
+		);
+	}
+
+	PatrolSpline->UpdateSpline();
+}
+
 int APatrolRoute::GetNextPatrolPointIndexSingle(int currentPointIndex)
 {
 	if (currentPointIndex == PatrolPoints.Num() - 1)
@@ -98,4 +127,3 @@ int APatrolRoute::GetNextPatrolPointIndexReverse(int currentPointIndex)
 		return (currentPointIndex + 1);
 	}
 }
-
