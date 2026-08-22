@@ -41,6 +41,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UWidgetComponent> StealthKillPromptWidgetComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWidgetComponent> HealthBarWidgetComp;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float HealthBarDisplayDuration = 3.0f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Alert")
 	EAlertState AlertState{ EAlertState::Neutral };
 
@@ -67,4 +73,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool bStartsArmed{ false };
+
+private:
+	UFUNCTION()
+	void HandleHealthChanged(float HealthPercent);
+
+	void HideHealthBar();
+
+	FTimerHandle HealthBarHideTimerHandle;
 };

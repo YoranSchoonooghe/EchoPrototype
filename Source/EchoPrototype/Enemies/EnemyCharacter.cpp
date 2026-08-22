@@ -4,6 +4,8 @@
 #include "Components/WidgetComponent.h"
 #include "BPWidgets/AlertWidget.h"
 #include "BPWidgets/DetectionMeterWidget.h"
+#include "BPWidgets/EnemyHealthBarWidget.h"
+#include "TimerManager.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -19,6 +21,10 @@ AEnemyCharacter::AEnemyCharacter()
 	StealthKillPromptWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("StealthKillPromptWidgetComponent"));
 	StealthKillPromptWidgetComp->SetupAttachment(GetMesh());
 	StealthKillPromptWidgetComp->SetVisibility(false);
+
+	HealthBarWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidgetComponent"));
+	HealthBarWidgetComp->SetupAttachment(GetMesh());
+	HealthBarWidgetComp->SetVisibility(false);
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -34,6 +40,36 @@ void AEnemyCharacter::BeginPlay()
 	if (bStartsArmed && Combat)
 	{
 		Combat->SetWeaponEquipped(true);
+	}
+
+	if (Health)
+	{
+		Health->OnHealthChanged.AddDynamic(this, &AEnemyCharacter::HandleHealthChanged);
+	}
+}
+
+void AEnemyCharacter::HandleHealthChanged(float HealthPercent)
+{
+	if (!HealthBarWidgetComp)
+	{
+		return;
+	}
+
+	if (UEnemyHealthBarWidget* HealthBarWidget = Cast<UEnemyHealthBarWidget>(HealthBarWidgetComp->GetUserWidgetObject()))
+	{
+		HealthBarWidget->SetHealthPercent(HealthPercent);
+	}
+
+	HealthBarWidgetComp->SetVisibility(true);
+
+	GetWorldTimerManager().SetTimer(HealthBarHideTimerHandle, this, &AEnemyCharacter::HideHealthBar, HealthBarDisplayDuration, false);
+}
+
+void AEnemyCharacter::HideHealthBar()
+{
+	if (HealthBarWidgetComp)
+	{
+		HealthBarWidgetComp->SetVisibility(false);
 	}
 }
 
