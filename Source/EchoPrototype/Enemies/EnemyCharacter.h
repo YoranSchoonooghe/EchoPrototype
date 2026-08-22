@@ -64,4 +64,7 @@ public:
 	TObjectPtr<APatrolRoute> PatrolRoute{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
 	bool bIsGuarding{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool bStartsArmed{ false };
 };

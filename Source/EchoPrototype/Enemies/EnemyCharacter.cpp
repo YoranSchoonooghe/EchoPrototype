@@ -30,6 +30,11 @@ void AEnemyCharacter::BeginPlay()
 		DetectionWidget->SetEnemy(this);
 		DetectionWidget->SetHidden(true);
 	}
+
+	if (bStartsArmed && Combat)
+	{
+		Combat->SetWeaponEquipped(true);
+	}
 }
 
 void AEnemyCharacter::Tick(float DeltaTime)
