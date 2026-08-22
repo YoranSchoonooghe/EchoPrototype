@@ -33,7 +33,7 @@ protected:
 	TObjectPtr<UEchoVisibilityComponent> EchoVisibility;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
-	TArray<APatrolPoint*> PatrolPoints;
+	TArray<TObjectPtr<APatrolPoint>> PatrolPoints;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	EPatrolMode PatrolMode{ EPatrolMode::Loop };
 
@@ -46,6 +46,9 @@ public:
 	int GetNextPatrolPointIndex(int currentPointIndex);
 	UFUNCTION(BlueprintCallable, Category = "Patrol")
 	APatrolPoint* GetPatrolPointAtIndex(int index) const;
+
+	UFUNCTION(CallInEditor, Category = "Patrol")
+	void RebuildPatrolSpline();
 
 private:
 	int GetNextPatrolPointIndexSingle(int currentPointIndex);
