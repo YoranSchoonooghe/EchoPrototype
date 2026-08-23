@@ -7,6 +7,7 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimMontage.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraShakeBase.h"
 #include "GameFramework/ForceFeedbackEffect.h"
 #include "GameFramework/PlayerController.h"
@@ -215,20 +216,29 @@ void UHealthComponent::PlayDeathAnimation(EHitDirection Direction)
 	UAnimSequence* SelectedAnim = PickAnimFromDirectionalPool(Direction, FrontDeathAnims, BackDeathAnims, LeftDeathAnims, RightDeathAnims);
 
 	ACharacter* Character = Cast<ACharacter>(GetOwner());
-	UAnimInstance* AnimInstance = Character && Character->GetMesh() ? Character->GetMesh()->GetAnimInstance() : nullptr;
-	if (SelectedAnim && AnimInstance)
+	USkeletalMeshComponent* MeshComp = Character ? Character->GetMesh() : nullptr;
+
+	float FinishDelay = 0.0f;
+
+	if (SelectedAnim && MeshComp)
 	{
-		if (UAnimMontage* DeathMontage = AnimInstance->PlaySlotAnimationAsDynamicMontage(SelectedAnim, DeathSlotName, 0.25f, 0.25f, 1.0f, 1))
-		{
-			// Freeze on the last frame of the death pose instead of blending back to locomotion.
-			DeathMontage->bEnableAutoBlendOut = false;
-		}
+		MeshComp->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+		MeshComp->PlayAnimation(SelectedAnim, false);
+
+		FinishDelay = SelectedAnim->GetPlayLength();
 
 		if (AActor* Owner = GetOwner())
 		{
-			Owner->SetLifeSpan(SelectedAnim->GetPlayLength());
+			Owner->SetLifeSpan(FinishDelay + DespawnDelay);
 		}
 	}
+
+	GetWorld()->GetTimerManager().SetTimer(DeathAnimationFinishedTimerHandle, this, &UHealthComponent::HandleDeathAnimationFinished, FinishDelay, false);
+}
+
+void UHealthComponent::HandleDeathAnimationFinished()
+{
+	OnDeathAnimationFinished.Broadcast();
 }
 
 void UHealthComponent::PlayHitReactAnimation(EHitDirection Direction)

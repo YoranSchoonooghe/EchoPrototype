@@ -20,6 +20,7 @@ class UEchoSaveGame;
 class UDodgeComponent;
 class ULockOnComponent;
 class UWeaponData;
+class UMenuStateBase;
 
 enum class EBufferedPlayerAction : uint8
 {
@@ -142,6 +143,15 @@ protected:
 
 	UFUNCTION()
 	void HandleDeath();
+
+	UFUNCTION()
+	void HandleCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+	void HandleDeathAnimationFinished();
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UMenuStateBase> DeathMenuStateClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom;

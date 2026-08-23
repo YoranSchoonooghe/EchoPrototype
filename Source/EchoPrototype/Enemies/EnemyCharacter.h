@@ -66,6 +66,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void ShowStealthKillPrompt(bool bShow);
 
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void Ragdoll();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
 	TObjectPtr<APatrolRoute> PatrolRoute{ nullptr };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EnemyAI")
@@ -78,7 +81,11 @@ private:
 	UFUNCTION()
 	void HandleHealthChanged(float HealthPercent);
 
+	UFUNCTION()
+	void HandleDeath();
+
 	void HideHealthBar();
 
 	FTimerHandle HealthBarHideTimerHandle;
+	bool bHasRagdolled = false;
 };

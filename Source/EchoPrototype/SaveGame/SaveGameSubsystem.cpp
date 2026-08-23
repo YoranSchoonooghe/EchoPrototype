@@ -35,18 +35,8 @@ void USaveGameSubsystem::LoadGame(const FString& SlotName)
 		return;
 	}
 
-	const FString CurrentLevelName = UGameplayStatics::GetCurrentLevelName(World, true);
-
-	if (!Loaded->LevelName.IsNone() && Loaded->LevelName.ToString() != CurrentLevelName)
-	{
-		UGameplayStatics::OpenLevel(World, Loaded->LevelName);
-		return;
-	}
-
-	if (APlayerCharacter* Character = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(World, 0)))
-	{
-		ApplyPendingLoadIfAny(Character);
-	}
+	const FName LevelToOpen = !Loaded->LevelName.IsNone() ? Loaded->LevelName : FName(*UGameplayStatics::GetCurrentLevelName(World, true));
+	UGameplayStatics::OpenLevel(World, LevelToOpen);
 }
 
 bool USaveGameSubsystem::DoesSaveExist(const FString& SlotName) const

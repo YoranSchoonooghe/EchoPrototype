@@ -10,6 +10,10 @@
 #include "../Combat/DodgeComponent.h"
 #include "../Combat/LockOnComponent.h"
 #include "../Combat/WeaponData.h"
+#include "../HUD/MenuFlowSubsystem.h"
+#include "../HUD/States/MenuStateBase.h"
+#include "../Enemies/EnemyCharacter.h"
+#include "Components/CapsuleComponent.h"
 #include "../Movement/ClimbingComponent.h"
 #include "../SkillTree/SkillTreeComponent.h"
 #include "../SkillTree/SkillTreeNodeData.h"
@@ -164,9 +168,12 @@ void APlayerCharacter::BeginPlay()
 	if (Health)
 	{
 		Health->OnDeath.AddDynamic(this, &APlayerCharacter::HandleDeath);
+		Health->OnDeathAnimationFinished.AddDynamic(this, &APlayerCharacter::HandleDeathAnimationFinished);
 
 		Health->OnHealthChanged.AddDynamic(this, &APlayerCharacter::HandleHealthChanged);
 	}
+
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &APlayerCharacter::HandleCapsuleHit);
 
 	if (LowHealthVignetteMaterial && FollowCamera)
 	{
@@ -206,6 +213,27 @@ void APlayerCharacter::HandleDeath()
 	}
 
 	ChangeState(NewObject<UPlayerState_Dead>(this));
+}
+
+void APlayerCharacter::HandleCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor))
+	{
+		Enemy->Ragdoll();
+	}
+}
+
+void APlayerCharacter::HandleDeathAnimationFinished()
+{
+	if (!DeathMenuStateClass)
+	{
+		return;
+	}
+
+	if (UMenuFlowSubsystem* Flow = GetGameInstance() ? GetGameInstance()->GetSubsystem<UMenuFlowSubsystem>() : nullptr)
+	{
+		Flow->PushState(DeathMenuStateClass);
+	}
 }
 
 void APlayerCharacter::HandleHealthChanged(float HealthPercent)

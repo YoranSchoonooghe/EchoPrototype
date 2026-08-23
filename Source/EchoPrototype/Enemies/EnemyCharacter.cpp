@@ -6,6 +6,8 @@
 #include "BPWidgets/DetectionMeterWidget.h"
 #include "BPWidgets/EnemyHealthBarWidget.h"
 #include "TimerManager.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AEnemyCharacter::AEnemyCharacter()
 {
@@ -45,7 +47,33 @@ void AEnemyCharacter::BeginPlay()
 	if (Health)
 	{
 		Health->OnHealthChanged.AddDynamic(this, &AEnemyCharacter::HandleHealthChanged);
+		Health->OnDeath.AddDynamic(this, &AEnemyCharacter::HandleDeath);
 	}
+}
+
+void AEnemyCharacter::HandleDeath()
+{
+	if (AlertWidgetComp)
+	{
+		AlertWidgetComp->SetVisibility(false);
+	}
+
+	if (DetectionWidgetComp)
+	{
+		DetectionWidgetComp->SetVisibility(false);
+	}
+
+	if (StealthKillPromptWidgetComp)
+	{
+		StealthKillPromptWidgetComp->SetVisibility(false);
+	}
+
+	if (HealthBarWidgetComp)
+	{
+		HealthBarWidgetComp->SetVisibility(false);
+	}
+
+	GetWorldTimerManager().ClearTimer(HealthBarHideTimerHandle);
 }
 
 void AEnemyCharacter::HandleHealthChanged(float HealthPercent)
@@ -106,6 +134,27 @@ void AEnemyCharacter::ShowStealthKillPrompt(bool bShow)
 	if (StealthKillPromptWidgetComp)
 	{
 		StealthKillPromptWidgetComp->SetVisibility(bShow);
+	}
+}
+
+void AEnemyCharacter::Ragdoll()
+{
+	if (bHasRagdolled || !Health || !Health->IsDead())
+	{
+		return;
+	}
+
+	bHasRagdolled = true;
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	if (USkeletalMeshComponent* MeshComp = GetMesh())
+	{
+		MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		MeshComp->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		MeshComp->SetSimulatePhysics(true);
+		MeshComp->WakeAllRigidBodies();
 	}
 }
 

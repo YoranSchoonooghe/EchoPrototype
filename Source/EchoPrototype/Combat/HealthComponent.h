@@ -22,6 +22,7 @@ enum class EHitDirection : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathAnimationFinishedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDamageSignature, AActor*, Aggressor);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStunStateChanged, bool, bIsStunned);
 
@@ -57,6 +58,9 @@ public:
 	FOnDamageSignature OnDamage;
 
 	UPROPERTY(BlueprintAssignable, Category = "Health")
+	FOnDeathAnimationFinishedSignature OnDeathAnimationFinished;
+
+	UPROPERTY(BlueprintAssignable, Category = "Health")
 	FOnHealthChanged OnHealthChanged;
 
 	UFUNCTION(BlueprintPure, Category = "Health")
@@ -82,6 +86,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Death")
 	FName DeathSlotName = "FullBody";
+
+	UPROPERTY(EditAnywhere, Category = "Death")
+	float DespawnDelay = 1.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Death")
 	TArray<TObjectPtr<UAnimSequence>> FrontDeathAnims;
@@ -134,9 +141,11 @@ private:
 	void PlayCameraShakeOnOwner(TSubclassOf<UCameraShakeBase> ShakeClass) const;
 	void PlayRumbleOnOwner(UForceFeedbackEffect* RumbleEffect) const;
 	void ClearStun();
+	void HandleDeathAnimationFinished();
 
 	float CurrentHealth = 0.0f;
 	bool bIsDead = false;
 	bool bIsStunned = false;
 	FTimerHandle StunTimerHandle;
+	FTimerHandle DeathAnimationFinishedTimerHandle;
 };
