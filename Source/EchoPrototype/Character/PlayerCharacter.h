@@ -204,6 +204,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float SneakSpeed = 250.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	float LandedLoudness{ 1.0f };
+
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
 	ECameraPerspective CurrentPerspective;
 

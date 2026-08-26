@@ -197,7 +197,7 @@ void APlayerCharacter::Landed(const FHitResult& Hit)
 	UAISense_Hearing::ReportNoiseEvent(
 		GetWorld(),
 		GetActorLocation(),
-		1.0f,
+		LandedLoudness,
 		this,
 		0.0f,
 		TEXT("Landed")
