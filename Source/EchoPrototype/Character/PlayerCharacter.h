@@ -104,9 +104,6 @@ public:
 	FORCEINLINE UDodgeComponent* GetDodgeComponent() const { return Dodge; }
 	FORCEINLINE FVector2D GetLastMovementInput() const { return LastMovementInput; }
 
-	// Input buffer: remembers a press that couldn't act immediately (e.g. dodge pressed mid-
-	// attack) so the relevant state can fire it the instant the blocking action ends, instead of
-	// dropping it. ConsumeBuffered*IfFresh() clears the buffer regardless of the result.
 	void BufferAttack();
 	void BufferDodge();
 	bool ConsumeBufferedAttackIfFresh();
