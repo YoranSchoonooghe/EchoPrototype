@@ -9,6 +9,8 @@
 class APawn;
 class APlayerController;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEchoVisionAudioSignature);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
 class ECHOPROTOTYPE_API UEchoVisionComponent : public UEchoComponentBase
 {
@@ -31,6 +33,18 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Echo|Vision")
 	bool IsViewingThroughEcho() const { return bIsViewingThroughEcho; }
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Echo|Teleport|Audio")
+	void PlayPossesEchoSound();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Echo|Teleport|Audio")
+	void PlayReturnToPlayerSound();
+
+	UPROPERTY(BlueprintAssignable, Category = "Echo|Vision|Audio")
+	FEchoVisionAudioSignature OnVisionPossessionStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Echo|Vision|Audio")
+	FEchoVisionAudioSignature OnVisionPossessionEnded;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Echo|Vision")

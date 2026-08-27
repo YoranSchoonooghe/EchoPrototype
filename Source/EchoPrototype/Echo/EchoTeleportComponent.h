@@ -18,6 +18,8 @@ class UCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeleportComplete, class AEchoCharacter*, Echo);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeleportAudioEvent, class AEchoCharacter*, Echo);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType)
 class ECHOPROTOTYPE_API UEchoTeleportComponent : public UEchoComponentBase
 {
@@ -31,8 +33,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Teleport")
 	bool ExecuteTeleport(APawn* PlayerPawn);
 
+	UPROPERTY(BlueprintAssignable, Category = "Echo|Teleport|Audio")
+	FOnTeleportAudioEvent OnTeleportStarted;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Echo|Teleport|Audio")
+	void PlayTeleportDepartureSound();
+
 	UPROPERTY(BlueprintAssignable, Category = "Teleport")
 	FOnTeleportComplete OnTeleportComplete;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Echo|Teleport|Audio")
+	void PlayTeleportArrivalSound();
+
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport|Visuals")

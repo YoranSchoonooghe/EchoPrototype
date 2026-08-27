@@ -39,6 +39,9 @@ bool UEchoTeleportComponent::ExecuteTeleport(APawn* PlayerPawn)
 
 	StartTeleportEffects(PlayerPawn);
 
+	OnTeleportStarted.Broadcast(Cast<AEchoCharacter>(GetOwner()));
+	PlayTeleportDepartureSound();
+
 	if (DepartureFX)
 	{
 		FVector DepartureLoc = PlayerPawn->GetActorLocation();
@@ -76,6 +79,7 @@ void UEchoTeleportComponent::PerformActualTeleport()
 		ResetPostProcessing();
 		bIsRecovering = false;
 		OnTeleportComplete.Broadcast(Cast<AEchoCharacter>(GetOwner()));
+		PlayTeleportArrivalSound();
 		return;
 	}
 
@@ -148,6 +152,7 @@ void UEchoTeleportComponent::UpdateTeleportEffects(float DeltaSeconds)
 		bIsRecovering = false;
 		FovEffectCamera.Reset();
 		OnTeleportComplete.Broadcast(Cast<AEchoCharacter>(GetOwner()));
+		PlayTeleportArrivalSound();
 		return;
 	}
 
@@ -171,6 +176,7 @@ void UEchoTeleportComponent::UpdateTeleportEffects(float DeltaSeconds)
 		bIsRecovering = false;
 		FovEffectCamera.Reset();
 		OnTeleportComplete.Broadcast(Cast<AEchoCharacter>(GetOwner()));
+		PlayTeleportArrivalSound();
 	}
 }
 

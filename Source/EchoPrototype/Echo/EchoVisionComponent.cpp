@@ -41,6 +41,9 @@ void UEchoVisionComponent::ToggleEchoPossession(APawn* OriginalPlayerPawn)
 	PC->Possess(EchoPawn);
 
 	bIsViewingThroughEcho = true;
+
+	OnVisionPossessionStarted.Broadcast();
+	PlayPossesEchoSound();
 }
 
 void UEchoVisionComponent::ReturnViewToPlayer()
@@ -54,6 +57,9 @@ void UEchoVisionComponent::ReturnViewToPlayer()
 	}
 
 	bIsViewingThroughEcho = false;
+
+	OnVisionPossessionEnded.Broadcast();
+	PlayReturnToPlayerSound();
 }
 
 void UEchoVisionComponent::AddEchoMoveInput(const FVector2D& Value)
